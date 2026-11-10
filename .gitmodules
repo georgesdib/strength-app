@@ -1,0 +1,6 @@
+[submodule "strength-training-app"]
+	path = strength-training-app
+	url = git@github.com:georgesdib/strength-training-app.git
+[submodule "StrengthApp"]
+	path = StrengthApp
+	url = git@github.com:georgesdib/StrengthApp.git
