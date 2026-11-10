@@ -91,16 +91,18 @@ or SQLite databases unless essential.
 
 ## Machine-specific instructions
 
-This repository supports two development environments:
+This repository documents three machine roles:
 
 - **iMac** — persistent remote coding-agent environment. Load
   `docs/agent/PROMPT-IMAC.md`.
 - **MacBook** — local Apple development and physical-device acceptance environment. Load
   `docs/agent/PROMPT-MACBOOK.md`.
+- **ODROID-C4** — backend development server and backend main server, also used for benchmarking. Load
+  `docs/agent/PROMPT-ODROID.md` when operating in that environment.
 
-The deployed server is an ODROID-C4 and is the host used for benchmarking. It is the server
-host, not the coding host; do not confuse it with the iMac. Server documentation may refer to
-the ODROID-C4 without implying that agents run there.
+Keep development and main-server targets/configuration distinct even though they share the ODROID
+host. Its server role does not, by itself, determine where a coding-agent session runs; follow the
+active machine prompt and local `AGENTS.machine.md`. The ODROID is not the Apple/Xcode workstation.
 
 At the start of a task, load the machine-specific instructions if available:
 

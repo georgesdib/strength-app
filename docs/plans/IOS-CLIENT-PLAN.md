@@ -112,9 +112,10 @@ server work starts. This phase writes no application code, adds no route and cha
   one re-pair at that point. Include the HealthKit capability in this build only to prove it signs
   under the personal team; no HealthKit code is written here. If it cannot sign, decide then
   between a paid account and deferring the HealthKit phase.
-- **Server host and LAN path:** the always-on Odroid Linux box, not the Mac. Record its LAN address
-  and the port the Python server already binds, and confirm the iPhone can reach it on home Wi-Fi
-  over plain HTTP. No port-forwarding, no VPN and no Tailscale.
+- **Server host and LAN path:** the always-on ODROID-C4 hosts both the backend development server
+  and backend main server. Record and verify the intended server endpoint and port; keep their
+  configuration and data contexts distinct. Confirm the iPhone can reach the intended server on
+  home Wi-Fi over plain HTTP. No port-forwarding, no VPN and no Tailscale.
 - **Pairing choices:** the CLI entry point ('strength-coach ios pair'), code length, TTL and attempt
   limit, and long-lived token handling (Keychain on the phone, verifier only on the server).
 - **Rollback:** stop. Phase 0 has no route, migration or data write to undo.

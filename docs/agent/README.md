@@ -14,13 +14,14 @@ execution and handoff instructions; repository-specific instructions live in eac
 | Cross-repo | [PROMPT-CROSS-REPO.md](PROMPT-CROSS-REPO.md) |
 | Working on the iMac coding host | [PROMPT-IMAC.md](PROMPT-IMAC.md) |
 | Working on the MacBook for Apple acceptance | [PROMPT-MACBOOK.md](PROMPT-MACBOOK.md) |
+| Working in the ODROID backend development/main-server environment | [PROMPT-ODROID.md](PROMPT-ODROID.md) |
 
 Do not load a prompt that does not match the task. Use [TASK-ROUTING.md](TASK-ROUTING.md) to
 classify the task first.
 
 ## Machine-prompt status
 
-- [PROMPT-ODROID.md](PROMPT-ODROID.md) is retained as a **superseded historical pointer**, not a usable coding workflow. ODROID-C4 is the deployed server/benchmarking host.
+- [PROMPT-ODROID.md](PROMPT-ODROID.md) is an active backend server workflow. The owner confirmed that ODROID-C4 hosts both the backend development server and backend main server; the prompt keeps those contexts distinct and does not infer the agent's runtime from the server role.
 
 ## Process documents
 

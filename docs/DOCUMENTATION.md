@@ -31,8 +31,9 @@ A component roadmap may remain local only when it is specifically the component'
 7. Keep active, completed, superseded, historical and unknown status explicit. Preserve phase numbers, dependencies, acceptance criteria, caveats and completion evidence. Never infer completion from source code or branch existence alone.
 8. A superseded document must name and link its replacement. A compatibility pointer must say it is not authoritative and must not repeat substantive content.
 9. Update links in Markdown, READMEs, agent prompts, manifests, tests, source comments, scripts and workflows when a path changes. Do not change application behavior or CI behavior merely to accommodate documentation.
-10. Keep submodule boundaries and Git safety: inspect status, fetch before branch changes, use separate task branches, do not force-push, and do not update portfolio submodule pointers unless the task explicitly requires it.
-11. Never publish private machine notes, credentials, health data, training exports, databases, generated artifacts or ignored local files.
+10. If a document is obsolete, historical or has uncertain ownership, leave it at its existing repository/path and preserve or clarify its status; do not move or delete it just to fit a new taxonomy. If a page mixes clearly current shared requirements with component-specific implementation or historical material, move only the clearly maintained shared portion and preserve the component-specific/history content at its existing location, with links as needed.
+11. Keep submodule boundaries and Git safety: inspect status, fetch before branch changes, use separate task branches, do not force-push, and do not update portfolio submodule pointers unless the task explicitly requires it.
+12. Never publish private machine notes, credentials, health data, training exports, databases, generated artifacts or ignored local files.
 
 ## Link and status conventions
 

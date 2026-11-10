@@ -11,8 +11,10 @@ The handoff unit is:
 - Commit SHA.
 - Acceptance or implementation report.
 
-The iMac is the coding host. The ODROID-C4 is the deployed server and benchmarking host; it is
-not a handoff endpoint and it is not where agents run.
+The iMac is the persistent remote coding environment and the MacBook is the Apple acceptance
+workstation. The ODROID-C4 hosts both the backend development server and backend main server and
+is used for benchmarking. A server role does not itself determine where an agent runs. Use GitHub
+branches and commit SHAs as the handoff unit; do not hand off by editing live server files.
 
 Uncommitted work is not a valid remote handoff.
 

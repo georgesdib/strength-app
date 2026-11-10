@@ -6,8 +6,9 @@ This prompt applies when operating in the persistent iMac environment.
 
 - The iMac is the always-on remote coding environment.
 - It may run a backend development server for implementation checks.
-- The deployed server is an ODROID-C4 and is the host used for benchmarking. Do not treat the
-  iMac as the deployed host or use iMac timing as evidence about deployed performance.
+- The ODROID-C4 hosts both the backend development server and backend main server and is used for
+  benchmarking. Keep those server contexts distinct; do not treat the iMac as the main server or
+  use iMac timing as evidence about ODROID performance.
 - It is not the Apple development workstation.
 - Do not assume Xcode, iOS simulators, or physical Apple devices are
   available.

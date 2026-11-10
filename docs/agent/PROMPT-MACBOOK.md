@@ -7,7 +7,8 @@ This prompt applies when operating in the local MacBook environment.
 - The MacBook is the Apple development workstation.
 - Xcode, iOS simulators, and physical Apple devices may be available.
 - The iMac is the persistent remote coding environment.
-- The ODROID-C4 is the deployed server and benchmarking host. It is not the coding host.
+- The ODROID-C4 hosts both the backend development server and backend main server and is used for
+  benchmarking. It is not the Apple/Xcode workstation; verify which server context a task targets.
 - Load the local `AGENTS.machine.md` if available.
 
 ## Operating model
