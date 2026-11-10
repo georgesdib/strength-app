@@ -6,8 +6,7 @@ repositories as Git submodules:
 - `strength-training-app/` — Python strength-coach server.
 - `StrengthApp/` — SwiftUI iOS client.
 
-The portfolio repository owns cross-repository process documentation only. Application code,
-tests and subject-matter documentation are committed in their owning submodule.
+The portfolio repository is the canonical source of truth for shared project-wide documentation: cross-repository roadmaps/plans, specifications, architecture, server/client contracts, multi-component decisions, shared acceptance/operations policy, and agent routing. Application code and implementation-coupled documentation remain in their owning component repository. See `docs/README.md` and `docs/DOCUMENTATION.md`.
 
 ## Task routing
 
@@ -33,18 +32,16 @@ Do not load a prompt file that does not match the task.
 
 ## Documentation placement
 
-Documentation has one canonical home. Before adding or moving a document, read
-`docs/DOCUMENTATION.md` and use this summary:
+Documentation has one canonical home. Before adding, moving, or updating shared documentation, read
+`docs/DOCUMENTATION.md` and the relevant index/plan/contract. Use this summary:
 
 | Content | Repository |
 |---|---|
-| Training methodology, readiness, prescriptions, data model, server API, server web UI, server design contracts | `strength-training-app/` |
-| iOS client plan, iPhone user guide, device acceptance, client build/test guidance | `StrengthApp/` |
-| Portfolio routing, machine prompts, handoff protocol, documentation policy | this repository |
+| Cross-repository plans/specifications, shared architecture, server/client contracts, shared policy/acceptance/operations and agent workflows | this repository (`docs/plans/`, `docs/contracts/`, `docs/agent/`) |
+| Python architecture, API implementation, schema/migrations, backend-only tests, server UI and backend operational procedures | `strength-training-app/` |
+| Swift/Xcode architecture, client UI, build/test/live-test guidance and Apple device acceptance | `StrengthApp/` |
 
-The server owns the client/server contract because Python is authoritative for training
-decisions. iOS documents link to the server contract instead of duplicating it. The iOS client
-plan lives in `StrengthApp/`, not in the server docs index.
+Python remains authoritative for training decisions and server behavior; the portfolio owns canonical cross-repository contract documents, while server implementation and API reference remain in the backend. The shared iOS client phase plan lives in portfolio `docs/plans/`; client-specific procedures remain in `StrengthApp/`. Components use short pointers/links, not duplicate shared documents.
 
 ## Non-negotiable rules
 
@@ -153,3 +150,14 @@ Use GitHub as the source of truth for handoff between development machines.
 - Do not force-push or overwrite commits from another machine.
 - Report tests performed and tests still outstanding.
 - Follow `docs/agent/MACHINE-HANDOFF.md` for machine transitions.
+
+
+## Shared documentation change management
+
+- Read shared plans/specifications/contracts in this portfolio before cross-repository implementation. Use the portfolio docs index even when the submodules are uninitialized or the task starts from a component checkout.
+- Shared documentation changes are committed in the portfolio repository. Backend/iOS implementation details remain in the component repository; a cross-repo change may require separate commits and coordinated PRs in all affected repositories.
+- Do not create parallel roadmaps or copies of shared plans/contracts. Use a short pointer only when an existing local path must remain for a manifest, viewer, script, test or compatibility.
+- When implementation invalidates a shared requirement or contract, update its portfolio canonical document and all component links. For a purely local implementation change, update only the owning component documentation.
+- Preserve active/completed/superseded/historical/unknown status, phase numbering, dependencies, acceptance evidence and caveats. Never claim completion without evidence.
+- Keep backend `ROADMAP.md` as the backend live implementation-status authority because its docs viewer and consistency tests consume it; portfolio plans link to it without duplicating its status.
+- Shared docs are committed only on an explicit task branch; fetch and inspect remotes first, never force-push, and do not change submodule pointers unless explicitly required.

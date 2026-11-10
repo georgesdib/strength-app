@@ -23,7 +23,7 @@ tooling and session instructions.
 2. Classify the task using `docs/agent/TASK-ROUTING.md`.
 3. Read only the matching task prompt and relevant repository instructions.
 4. Inspect Git status and submodule state before editing.
-5. Work in the relevant submodule repository, not in the portfolio repository.
+5. Work in the owning component repository for implementation-specific changes; make shared plan/contract/policy/agent-instruction changes in a separate portfolio branch, not in a component submodule.
 6. Implement the smallest coherent change.
 7. Run focused local tests and available quality checks.
 8. Report the commit SHA, CI state, and outstanding acceptance requirements.
@@ -67,3 +67,9 @@ Return:
 - CI status or link if available.
 - Device acceptance required or completed.
 - Next action, if any.
+
+## Shared documentation architecture (required)
+
+Before implementing a task that touches shared requirements or crosses repositories, read the canonical portfolio index at https://github.com/georgesdib/strength-app/blob/main/docs/README.md and ownership rules at https://github.com/georgesdib/strength-app/blob/main/docs/DOCUMENTATION.md. Locate cross-repository phase plans under `docs/plans/` and contracts under `docs/contracts/`; do not rely on a duplicated plan inside a submodule or on a portfolio submodule being initialized.
+
+Classify work as backend-only, iOS/watchOS-only, or cross-repository. Commit implementation-specific changes only in the owning component repository. Commit shared plans/specifications/contracts/architecture/decisions and project-wide agent instructions only in the portfolio repository. For a cross-repository task, update the canonical portfolio document plus affected component docs/references in separate coordinated branches and link to the canonical source; do not update submodule pointers unless explicitly required. Keep local compatibility pointers short and non-authoritative. Preserve completed/historical status and never infer phase completion.

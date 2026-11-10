@@ -18,6 +18,10 @@ execution and handoff instructions; repository-specific instructions live in eac
 Do not load a prompt that does not match the task. Use [TASK-ROUTING.md](TASK-ROUTING.md) to
 classify the task first.
 
+## Machine-prompt status
+
+- [PROMPT-ODROID.md](PROMPT-ODROID.md) is retained as a **superseded historical pointer**, not a usable coding workflow. ODROID-C4 is the deployed server/benchmarking host.
+
 ## Process documents
 
 - [TASK-ROUTING.md](TASK-ROUTING.md) — server-only, iOS-only, cross-repo or default.
@@ -29,3 +33,7 @@ classify the task first.
 `AGENTS.machine.md` at the portfolio root is optional, local and git-ignored. It supplements
 the committed instructions and must not override security, architecture, data invariants, CI or
 approval requirements.
+
+## Shared plans and contracts
+
+Use the [portfolio documentation index](../README.md), [plans index](../plans/README.md), and [contract index](../contracts/README.md) as the project-wide sources of truth.
