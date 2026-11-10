@@ -2,3 +2,6 @@ acceptance
 .DS_Store
 .tmp-build
 .worktrees
+
+# Machine-local coding-agent instructions
+/AGENTS.machine.md

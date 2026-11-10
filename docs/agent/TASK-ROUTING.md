@@ -1,6 +1,8 @@
 # Task routing
 
-Before choosing a workflow, classify the task.
+Before choosing a workflow, classify the task. For documentation-only work, decide the owning
+repository with `docs/DOCUMENTATION.md`; a change that spans repositories follows the cross-repo
+prompt for link and manifest verification even when no code changes.
 
 ## Server-only
 

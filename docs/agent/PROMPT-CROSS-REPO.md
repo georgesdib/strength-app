@@ -9,11 +9,13 @@ iOS client repository: `StrengthApp/`
 ## Before implementation
 
 1. Identify the authoritative side: server or client.
-2. Read the relevant server contract document and iOS contract/document.
-3. Identify every affected route, request/response field, error code,
+2. Keep server API/data-model contracts in `strength-training-app/docs/design/` and the client
+   plan in `StrengthApp/docs/`; link across repositories with absolute GitHub URLs.
+3. Read the relevant server contract document and iOS contract/document.
+4. Identify every affected route, request/response field, error code,
    authentication rule, client model, decoder, and test.
-4. Produce a compatibility matrix before editing.
-5. For migrations, API/schema contracts, security-sensitive changes or architectural
+5. Produce a compatibility matrix before editing.
+6. For migrations, API/schema contracts, security-sensitive changes or architectural
    refactors, wait for approval before editing. Otherwise proceed after the plan.
 
 ## Compatibility matrix

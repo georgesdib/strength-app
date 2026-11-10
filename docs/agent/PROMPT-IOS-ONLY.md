@@ -8,10 +8,13 @@ Do not inspect or modify `strength-training-app/` unless explicitly instructed.
 ## Before implementation
 
 1. Read the relevant sections of the iOS `AGENTS.md`.
-2. Identify affected Swift files, views, models, networking, storage, and tests.
-3. Identify any server contract assumptions that need verification.
-4. Return a concise plan before editing.
-5. For migrations, API/schema contracts, security-sensitive changes or architectural
+2. Client-owned docs (plan, guide, device acceptance) live in this repository; link to server
+   contracts in `strength-training-app/` rather than copying them. Use `docs/DOCUMENTATION.md`
+   when a document's owner is unclear.
+3. Identify affected Swift files, views, models, networking, storage, and tests.
+4. Identify any server contract assumptions that need verification.
+5. Return a concise plan before editing.
+6. For migrations, API/schema contracts, security-sensitive changes or architectural
    refactors, wait for approval before editing. Otherwise proceed after the plan.
 
 ## Plan format

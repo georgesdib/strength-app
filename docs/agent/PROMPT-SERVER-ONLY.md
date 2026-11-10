@@ -7,11 +7,13 @@ Do not inspect or modify `StrengthApp/` unless explicitly instructed.
 ## Before implementation
 
 1. Read the relevant sections of the server `AGENTS.md`.
-2. Identify affected modules, tests, documentation, and configuration.
-3. Identify whether the change affects SQLite migrations, append-only records,
+2. Client-owned docs (plan, iPhone guide, device acceptance) live in `StrengthApp/`; server-owned
+   iOS API contracts stay in `docs/design/`. Do not add client docs to the server docs index.
+3. Identify affected modules, tests, documentation, and configuration.
+4. Identify whether the change affects SQLite migrations, append-only records,
    data quality, prescriptions, readiness, web API, or web UI.
-4. Return a concise plan before editing.
-5. For migrations, API/schema contracts, security-sensitive changes or architectural
+5. Return a concise plan before editing.
+6. For migrations, API/schema contracts, security-sensitive changes or architectural
    refactors, wait for approval before editing. Otherwise proceed after the plan.
 
 ## Plan format

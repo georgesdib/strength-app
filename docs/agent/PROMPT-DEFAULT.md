@@ -5,10 +5,11 @@ Use this when the task type is unclear or spans an unknown part of the portfolio
 ## Before implementation
 
 1. Identify whether the task is server-only, iOS-only, or cross-repo.
-2. Identify the smallest set of files and directories required.
-3. Read the relevant repository `AGENTS.md` and any directly relevant contract.
-4. Return a concise plan before editing.
-5. For migrations, API/schema contracts, security-sensitive changes or architectural
+2. Put documentation in the owning repository (`docs/DOCUMENTATION.md`); do not duplicate it.
+3. Identify the smallest set of files and directories required.
+4. Read the relevant repository `AGENTS.md` and any directly relevant contract.
+5. Return a concise plan before editing.
+6. For migrations, API/schema contracts, security-sensitive changes or architectural
    refactors, wait for approval before editing. Otherwise proceed after the plan.
 
 ## Plan format
