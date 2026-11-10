@@ -24,13 +24,9 @@ tooling and session instructions.
 3. Read only the matching task prompt and relevant repository instructions.
 4. Inspect Git status and submodule state before editing.
 5. Work in the relevant submodule repository, not in the portfolio repository.
-6. Use a dedicated task branch based on the appropriate remote `development`
-   branch.
-7. Implement the smallest coherent change.
-8. Run focused local tests and available quality checks.
-9. Push the task branch to GitHub.
-10. Open or update a PR when the task is ready for review.
-11. Report the commit SHA, CI state, and outstanding acceptance requirements.
+6. Implement the smallest coherent change.
+7. Run focused local tests and available quality checks.
+8. Report the commit SHA, CI state, and outstanding acceptance requirements.
 
 ## Validation
 
