@@ -4,7 +4,7 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 
 ## Canonical shared plans
 
-- [iOS client phase plan](IOS-CLIENT-PLAN.md) — cross-repository milestones, scope, dependencies, acceptance criteria, architecture boundaries, and historical completion records. Source snapshot: `StrengthApp` `development` at `eecfd6fc33ad23c16ac43a8a00533becf7401567`.
+- [iOS client phase plan](IOS-CLIENT-PLAN.md) — cross-repository milestones, scope, dependencies, acceptance criteria, architecture boundaries, and historical completion records. It reflects the Phase 6.2 closure on 2026-11-10; 6.3+ remains pending.
 - [Server/client contract index](../contracts/README.md) — canonical contracts and ownership of their implementation.
 
 ## Component roadmap and active status
@@ -14,4 +14,4 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 
 ## Status and change control
 
-The plan preserves status exactly as recorded in its source snapshot. Where other remote branches contain newer implementation evidence (notably watchOS work), do not infer completion from branch existence; reconcile against the current implementation, acceptance record and owner decision before changing status. Completed phase records remain historical evidence and are not deleted. Superseded documents must point to their replacement.
+The plan records current status plus historical completion evidence. Do not infer completion from branch existence or code alone; reconcile against implementation, acceptance record and owner decision before changing status. Physical Apple Watch acceptance remains owner-run. Completed phase records remain historical evidence and are not deleted. Superseded documents must point to their replacement.
