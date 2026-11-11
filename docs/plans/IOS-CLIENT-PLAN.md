@@ -558,7 +558,7 @@ starting; cache the exercise catalogue for offline browsing and off-plan capture
 timer to app level and show it on Today; install the notification delegate with a **Done** action
 and cancel on finish/close; add form rating to the exercise screen; align plan-item attribution
 with the server payload; and show warm-up rows with the empty-bar first set
-`min(20 kg, first ramp set)`. Its unit/simulator gates are the existing CI entry point and the 225-test iOS suite;
+`min(20 kg, first ramp set)`. Its unit/simulator gates are the existing CI entry point and the 226-test iOS suite;
 notifications and physical timing remain owner-run device acceptance.
 
 After that batch, R10 (set correction and VBT timing) and R11 (rest Live Activity) are planned but
@@ -1072,7 +1072,9 @@ exercise swap, set-count change".
 - Warm-up rows render on the exercise screen. The server prepends `min(20 kg, first ramp set)`
   (10 reps, configurable) and de-duplicates it when it equals the first rung; skipping warm-ups
   never gates working sets.
-- Verified: 225 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
+- Unplanned and warm-up sets are indexed above the entire planned range, so logging one before a
+  planned set cannot collide with a later working set and suppress it.
+- Verified: 226 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
   pytest suite. Physical iPhone notification/timer and warm-up acceptance remain owner-run.
 
 ### Phase 3A — HealthKit HRV/RHR/bodyweight readiness (closed 2026-11-08)
