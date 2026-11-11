@@ -7,7 +7,8 @@ This prompt applies when operating in the local MacBook environment.
 - The MacBook is the Apple development workstation.
 - Xcode, iOS simulators, and physical Apple devices may be available.
 - The iMac is the persistent remote coding environment.
-- The ODROID-C4 is the deployed server and benchmarking host. It is not the coding host.
+- The ODROID-C4 hosts both the backend development server and backend main server and is used for
+  benchmarking. It is not the Apple/Xcode workstation; verify which server context a task targets.
 - Load the local `AGENTS.machine.md` if available.
 
 ## Operating model
@@ -66,3 +67,9 @@ Return:
 - Pass/fail results and reproducible failures.
 - Fixes committed and pushed.
 - Outstanding acceptance items.
+
+## Shared documentation architecture (required)
+
+Before implementing a task that touches shared requirements or crosses repositories, read the canonical portfolio index at https://github.com/georgesdib/strength-app/blob/main/docs/README.md and ownership rules at https://github.com/georgesdib/strength-app/blob/main/docs/DOCUMENTATION.md. Locate cross-repository phase plans under `docs/plans/` and contracts under `docs/contracts/`; do not rely on a duplicated plan inside a submodule or on a portfolio submodule being initialized.
+
+Classify work as backend-only, iOS/watchOS-only, or cross-repository. Commit implementation-specific changes only in the owning component repository. Commit shared plans/specifications/contracts/architecture/decisions and project-wide agent instructions only in the portfolio repository. For a cross-repository task, update the canonical portfolio document plus affected component docs/references in separate coordinated branches and link to the canonical source; do not update submodule pointers unless explicitly required. Keep local compatibility pointers short and non-authoritative. Preserve completed/historical status and never infer phase completion.

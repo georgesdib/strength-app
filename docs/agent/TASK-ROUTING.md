@@ -4,6 +4,10 @@ Before choosing a workflow, classify the task. For documentation-only work, deci
 repository with `docs/DOCUMENTATION.md`; a change that spans repositories follows the cross-repo
 prompt for link and manifest verification even when no code changes.
 
+## Shared documentation-only
+
+Use when the task changes only cross-repository plans, specifications, architecture, contracts, project-wide policies, agent routing or documentation ownership. Work in the portfolio repository, read `docs/DOCUMENTATION.md`, preserve component implementation details in place, and update only the pointers/references genuinely affected. If implementation or tests change, use the server-only, iOS-only or cross-repo path as well.
+
 ## Server-only
 
 Use when the change affects only:
@@ -13,7 +17,7 @@ Use when the change affects only:
 - CLI commands
 - web UI
 - server tests
-- server documentation
+- backend-specific implementation documentation
 
 Read and follow `docs/agent/PROMPT-SERVER-ONLY.md`.
 

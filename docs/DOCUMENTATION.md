@@ -1,56 +1,43 @@
-# Documentation ownership and placement
+# Documentation architecture and ownership
 
-The portfolio has three repositories. Documentation must have one canonical home; the copy in
-the owning repository is authoritative and every other repository links to it.
+The portfolio repository (`georgesdib/strength-app`) is the canonical source of truth for documentation whose requirements, plans, decisions or contracts span repositories. The backend (`georgesdib/strength-training-app`) and iOS/watchOS client (`georgesdib/StrengthApp`) remain the canonical homes for implementation-coupled documentation and operational details belonging only to that component.
 
-## Ownership table
+## Repository responsibilities
 
-| Kind of document | Owner | Examples |
+| Content | Canonical owner | Examples |
 |---|---|---|
-| Portfolio process, cross-repo agent routing, machine handoff, documentation policy | This repository | `AGENTS.md`, `docs/agent/*`, this file |
-| Training methodology, evidence, readiness, prescriptions, loads, sets, progression, scoring | `strength-training-app/` | `docs/METHODOLOGY.md`, `docs/READINESS.md`, `docs/WORKOUT-GENERATION.md` |
-| Server architecture, data model, API, migrations, server web UI, server tests | `strength-training-app/` | `docs/ARCHITECTURE.md`, `docs/DATA-MODEL.md`, `docs/API.md`, `docs/WEB-UI.md` |
-| Server-side design contracts for the iOS API | `strength-training-app/` | `docs/design/IOS-*-CONTRACT.md` |
-| iOS client plan, client UI/UX, iPhone user guide, device acceptance | `StrengthApp/` | `docs/IOS-CLIENT-PLAN.md`, `USER-GUIDE.md`, `DEVICE-ACCEPTANCE.md` |
-| iOS build/test/live-test/agent guidance | `StrengthApp/` | `AGENTS.md`, `docs/AGENT-*.md` |
+| Overall cross-repository plans, phase roadmaps, shared feature specifications, project architecture, decisions affecting multiple components, server/client contracts, integration requirements, shared acceptance rules, shared operational/data-management policies, agent task routing and handoff | Portfolio | `docs/plans/`, `docs/contracts/`, `docs/decisions/`, `docs/specifications/`, `docs/operations/`, `docs/agent/`, this policy |
+| Python implementation architecture, backend API reference, schemas and migration details, config formats, backend-only tests, server operations and code-coupled user guides | Backend | `AGENTS.md`, `ROADMAP.md` for live backend implementation status, `docs/API.md`, `docs/DATA-MODEL.md`, `docs/design/` implementation materials, manifest/viewer docs |
+| Swift architecture, Xcode/build/test procedures, UI implementation, live-test setup, Apple platform details and physical-device acceptance evidence | iOS/watchOS | `AGENTS.md`, `README.md`, `docs/AGENT-*.md`, `USER-GUIDE.md`, `DEVICE-ACCEPTANCE.md`, watch-specific implementation docs |
 
-## Decision rules
+## Canonical shared sources
 
-1. If it defines a training decision or server behaviour, it belongs to the server repository.
-2. If it describes how the iPhone app behaves, how it is built, or how it is accepted, it belongs
-   to the iOS repository.
-3. If it coordinates machines, repositories or agents, it belongs to this portfolio repository.
-4. The server owns the client/server contract because Python is authoritative for training
-   decisions. iOS docs link to the server contract; they do not mirror it.
-5. If a document genuinely serves two owners, keep the authoritative explanation in the owning
-   repository and put a short pointer in the other. Never maintain two full copies.
+- [`docs/README.md`](README.md) is the navigation index.
+- [`docs/plans/README.md`](plans/README.md) is the portfolio-level plan and roadmap locator. It links the backend implementation roadmap without duplicating it because that file is consumed by backend tests and the docs viewer.
+- [`docs/plans/IOS-CLIENT-PLAN.md`](plans/IOS-CLIENT-PLAN.md) is the canonical cross-repository iOS phase plan.
+- [`docs/contracts/README.md`](contracts/README.md) indexes the canonical server/client phase contracts.
+- `docs/agent/` is the source for shared task routing, prompts and machine handoff. Machine-only private instructions remain untracked and local.
 
-## Cross-repository links
+A component roadmap may remain local only when it is specifically the component's implementation-status authority and is coupled to that component's code, tests or tools. The backend `ROADMAP.md` is such an exception; it is not a second cross-repository roadmap. Portfolio documents must link to it rather than restating its active phase status.
 
-- From one submodule to the other, use an absolute GitHub URL on the `development` branch, for
-  example:
-  `https://github.com/georgesdib/strength-training-app/blob/development/docs/design/IOS-WATCH-CONTRACT.md`.
-- Relative links are correct only within the same repository.
-- Do not link a public document to `private/` or to another repository's local filesystem path.
-- When a document moves, update every inbound link in both repositories and in the server docs
-  manifest/index. The server documentation tests fail on broken relative links and on any
-  unclassified Markdown file under `docs/`.
+## Documentation change rules
 
-## Plans
+1. Every shared project plan, shared specification and cross-repository contract has one canonical file in the portfolio repository. Component repositories may retain short compatibility pointers, never a second full copy.
+2. Backend-specific implementation documentation, Python architecture, API implementation detail, schema/migration detail, backend-only testing and operational procedures stay in the backend repository.
+3. iOS/watchOS implementation documentation, Swift architecture, Xcode instructions, Apple testing and device acceptance remain in the client repository.
+4. Do not copy shared documents between repositories or create parallel roadmaps/plans. Link to the canonical document; use a pointer only where a stable old path is needed by a manifest, viewer, script, test or historical external link.
+5. If implementation invalidates a shared plan, contract, acceptance criterion or cross-repository requirement, update the canonical portfolio document. Update component-specific docs when only local implementation changes.
+6. Cross-repository tasks review relevant portfolio plans/contracts before implementation and update all affected repositories' references. Shared-doc changes are committed in the portfolio branch; implementation changes are committed in their owning component branches.
+7. Keep active, completed, superseded, historical and unknown status explicit. Preserve phase numbers, dependencies, acceptance criteria, caveats and completion evidence. Never infer completion from source code or branch existence alone.
+8. A superseded document must name and link its replacement. A compatibility pointer must say it is not authoritative and must not repeat substantive content.
+9. Update links in Markdown, READMEs, agent prompts, manifests, tests, source comments, scripts and workflows when a path changes. Do not change application behavior or CI behavior merely to accommodate documentation.
+10. If a document is obsolete, historical or has uncertain ownership, leave it at its existing repository/path and preserve or clarify its status; do not move or delete it just to fit a new taxonomy. If a page mixes clearly current shared requirements with component-specific implementation or historical material, move only the clearly maintained shared portion and preserve the component-specific/history content at its existing location, with links as needed.
+11. Keep submodule boundaries and Git safety: inspect status, fetch before branch changes, use separate task branches, do not force-push, and do not update portfolio submodule pointers unless the task explicitly requires it.
+12. Never publish private machine notes, credentials, health data, training exports, databases, generated artifacts or ignored local files.
 
-- A plan lives with the work it plans. A server implementation plan belongs to the server repo; an
-  iPhone client plan belongs to the iOS repo.
-- A cross-repo plan stays in the repository that owns the majority of the work, with links to the
-  companion plan or contract.
-- Completed plans move to the owning repository's archive (where one exists), or stay as history
-  with a clear completed status. Do not leave the client plan in the server docs index.
+## Link and status conventions
 
-## Moving a document — checklist
-
-1. Decide the owner using the table above.
-2. Move the file into the owning repository's docs tree.
-3. Update the owning repository's index and, for the server, `docs/manifest.yaml`.
-4. Rewrite inbound links in both repositories to the new canonical location.
-5. Update tests that assert document paths or manifest coverage.
-6. Confirm the old path no longer exists and no duplicate copy remains.
-7. Do not commit until the owner asks; local review is expected first.
+- Relative Markdown links are for files inside the same repository only.
+- Cross-repository documentation links must use absolute GitHub URLs to the canonical path and the intended stable integration branch. The PR sequence must merge the portfolio canonical docs before component pointers that refer to them.
+- In the current backend docs viewer, local pointer paths and manifest entries remain where needed for compatibility. They resolve to a concise link to the portfolio canonical source.
+- The plan/index page is not a second roadmap: it locates authoritative status sources and must not restate their changing status tables.

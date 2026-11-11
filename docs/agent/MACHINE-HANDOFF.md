@@ -11,8 +11,10 @@ The handoff unit is:
 - Commit SHA.
 - Acceptance or implementation report.
 
-The iMac is the coding host. The ODROID-C4 is the deployed server and benchmarking host; it is
-not a handoff endpoint and it is not where agents run.
+The iMac is the persistent remote coding environment and the MacBook is the Apple acceptance
+workstation. The ODROID-C4 hosts both the backend development server and backend main server and
+is used for benchmarking. A server role does not itself determine where an agent runs. Use GitHub
+branches and commit SHAs as the handoff unit; do not hand off by editing live server files.
 
 Uncommitted work is not a valid remote handoff.
 
@@ -97,8 +99,15 @@ Use this format:
 
 For backend/client contract changes:
 
-- Keep the server and client changes in their respective repositories.
-- Record both branches and commit SHAs in the handoff.
+- Keep implementation changes in their respective component repositories; keep shared plan/contract/policy updates in the portfolio repository.
+- Record the portfolio, server and client branches/SHAs in the handoff when all are affected.
 - Identify compatibility requirements and deployment order.
 - Do not assume merging one repository automatically merges the other.
+- When component branches link to newly introduced portfolio canonical paths, merge the portfolio PR first; then merge component pointer/reference PRs.
 - Follow `docs/agent/PROMPT-CROSS-REPO.md`.
+
+## Shared documentation architecture (required)
+
+Before implementing a task that touches shared requirements or crosses repositories, read the canonical portfolio index at https://github.com/georgesdib/strength-app/blob/main/docs/README.md and ownership rules at https://github.com/georgesdib/strength-app/blob/main/docs/DOCUMENTATION.md. Locate cross-repository phase plans under `docs/plans/` and contracts under `docs/contracts/`; do not rely on a duplicated plan inside a submodule or on a portfolio submodule being initialized.
+
+Classify work as backend-only, iOS/watchOS-only, or cross-repository. Commit implementation-specific changes only in the owning component repository. Commit shared plans/specifications/contracts/architecture/decisions and project-wide agent instructions only in the portfolio repository. For a cross-repository task, update the canonical portfolio document plus affected component docs/references in separate coordinated branches and link to the canonical source; do not update submodule pointers unless explicitly required. Keep local compatibility pointers short and non-authoritative. Preserve completed/historical status and never infer phase completion.

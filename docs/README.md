@@ -1,25 +1,30 @@
-# Portfolio documentation
+# Strength App portfolio documentation
 
-Index of documentation that belongs to the portfolio itself, rather than to the server or iOS
-client repository.
+The portfolio repository is the canonical home for shared project documentation across the backend and iOS/watchOS repositories. Start here, then open the authoritative shared plan or contract; implementation-specific instructions remain in their component repository.
 
-- [Documentation ownership and placement](DOCUMENTATION.md) — which repository owns which kind
-  of document, and the move/cross-link rules.
-- [Agent documentation](agent/README.md) — task routing, execution prompts and machine handoff.
-- [Task routing](agent/TASK-ROUTING.md) — server-only, iOS-only, cross-repo or default.
-- [Machine handoff](agent/MACHINE-HANDOFF.md) — branch/commit handoff between machines.
+## Project plans and roadmap
 
-## Repository documentation
+- [Plans and roadmap navigation](plans/README.md) — authoritative entry point; identifies the active shared plan and links to the backend implementation-status roadmap without duplicating it.
+- [Canonical iOS client phase plan](plans/IOS-CLIENT-PLAN.md) — phases, architecture, dependencies, acceptance, rollback gates and retained completion history.
 
-- Server docs index:
-  [strength-training-app/docs/README.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/README.md)
-- iOS docs index:
-  [StrengthApp/docs/README.md](https://github.com/georgesdib/StrengthApp/blob/development/docs/README.md)
+## Contracts and specifications
 
-## Machine naming
+- [Server/client contract index](contracts/README.md) — canonical iOS phase/R7/R8/watchOS contracts. Backend implementation is in `strength-training-app`; client implementation and Apple acceptance are in `StrengthApp`.
+- Project-wide architecture/decision/specification/operations categories should be added here only when a canonical document is established; do not create a competing copy of component-coupled implementation docs.
 
-- **iMac** — the persistent remote coding-agent environment.
-- **MacBook** — the local Apple development and physical-device acceptance environment.
-- **ODROID-C4** — the deployed home server and benchmarking host. It is not the coding host;
-  do not confuse it with the iMac. Server-specific references to the ODROID-C4 remain valid in
-  the server repository.
+## Agent instructions
+
+- [Portfolio `AGENTS.md`](../AGENTS.md) — entry point for project-wide and cross-repository work.
+- [Documentation architecture and ownership](DOCUMENTATION.md) — canonical ownership, change rules, and link conventions.
+- [Agent documentation index](agent/README.md) — task routing, execution prompts and machine-specific workflows.
+- [Task routing](agent/TASK-ROUTING.md) — classify server-only, iOS-only, cross-repository and documentation-only tasks.
+- [Machine handoff](agent/MACHINE-HANDOFF.md) — branch, commit and acceptance handoff rules.
+
+## Component implementation documentation
+
+- [Backend documentation index](https://github.com/georgesdib/strength-training-app/blob/development/docs/README.md) — backend implementation docs and its manifest-backed viewer. Its `ROADMAP.md` remains the backend implementation status authority.
+- [iOS/watchOS documentation index](https://github.com/georgesdib/StrengthApp/blob/development/docs/README.md) — client-specific build, test, UI and Apple acceptance documentation.
+
+## Status labels and history
+
+Shared plans identify active, completed, superseded, historical and unknown material. Completed phases remain linked as historical evidence. Component implementation status must be read from its authoritative component roadmap/acceptance record; this index deliberately does not reproduce changing status tables.
