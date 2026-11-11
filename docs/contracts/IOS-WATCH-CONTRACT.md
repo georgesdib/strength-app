@@ -414,8 +414,11 @@ server-side reservation or locking while the watch is offline.
 - **Partial flush:** the outbox flushes in order and acknowledges per operation; it stops on the
   first failure and never clears an unacknowledged operation. Reconnecting mid-session and
   flushing a prefix is normal.
-- **Retry:** on failure wait 5s, 15s, 60s, then every 5 minutes; reset on success. Also retry on a
-  network-path change and on foreground. No tight polling; the watch is on battery.
+- **Retry:** on failure wait 5s, 15s, 60s, then every 5 minutes; reset on success. Automatic
+  retries stop after a 15-minute window from the first failure of a burst, with the final wait
+  clamped to the window's end; a foreground, a network-path change or an explicit retry starts a
+  new burst. Authentication failures are not retried: they clear to "credentials missing" and
+  leave the queue intact. No tight polling; the watch is on battery.
 - **Finish:** the finish intent and `ended_at` are persisted, HealthKit is saved locally, and the
   server finish is queued. The summary retries while visible; if the app is suspended, the queue
   survives and syncs on next open. There is no guaranteed background sync.
@@ -434,6 +437,9 @@ server-side reservation or locking while the watch is offline.
 
 - The watch starts an `HKWorkoutSession` and `HKLiveWorkoutBuilder` before the active UI is
   shown. This is what keeps the app running when the wrist is lowered or the screen dims.
+- In 6.3 the session is started and must report `.running` before the server workout may start;
+  a session that never runs is a hard start failure. The builder, heart rate and the exactly-once
+  save arrive in 6.5, so a 6.3 session saves no HealthKit workout.
 - HealthKit **workout authorisation is required to start a watch session**. Without it the app
   cannot be relied on to stay alive, so the watch refuses to start and explains the choice
   (enable Health access, or log on the phone). Heart-rate read authorisation is optional: without
@@ -479,6 +485,17 @@ On launch, the watch reads its session store and `GET .../execution`:
 | active | no active workout | Show “ended elsewhere”, keep the local summary, offer clear. |
 | finishing | in_progress | Resume finalisation: retry the server finish and the HealthKit save (section 12). |
 | finished | completed | Clear the store after the summary is acknowledged. |
+
+### 11.6 Execution telemetry (watch)
+
+The watch emits only what it observes: `set_started`, `set_completed`, `rest_started`,
+`rest_completed`, `rest_extended`, `exercise_started` and `exercise_completed`. It never
+emits `rest_skipped` (a rest ends through one deliberate action, and the server derives duration
+and deviation from the timestamps), `workout_paused`/`workout_resumed` (the watch has no pause),
+or an event for a set or exercise that never started. A rest closes on **End rest**, or at the
+instant the next set starts. `set_completed` gains `set_id` only after the matching add-set is
+acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index`,
+`prescribed_rest_s`, `added_s`.
 
 ## 12. HealthKit idempotency and recovery
 
