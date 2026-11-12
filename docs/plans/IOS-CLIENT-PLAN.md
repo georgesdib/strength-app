@@ -366,7 +366,29 @@ on boundaries and per-stage acceptance.
    iOS build, embedded watch app, deployment-target assertion, 277 tests). Physical watch
    acceptance remains owner-run.
 8. **6.7 Acceptance and CI.** Watch build and deployment-target assertion in `ios-ci`, the
-   thirteen scenario tests in contract §17, physical Ultra acceptance, docs and rollback notes.
+   twelve scenario tests in contract §17, physical Ultra acceptance, docs and rollback notes.
+   The physical checklist and sign-off table are in
+   [DEVICE-ACCEPTANCE.md](https://github.com/georgesdib/StrengthApp/blob/development/DEVICE-ACCEPTANCE.md).
+
+**6.7 scenario evidence.** Client evidence per contract §17 scenario, verified against the test
+sources 2026-11-12; the server half is the backend suite (`tests/test_ios_watch_ownership.py`,
+`tests/test_ios_workflow.py`). "Physical" names the checklist step; "—" means the automated
+evidence is expected to suffice and the step is not repeated on the watch.
+
+| § | Scenario | Automated evidence | Physical |
+|---|---|---|---|
+| 1 | Delayed/failed credential delivery | `WatchCredentialTests.testPolicyAcceptsNewEpochAndRejectsStaleOrRevokedRollback`, `WatchPairingTests.testPairSendsTokenThenAckMarksPaired` | W1 |
+| 2 | Relaunch with pending mutations | `WatchExecutionEngineTests.testRelaunchRestoresAnActiveSessionAndItsQueue`, `.testSetDraftSurvivesARelaunch` | W2 |
+| 3 | Backgrounding mid-workout | policy only: `WatchLivenessPolicyTests` | W3 |
+| 4 | Phone plan edit while the watch is offline | `WatchExecutionEngineTests.testRevisionAppliesAfterAnOfflineSetEvenWithQueuedWork`, `.testPlanItemMismatchRetriesOffPlanAndKeepsTheSet`, `.testANewerRevisionWaitsForAnIdlePoint` | W4 |
+| 5 | Stale revision rejection | `WatchExecutionEngineTests.testAnOlderRevisionIsIgnored`, `WatchMirrorTests.testApplyRemoteAppliesOnlyNewerRevisionsForThisWorkout` | — |
+| 6 | Take-over and read-only state | `WatchExecutionEngineTests.testReconciliationGoesReadOnlyWhenThePhoneOwnsTheSession`, `.testNotOwnerDuringFlushTurnsTheSessionReadOnly`, `WatchMirrorTests.testAPhoneOwnedPayloadMakesTheWatchReadOnly`, `Phase2AppModelTests.testWatchOwnedSessionIsReadOnlyOnThePhoneUntilTakeOver` | W6 |
+| 7 | HealthKit finish retry without duplication | `WatchHealthKitFinalizerTests.testAnExistingWorkoutIsNeverSavedTwice`, `.testTransientFailureStaysPendingAndCounts`, `.testFiveTransientFailuresBecomeUnsaved` | W7 |
+| 8 | Clock skew and timestamps | `WatchExecutionEngineTests.testStartPersistsTheSessionAndDerivesTheClockOffsetFromStartedAt`, `.testElapsedTimeUsesThePersistedServerOffset`, `.testSetDurationAndRestUseTheServerClock` | W8 |
+| 9 | watchOS deployment and CI | `scripts/ci.sh` reads back both deployment targets; the watch scheme builds in the same script | — |
+| 10 | Execution target | `Phase2ClientTests` (execution_target on issue and plan), `WatchTodayTests` (target filtering) | W10 |
+| 11 | Patchy Wi-Fi | `WatchExecutionCoreTests.testRetryLadderFollowsTheScheduleAndStopsAfterFifteenMinutes`, `WatchExecutionEngineTests.testFailedSetIsPersistedWithItsOriginalTimestampAndStaysQueued` | W11 |
+| 12 | Home config refresh | `WatchPairingTests.testConfigChangeSendsSameEpochWithoutToken`, `.testWatchConfigAheadOfPhoneIsRebaselinedAndApplied`, `WatchExecutionEngineTests.testAnUnauthorizedFlushKeepsTheQueueAndReportsCredentialsMissing` | W12 |
 
 **Acceptance.** The physical script in contract §17 plus the required scenarios: delayed/failed
 credential delivery, relaunch with pending mutations, backgrounding and returning mid-session,
