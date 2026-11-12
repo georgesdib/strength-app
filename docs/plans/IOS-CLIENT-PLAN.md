@@ -572,13 +572,13 @@ with the server payload; and show warm-up rows with the empty-bar first set
 notifications and physical timing remain owner-run device acceptance.
 
 After that batch, R10 (set correction and VBT timing) and R11 (rest Live Activity) are planned but
-not started, and each needs its own go-ahead. Phase 6.4 remains the next watch work package; 6.6
-now also covers the watch form-rating gap and optional mean-velocity VBT entry. R7 and R8 are
-recorded in section 4.30 and their contracts rather than as pending next steps.
+not started, and each needs its own go-ahead. Phase 6 is complete through 6.6; 6.7 (acceptance and
+CI) is the next watch work package. R7 and R8 are recorded in section 4.30 and their contracts
+rather than as pending next steps.
 
-Do not begin Phase 3B, cardio, PCC, R10, R11 or Phase 6.4+ work without separate approval.
-Phase 4 is closed; Phase 3B remains a separate contract; Phase 6.3 is closed, with 6.4+ planned
-but not started.
+Do not begin Phase 3B, cardio, PCC, R10, R11 or Phase 6.7 work without separate approval.
+Phase 4 is closed; Phase 3B remains a separate contract; Phase 6.3-6.6 are closed, with 6.7
+planned but not started.
 
 ## 12. References
 
