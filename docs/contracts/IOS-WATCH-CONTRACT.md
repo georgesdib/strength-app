@@ -26,7 +26,8 @@ the session.
   `configVersion`, never the phone's currently active Away route.
 - Plan fetch and start from the watch, within the existing issued-plan rules. Start is the only
   online gate in v1; everything after it is offline-first.
-- Set logging, rest timer, form rating and finish with sRPE on the watch.
+- Set logging with an optional mean velocity (VBT), rest timer, form rating and finish with sRPE
+  on the watch.
 - Execution telemetry (rest and set events with their original `occurred_at`) so the server
   timeline keeps the times the user acted, not the replay times.
 - Offline-first execution: every mutation is persisted locally before the network call and
@@ -36,8 +37,10 @@ the session.
   heart rate, active energy and the effort rating derived from sRPE.
 - Plan-revision propagation so a substitution made on the phone reaches the watch without
   disturbing a set in progress.
-- A phone mirror mode for a watch-owned session: plan edits allowed, set logging blocked and a
-  take-over action available.
+- A phone mirror mode for a watch-owned session: plan edits allowed, set/form/velocity logging
+  blocked and a take-over action available.
+- Active-session Set, Session and Plan destinations, with refresh and reconnect reconciliation,
+  idle-warning visibility during execution, and explicit completed/abandoned-elsewhere messaging.
 - Idle detection and automatic abandonment of forgotten sessions. The 24h hard threshold is
   accepted and unchanged.
 
@@ -325,8 +328,8 @@ of the extraction.
 `workout_session.owner_device_id` is set at start:
 
 - **Owner** may add sets, forms and finish/abandon.
-- **Non-owner** receives `409 not_owner` for set and finish writes. Plan edits are exempt and
-  remain available to the phone (existing R8 rules).
+- **Non-owner** receives `409 not_owner` for set, form and finish writes. Plan edits are exempt
+  and remain available to the phone (existing R8 rules).
 - Workouts with `owner_device_id IS NULL` (legacy rows and pre-upgrade clients) keep today's
   permissive behaviour.
 - `POST /api/ios/v1/workouts/{id}/takeover` transfers ownership to the caller and appends an
@@ -334,9 +337,11 @@ of the extraction.
   log on the phone; the watch, on its next refresh, becomes read-only and shows “Logging moved to
   the phone”.
 - The phone opens a watch-owned session in **mirror mode**: the existing active-workout view with
-  set, form and finish controls disabled, plan editing enabled, a “Logging on Apple Watch” banner,
-  and one **Take over logging** confirmation. The recovery card is labelled “started on Apple
-  Watch”.
+  set, form, velocity and finish controls disabled, plan editing enabled, a “Logging on Apple
+  Watch” banner, and one **Take over logging** confirmation. The recovery card is labelled
+  “started on Apple Watch”. The form section states that ratings are recorded on the watch; a
+  phone-side form mutation is rejected before any online or offline-queue branch, and the server
+  ownership check remains authoritative.
 - Take-over ships in v1 with that button and the endpoint; a richer hand-back from phone to watch
   is deferred (section 21).
 - Abandon is allowed from any authenticated device, so a lost watch cannot strand a workout.
@@ -365,10 +370,12 @@ When the watch regains connectivity with pending work:
 
 1. Flush pending set/form/telemetry operations in their original order, each with its original
    idempotency key and timestamps.
-2. Fetch `GET .../execution`.
-3. If the fetched revision is newer, replace the local snapshot and its revision.
-4. Resume the UI on the new snapshot. A newer plan is never applied before the pending sets are
-   flushed.
+2. If any flush step fails, stop. Do not fetch or apply a snapshot while the queue still holds
+   unacknowledged work; keep the local state and expose retry/error status.
+3. Fetch `GET .../execution`.
+4. If the fetched revision is newer, replace the local snapshot and its revision.
+5. Resume the UI on the new snapshot. A newer plan is never applied before the pending sets are
+   flushed. Reconnect and refresh are single-flight, so overlapping requests cannot double-apply.
 
 ### 10.4 Mismatch policy
 
@@ -483,7 +490,7 @@ On launch, the watch reads its session store and `GET .../execution`:
 | active | in_progress, owner = this watch | Resume: restore the snapshot, restart the HK session, flush pending operations. |
 | active | in_progress, owner = phone | Read-only; show “Logging moved to the phone”; offer to clear local state. |
 | active with pending finish | completed/abandoned | Flush nothing; show the conflict and the preserved summary; do not recreate the workout. |
-| active | no active workout | Show “ended elsewhere”, keep the local summary, offer clear. |
+| active | no active workout | Show explicit “completed elsewhere” / “abandoned elsewhere” wording, keep the local sets and summary, offer clear. |
 | finishing | in_progress | Resume finalisation: retry the server finish and the HealthKit save (section 12). |
 | finished | completed | Clear the store after the summary is acknowledged. |
 
@@ -542,14 +549,26 @@ acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index
 
 ## 13. Watch UI contract
 
-Three vertically paged screens plus the end flow:
+An active session exposes three destinations. Set is the main screen; Session and Plan open as
+watch-appropriate sheets from the Set or exercise-list header. Opening either sheet must not clear
+the selected exercise, active set or execution state, and closing it restores the same context.
 
 1. **Set** — exercise name, “Set n of m”, target load × reps @ RIR, last set, current HR, a large
-   **Log set** button, and the rest countdown when resting.
-2. **Session** — elapsed time (from the server's `started_at`), sets done/total, tonnage so far,
-   average HR, next exercise, and **Refresh**.
-3. **Plan** — remaining items, read-only, with a marker when the plan was updated.
+   **End set** button when running, and the rest countdown when resting.
+2. **Session** — elapsed time (from the server's `started_at`), completed and pending set counts,
+   tonnage clearly marked provisional while operations are pending, sync/network status and
+   actionable errors, **Refresh**, **Retry sync**, **Undo last set** where supported, the next
+   exercise when the authoritative plan has one, and **Finish**.
+3. **Plan** — the full exercise sequence, read-only, with completed, current and upcoming state and
+   a marker when the plan was updated. It offers no way to select, start, log or end an exercise;
+   the exercise-navigation lock is unchanged, so the Plan screen cannot be used to bypass it.
 
+- **Idle warning.** The server-derived stale state is advisory and shown on Set, Session and Plan:
+  “No activity for 3h — the server may abandon this session.” It never blocks a set, changes the
+  workout or terminates anything locally.
+- **Ended elsewhere.** A completed or abandoned server session uses explicit wording (“Workout
+  completed elsewhere” / “Workout abandoned elsewhere”); the raw status identifier is never shown.
+  Locally captured sets stay visible and the clear-record action remains available.
 - End flow: summary, sRPE picker (Digital Crown, 1–10), **Finish**. Productivity is not captured
   here; it defaults to “not recorded” and stays a phone concern.
 - Persistent states: offline banner with pending count (“offline · 4 pending”), “Plan updated”,
@@ -564,10 +583,16 @@ Three vertically paged screens plus the end flow:
 - No keyboard text entry except an optional short note if it proves necessary; v1 omits notes.
 - Always-On dims to the Set screen; no complication.
 
+**Active refresh.** A refresh action is available on Set and Session. It flushes queued operations
+first and then fetches the authoritative execution snapshot; it never requires returning to the
+exercise list and never bypasses the exercise-navigation lock. A failed flush leaves local state
+and the queue intact and does not apply a snapshot.
+
 **Phone mirror.** A watch-owned session opens on the phone in the existing active-workout view with
-set, form and finish controls disabled, plan editing enabled, a banner naming the watch, and one
-take-over confirmation. No watch→phone message is involved; the phone discovers the session on its
-next foreground refresh.
+set, form, velocity and finish controls disabled, plan editing enabled, a banner naming the watch,
+and one take-over confirmation. The form section says the rating is recorded on the watch; a
+phone-side form mutation is rejected before any online or offline-queue branch. No watch→phone
+message is involved; the phone discovers the session on its next foreground refresh.
 
 ## 14. Server API changes
 
@@ -694,13 +719,24 @@ Required scenario tests (unit/integration where possible, physical where not):
     the watch applies the new `configVersion` and keeps its token. With an active session or
     queued operations, the change is deferred and the old-URL queue flushes first. The watch never
     follows the phone's Away route.
+13. **Active-session corrections:** open Plan during a running set; the selected exercise, active
+    set and row statuses are unchanged and Plan cannot select another exercise. Refresh flushes
+    before it fetches; a failed flush leaves the queue and snapshot untouched and does not fetch;
+    reconnect performs flush then reconciliation; the stale warning is visible on Set, Session and
+    Plan; an abandoned session says “Workout abandoned elsewhere” without the raw status; the
+    Session screen shows the next exercise; and phone mirror form controls are disabled with a
+    phone form mutation rejected before any offline queueing.
 
 Physical acceptance on the Ultra 4: phone plan (watch target) → phone app closed → watch fetch →
-start → sets → phone substitution → watch update → finish with sRPE → server completed → exactly
-one HealthKit workout with HR and effort. Repeat with the network dropped repeatedly during the
+start → sets (one with mean velocity) → form rating after an exercise → phone substitution → watch
+update → finish with sRPE → server completed → exactly one HealthKit workout with HR and effort. Repeat with the network dropped repeatedly during the
 session and re-enabled only after finish: the session must sync, timestamps must stay at the times
-the sets were logged, and a suspended app must sync on next open. Exercise the idle warning with a lowered test threshold or a seeded `last_activity_at`
-(a real 3h wait is not an acceptance step); abandon, start another and confirm no 409.
+the sets were logged, and a suspended app must sync on next open. Open Plan during a running set
+and return to the same set. Refresh from Set and Session. Force a reconnect and confirm the flush
+happens before the snapshot. Exercise the idle warning with a lowered test threshold or a seeded
+`last_activity_at` (a real 3h wait is not an acceptance step); abandon the session from the phone
+and confirm the watch says “Workout abandoned elsewhere” while keeping its local set count; check
+the phone mirror form section is disabled.
 
 ## 18. CI and distribution
 
