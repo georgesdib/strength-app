@@ -353,8 +353,9 @@ of the extraction.
 ### 10.2 Propagation
 
 - After an edit the phone, while foreground, sends the new execution payload to the watch over
-  WatchConnectivity (`updateApplicationContext`, latest-wins). This is a nudge, not the source of
-  truth: the watch also refreshes on foreground, after each set and on demand.
+  WatchConnectivity as a queued `transferUserInfo` nudge; the single-slot application context stays
+  reserved for the credential handshake. This is a nudge, not the source of truth: the watch also
+  refreshes on foreground, after each set and on demand.
 - The payload carries `plan_revision`; the watch applies it only when it is equal to or newer than
   its snapshot, and only at an idle point (10.4).
 
