@@ -4,7 +4,7 @@
 compatibility pointer and is not authoritative.
 
 **Status:** AFC-2, AFC-2i, AFC-3 and AFC-4 are implemented 2026-11-13; physical iPhone acceptance
-of the AFC-2i report is pending. AFC-5 remains separate and gated.
+of the AFC-2i report is pending. AFC-5 is scoped (docs only) and remains separate and gated.
 
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
@@ -389,22 +389,48 @@ Scope: extend existing hosts only. No new tab.
 
 ### AFC-5 — evidence-gated prescription adaptation (separate)
 
-Not part of AFC-1 to AFC-4 and not a dependency of them. It also owns the deferred AFC-3 second
-cut — stagnation and "improving performance with stable effort" — as a scoping question, before
-any prescription adaptation work.
+**Status: scoped 2026-11-13 (`DEC-AFC-09`); not implemented, no code.** Not part of AFC-1 to
+AFC-4 and not a dependency of them. It also owns the deferred AFC-3 second cut — stagnation and
+"improving performance with stable effort".
 
 - AFC-5a historical evaluation of adaptation candidates;
 - AFC-5b prospective shadow proposals;
 - AFC-5c narrow, user-approved prescription changes.
 
-AFC-5a may begin only after AFC-2 and AFC-3 produce a trustworthy evidence contract. AFC-5b and
-AFC-5c require an independent evidence and safety gate; automatic adaptation is never
-recommended without one.
+**Levers in scope.** Only two: external load within the current prescription's intent, and set
+count within the existing volume policy. Out of scope: exercise selection or rotation, deload
+timing, session type, RIR target changes, and anything a Phase 5A instrument reads. No new data
+capture.
+
+**AFC-5a — historical evaluation (design and analysis only).** A counterfactual over stored
+sessions with a single named outcome: the e1RM trend at stable effort. Pre-registered before any
+number is inspected: a 12-week window, at least 20 comparable sessions, and success/failure
+criteria written in advance. It produces a report, never a proposal, and it may start now because
+it changes nothing.
+
+**Stagnation definition (inherited from AFC-3, written before use).** A lift is stagnant when its
+e1RM shows no positive trend over 12 weeks while median RIR stayed inside the engine's tolerance,
+with at least 8 comparable sessions. Fewer sessions or an effort drift means *unknown*, never
+stagnant. The definition is fixed here and is not retuned after seeing output.
+
+**Safety gate for AFC-5b/5c.** Written into `DECISIONS.md` before any proposal is generated, and
+satisfied only with shadow-only evidence: a four-week shadow period, a rollback rule, per-change
+explicit athlete approval, and no automatic application. AFC-5b may show proposals only after
+the gate is declared satisfied; AFC-5c is limited to the two levers above and to narrow,
+approved changes.
+
+**Timing.** Until the Phase 5A review on 2027-01-22 only design and AFC-5a historical analysis are
+allowed. Shadow proposals, any user-visible surface, and any prescription change wait until after
+that gate and the separate safety gate.
+
+**Out of scope permanently.** Automatic adaptation, a learned policy that writes prescriptions,
+selection/rotation changes, deload-timing changes, and any adaptation justified only by a
+correlation.
 
 ## 8. Sequence
 
 Documentation consolidation (AFC-0.5) → AFC-2 (completed) → AFC-2i (implemented) → AFC-3
-(completed) → AFC-4 (implemented) → AFC-5 (separate and gated).
+(completed) → AFC-4 (implemented) → AFC-5 (scoped, separate and gated).
 
 AFC-1 is dissolved and is not a step. AFC-2 came first because it needed no schema, no decision
 change and no new calculation, and because it produces the evidence contract AFC-3, AFC-4 and
@@ -414,10 +440,10 @@ beside or after them, but never before AFC-2.
 
 ## 9. Open items
 
-- **Stagnation definition (deferred to AFC-5).** AFC-3 closed without it. When AFC-5 scoping
-  reaches the deferred second cut, the definition must be written before any stagnation number is
-  generated or inspected; a threshold chosen after seeing the output is post-hoc. Do not reuse a
-  percentage band invented during Phase 5A.
+- **Stagnation definition (written 2026-11-13, unused).** The definition is fixed in AFC-5 above:
+  no positive e1RM trend over 12 weeks at median RIR within tolerance, with at least 8 comparable
+  sessions; otherwise *unknown*. It must not be retuned after seeing output, and no number has
+  been produced under it yet.
 - **Per-workout observation (closed 2026-11-13, native rendering pending).** The decision is
   taken: `workout.summary()` carries one deterministic, evidence-wrapped observation
   (`DEC-AFC-08`). The backend, web end screen and iPhone report render it; no client may
