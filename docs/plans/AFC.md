@@ -262,9 +262,10 @@ section 6 above.
 **The per-workout observation (decided 2026-11-13).** `workout.summary()` now carries at most
 one deterministic `observation` — the strongest qualifying family among RIR deviation,
 unperformed prescribed slots and velocity sets outside the calibration band — always with the
-evidence envelope, or `null` when nothing qualifies (`DEC-AFC-08`). The web end screen renders it.
-The iPhone report is a follow-up view change: it must render the field if present, never
-manufacture one, and stay read-only. AFC-3's longitudinal observations remain a separate report.
+evidence envelope, or `null` when nothing qualifies (`DEC-AFC-08`). The web end screen renders it, and the iPhone report now renders it too
+(`7afde09`): a **What stood out** section with gate, sample size and limitations, absent when the
+server sends none. Nothing is synthesised client-side. AFC-3's longitudinal observations remain a
+separate report.
 
 **Navigation.** The report is reached from the existing finish flow
 (`POST /api/ios/v1/workouts/<id>/complete`), which keeps its current contract:
@@ -419,8 +420,8 @@ beside or after them, but never before AFC-2.
   percentage band invented during Phase 5A.
 - **Per-workout observation (closed 2026-11-13, native rendering pending).** The decision is
   taken: `workout.summary()` carries one deterministic, evidence-wrapped observation
-  (`DEC-AFC-08`). The backend and web render it; showing it in the iPhone report is a small
-  follow-up view change, and no client may synthesise or reword it.
+  (`DEC-AFC-08`). The backend, web end screen and iPhone report render it; no client may
+  synthesise or reword it.
 - **Interpretation caveat for the gate.** A declared break depresses `attendance.pct` and can
   raise `ATTENDANCE_LOW` in the Phase 5A read-out. This is expected behaviour under
   `DEC-W7-01`, not a defect. Note it when reading the 2027-01-22 review.
