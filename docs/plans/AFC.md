@@ -313,17 +313,19 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
 
 - **Transport resolved.** The backend added the transport-only facade
   `GET /api/ios/v1/workouts/<id>/summary` (`9e85865`), returning `workout.summary()` unchanged;
-  unknown id 404, in-progress 409. The summary now also carries at most one deterministic
-  observation (`823d991`, `DEC-AFC-08`), so the earlier "decision open" note is closed.
+  unknown id 404, in-progress 409. `workout.summary()` itself was not extended, so the
+  per-workout observation decision stays open.
 - **Client.** The iPhone opens the report after an acknowledged completion and reopens it from
-  History; the view is read-only, shows the observation when present, adherence, VBT, feedback,
-  quality flags and evidence, and renders unavailable data with its reason. No client arithmetic,
-  no synthesised observation, and no second completion request (`00eda49`, `7afde09`).
-- **Verification.** `scripts/ci.sh` passes: the watch scheme and iPhone app build, the deployment
-  targets are asserted, and **290 iOS unit tests pass**. The backend `test_ios_api` covers the
-  facade plus 404/409; `docs` consistency and `ruff` pass.
-- **Outstanding.** Physical iPhone acceptance of the report (including its observation) and its
-  offline/retry behaviour is still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`.
+  History; the view is read-only, shows adherence, VBT, feedback, quality flags and evidence, and
+  renders unavailable data with its reason. No client arithmetic, no coaching observation, and no
+  second completion request (`00eda49`).
+- **Verification.** 289 iOS unit tests pass and the report navigation build succeeds; the backend
+  `test_ios_api` covers the facade plus 404/409; `docs` consistency and `ruff` pass.
+- **Outstanding.** Physical iPhone acceptance of the report and its offline/retry behaviour is
+  still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`. The "What stood out" rendering
+  (`7afde09`) was written after the last successful iOS build and is **not compiled yet**; the
+  tracked `afc_device_acceptance` reminder is the proof, and a compile fix is expected to be
+  small.
 
 ### AFC-3 — longitudinal observations
 
@@ -445,10 +447,10 @@ beside or after them, but never before AFC-2.
   no positive e1RM trend over 12 weeks at median RIR within tolerance, with at least 8 comparable
   sessions; otherwise *unknown*. It must not be retuned after seeing output, and no number has
   been produced under it yet.
-- **Per-workout observation (closed 2026-11-13).** The decision is taken:
-  `workout.summary()` carries one deterministic, evidence-wrapped observation
-  (`DEC-AFC-08`). The backend, web end screen and iPhone report render it (`7afde09`);
-  no client may synthesise or reword it.
+- **Per-workout observation (closed 2026-11-13, native rendering pending).** The decision is
+  taken: `workout.summary()` carries one deterministic, evidence-wrapped observation
+  (`DEC-AFC-08`). The backend, web end screen and iPhone report render it; no client may
+  synthesise or reword it.
 - **Tracked follow-ups (review tasks, not code).** Two pending items are now reminders in the
   app's periodic-review panel, so they cannot be forgotten: `afc_device_acceptance` (physical
   iPhone acceptance of the report and its observation; due now) and `afc_5a_historical` (AFC-5a
