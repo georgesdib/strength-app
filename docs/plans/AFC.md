@@ -3,12 +3,14 @@
 **Canonical location:** this file, in the portfolio repository. The backend `docs/AFC.md` is a
 compatibility pointer and is not authoritative.
 
-**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-2i, AFC-3 first cut and AFC-4 implemented
-2026-11-13. Physical iPhone report acceptance remains owner-run. No additional runtime
-behaviour, prompt, API, schema, dependency or training-rule change is included in this plan.
+**Status:** AFC-2, AFC-2i, AFC-3 first cut and AFC-4 are implemented 2026-11-13; physical iPhone
+acceptance of the AFC-2i report is pending. AFC-5 remains separate and gated.
+
+documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
+training-rule change is included in this plan.
 **Roadmap workstream:** [ROADMAP §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
-**Owner:** the athlete. AFC-3, AFC-4 and AFC-5 require explicit approval before implementation;
-AFC-2i is implemented.
+**Owner:** the athlete. AFC-2i, AFC-3 and AFC-4 are implemented; any further scope and AFC-5
+require explicit approval before implementation.
 **Scope:** composition over the backend services in section 2, rendered by the server's browser
 UI and, from AFC-2i, by the native iOS client. AFC-2 itself is backend and web UI only; AFC-2i
 adds iPhone presentation of the same report and no calculation, capture or prescription change
@@ -221,9 +223,10 @@ per-workout observation record: the payload carries evidence items and quality f
 
 ### AFC-2i — native post-workout feedback report
 
-**Status: implemented 2026-11-13.** The native report, the History entry point and the iOS
-summary facade are complete; physical iPhone acceptance remains owner-run. It depends on AFC-2's
-report contract, does not depend on AFC-3/AFC-4, and does not reopen AFC-2.
+**Status: implemented 2026-11-13; physical iPhone acceptance pending.** The backend exposes a
+transport-only facade and the iPhone renders the same payload read-only. It depends on AFC-2 and
+the report contract AFC-2 delivered; it does not depend on AFC-3 or AFC-4 and does not reopen
+AFC-2.
 
 **Purpose.** Expose the completed AFC-2 report in the native iOS workout completion experience, so
 the athlete reads the same evidence-linked report the web end screen shows, without a browser. It
@@ -234,6 +237,8 @@ is a concise report, not an analytics dashboard and not a Progress replacement.
 - `GET /api/workout/<id>/summary` (`strength_coach/workout.py` `summary()`), the canonical
   completed-workout payload: `adherence` (`original`, `final_plan`, `changes`, `quality`),
   `vbt`, `feedback`, `quality.flags`, `quality.coverage` and `evidence`;
+- `GET /api/ios/v1/workouts/<id>/summary` — the transport-only facade added for the iPhone
+  (unknown 404, in-progress 409), returning that payload unchanged;
 - the evidence envelope `strength_coach/features/evidence.py` (`evidence_id`, `source`,
   `source_ids`, `window`, `value`, `n`, `comparability`, `gate`, `quality_flags`,
   `method_versions`, `calibration_ids`, `limitations`, `rule_ids`, `assumption_ids`);
@@ -305,40 +310,20 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
     the summary API tests and the Phase 5A guards remain authoritative; the client adds no
     expected-value arithmetic.
 
-**Implementation considerations (not requirements).** These depend on the client and facade as they
-stand today; they are resolved at kickoff, not invented here:
+**As implemented (2026-11-13).**
 
-- The iPhone reaches only the device-authenticated `/api/ios/v1/...` facade, while
-  `GET /api/workout/<id>/summary` is the browser surface. Whether the facade exposes that payload
-  (transport only, no calculation) or a later `GET /api/ios/v1/history/<id>` revision carries
-  `evidence` and `quality.flags` is a contract change to agree before implementation. Neither
-  option permits a second payload shape or client arithmetic.
-- The delivered `evidence` list is small (adherence set-completion and VBT), so an expandable
-  "why" per claim is optional in the first cut; a flag still has to be visible wherever it
-  qualifies a number.
-- Sheet versus pushed screen is a UI decision; the navigation rules above are the constraint.
-
-**Verification.** At implementation time the narrowest checks are the iOS scheme's report and
-completion tests, with the backend summary, adherence, evidence and Phase 5A tests unchanged. AFC-2i
-is not expected to change any backend test.
-
-**Implementation record (2026-11-13).** Delivered on the iPhone:
-
-- the post-finish report opens as a full-screen read-only screen after the completion is
-  acknowledged; a failed report read offers **Try again** and **Done**, never a completion retry;
-- a queued/offline finish dismisses as before, and the report is reachable from History after the
-  finish syncs;
-- History detail carries a **View session report** action for sessions with a workout record, and
-  explains why imported sessions have none;
-- the iPhone calls the new transport-only facade `GET /api/ios/v1/workouts/<id>/summary`, which
-  returns the existing web summary payload unchanged; no new field, migration or calculation was
-  added;
-- the report renders adherence (final plan, original plan when modified, changes, quality),
-  VBT/velocity, session feedback, top-level quality flags and evidence limitations;
-- the coaching-observation block is omitted because the delivered summary carries no observation
-  object. No client-side observation was manufactured.
-- Tests: 289 iOS unit tests pass, including the summary contract/API/history decoding tests; the
-  iOS API server tests pass. Physical iPhone report acceptance remains owner-run.
+- **Transport resolved.** The backend added the transport-only facade
+  `GET /api/ios/v1/workouts/<id>/summary` (`9e85865`), returning `workout.summary()` unchanged;
+  unknown id 404, in-progress 409. `workout.summary()` itself was not extended, so the
+  per-workout observation decision stays open.
+- **Client.** The iPhone opens the report after an acknowledged completion and reopens it from
+  History; the view is read-only, shows adherence, VBT, feedback, quality flags and evidence, and
+  renders unavailable data with its reason. No client arithmetic, no coaching observation, and no
+  second completion request (`00eda49`).
+- **Verification.** 289 iOS unit tests pass and the report navigation build succeeds; the backend
+  `test_ios_api` covers the facade plus 404/409; `docs` consistency and `ruff` pass.
+- **Outstanding.** Physical iPhone acceptance of the report and its offline/retry behaviour is
+  still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`.
 
 ### AFC-3 — longitudinal observations
 
@@ -414,8 +399,8 @@ recommended without one.
 
 ## 8. Sequence
 
-Documentation consolidation (AFC-0.5) → AFC-2 (completed) → AFC-2i → AFC-3 (first cut
-implemented) → AFC-4 → AFC-5 (separate and gated).
+Documentation consolidation (AFC-0.5) → AFC-2 (completed) → AFC-2i (implemented) → AFC-3
+(first cut implemented) → AFC-4 (implemented) → AFC-5 (separate and gated).
 
 AFC-1 is dissolved and is not a step. AFC-2 came first because it needed no schema, no decision
 change and no new calculation, and because it produces the evidence contract AFC-3, AFC-4 and
@@ -429,11 +414,11 @@ beside or after them, but never before AFC-2.
   second cut is scoped. The definition must be written before any stagnation number is generated
   or inspected; a threshold chosen after seeing the output is post-hoc. Do not reuse a percentage
   band invented during Phase 5A.
-- **Per-workout observation (AFC-2i dependency).** AFC-2 delivered the evidence envelope and
-  quality flags but no per-workout observation record, so the native report cannot show a coaching
-  observation without a backend addition. AFC-3 does not add one to `workout.summary()`; the
-  decision whether `summary()` gains a single gated observation is taken at AFC-2i's kickoff. The
-  native report ships without coaching text until then, and nothing synthesises one in Swift.
+- **Per-workout observation (still open).** AFC-2 delivered the evidence envelope and quality
+  flags but no per-workout observation record. AFC-3 deliberately did not add one to
+  `workout.summary()`, and AFC-2i shipped without a coaching block. Whether `summary()` ever
+  gains a single gated observation is now a separate, later decision; nothing synthesises one in
+  Swift, and the native report stays observation-free until then.
 - **Interpretation caveat for the gate.** A declared break depresses `attendance.pct` and can
   raise `ATTENDANCE_LOW` in the Phase 5A read-out. This is expected behaviour under
   `DEC-W7-01`, not a defect. Note it when reading the 2027-01-22 review.
