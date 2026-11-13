@@ -3,7 +3,8 @@
 **Canonical location:** this file, in the portfolio repository. The backend `docs/AFC.md` is a
 compatibility pointer and is not authoritative.
 
-**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`). AFC-2i, AFC-3 and AFC-4 planned;
+**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-3 scoped and approved 2026-11-13.
+AFC-2i and AFC-4 planned;
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
 **Roadmap workstream:** [ROADMAP §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -338,8 +339,25 @@ Rules:
 - no causal language and no diagnosis;
 - observations are descriptive and never change a prescription.
 
-Persistence: a small append-only observation table recording identity, window, gate, `n` and
-the evidence id, so a displayed observation is reproducible.
+**Scoping decisions (2026-11-13, approved).**
+
+- **First cut only.** The three families above are the whole phase. "Improving performance with
+  stable effort" and stagnation stay out; the second cut is a separate decision, not part of this
+  phase. Anything added later needs its definition written before a number is generated.
+- **"Repeated" is 3 of the last 5 comparable sessions inside an 8-week window.** Those values live
+  in `config/` with a recorded assumption, never as literals in code. They are new configuration,
+  not a Phase 5A instrument, and changing them later is a decision, not a tuning knob.
+- **Persistence.** A new append-only observation table stores identity, window, gate, `n` and the
+  evidence id, written when observations are requested and idempotent on `evidence_id`. No
+  backfill: a historical session simply has no stored observation until one is requested, and an
+  observation is never rewritten.
+- **Surfaces.** The web (Progress, with AFC-4) and a read-only CLI report (Q7). `workout.summary()`
+  is unchanged in this phase; the single per-workout observation contract is decided at AFC-2i's
+  kickoff.
+- **Eligibility.** Imported sessions without a prescription snapshot, abandoned attempts,
+  technique sessions and voided sessions are non-comparable: they appear in `abstain` with a
+  reason and can never produce a value. Incomplete work is judged against `final_plan`, with
+  `original` shown beside it when the plan was modified.
 
 ### AFC-4 — web UI coaching and nudges
 
@@ -377,9 +395,10 @@ beside or after them, but never before AFC-2.
 
 ## 9. Open items
 
-- **Stagnation definition (deferred).** Re-ask when AFC-3's second cut is scoped. The definition
-  must be written before any stagnation number is generated or inspected; a threshold chosen
-  after seeing the output is post-hoc. Do not reuse a percentage band invented during Phase 5A.
+- **Stagnation definition (deferred).** AFC-3's approved first cut excludes it; re-ask when the
+  second cut is scoped. The definition must be written before any stagnation number is generated
+  or inspected; a threshold chosen after seeing the output is post-hoc. Do not reuse a percentage
+  band invented during Phase 5A.
 - **Per-workout observation (AFC-2i dependency).** AFC-2 delivered the evidence envelope and
   quality flags but no per-workout observation record, so the native report cannot show a coaching
   observation without a backend addition. AFC-3 does not add one to `workout.summary()`; the
