@@ -448,6 +448,11 @@ beside or after them, but never before AFC-2.
   taken: `workout.summary()` carries one deterministic, evidence-wrapped observation
   (`DEC-AFC-08`). The backend, web end screen and iPhone report render it; no client may
   synthesise or reword it.
+- **Tracked follow-ups (review tasks, not code).** Two pending items are now reminders in the
+  app's periodic-review panel, so they cannot be forgotten: `afc_device_acceptance` (physical
+  iPhone acceptance of the report and its observation; due now) and `afc_5a_historical` (AFC-5a
+  historical analysis; waits until 2027-01-23, the day after the Phase 5A gate). Neither starts
+  work by itself; the first is a checklist and the second is a precondition.
 - **Interpretation caveat for the gate.** A declared break depresses `attendance.pct` and can
   raise `ATTENDANCE_LOW` in the Phase 5A read-out. This is expected behaviour under
   `DEC-W7-01`, not a defect. Note it when reading the 2027-01-22 review.
