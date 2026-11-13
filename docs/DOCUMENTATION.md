@@ -15,6 +15,7 @@ The portfolio repository (`georgesdib/strength-app`) is the canonical source of 
 - [`docs/README.md`](README.md) is the navigation index.
 - [`docs/plans/README.md`](plans/README.md) is the portfolio-level plan and roadmap locator. It links the backend implementation roadmap without duplicating it because that file is consumed by backend tests and the docs viewer.
 - [`docs/plans/IOS-CLIENT-PLAN.md`](plans/IOS-CLIENT-PLAN.md) is the canonical cross-repository iOS phase plan.
+- [`docs/plans/AFC.md`](plans/AFC.md) is the canonical cross-repository Athlete Feedback & Coaching plan; the backend `docs/AFC.md` is a compatibility pointer.
 - [`docs/contracts/README.md`](contracts/README.md) indexes the canonical server/client phase contracts.
 - `docs/agent/` is the source for shared task routing, prompts and machine handoff. Machine-only private instructions remain untracked and local.
 
