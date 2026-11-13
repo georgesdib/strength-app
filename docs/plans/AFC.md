@@ -3,13 +3,12 @@
 **Canonical location:** this file, in the portfolio repository. The backend `docs/AFC.md` is a
 compatibility pointer and is not authoritative.
 
-**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-3 first cut and AFC-4 implemented
-2026-11-13. AFC-2i planned;
-documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
-training-rule change is included in this plan.
+**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-2i, AFC-3 first cut and AFC-4 implemented
+2026-11-13. Physical iPhone report acceptance remains owner-run. No additional runtime
+behaviour, prompt, API, schema, dependency or training-rule change is included in this plan.
 **Roadmap workstream:** [ROADMAP §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
-**Owner:** the athlete. AFC-2i, AFC-3, AFC-4 and AFC-5 require explicit approval before
-implementation.
+**Owner:** the athlete. AFC-3, AFC-4 and AFC-5 require explicit approval before implementation;
+AFC-2i is implemented.
 **Scope:** composition over the backend services in section 2, rendered by the server's browser
 UI and, from AFC-2i, by the native iOS client. AFC-2 itself is backend and web UI only; AFC-2i
 adds iPhone presentation of the same report and no calculation, capture or prescription change
@@ -222,9 +221,9 @@ per-workout observation record: the payload carries evidence items and quality f
 
 ### AFC-2i — native post-workout feedback report
 
-**Status: planned. Documentation only: no Swift, API, schema or capture change is defined here.**
-It depends on AFC-2 being completed and on the report contract AFC-2 delivered. It does not depend
-on AFC-3 or AFC-4, and it does not reopen AFC-2.
+**Status: implemented 2026-11-13.** The native report, the History entry point and the iOS
+summary facade are complete; physical iPhone acceptance remains owner-run. It depends on AFC-2's
+report contract, does not depend on AFC-3/AFC-4, and does not reopen AFC-2.
 
 **Purpose.** Expose the completed AFC-2 report in the native iOS workout completion experience, so
 the athlete reads the same evidence-linked report the web end screen shows, without a browser. It
@@ -322,6 +321,24 @@ stand today; they are resolved at kickoff, not invented here:
 **Verification.** At implementation time the narrowest checks are the iOS scheme's report and
 completion tests, with the backend summary, adherence, evidence and Phase 5A tests unchanged. AFC-2i
 is not expected to change any backend test.
+
+**Implementation record (2026-11-13).** Delivered on the iPhone:
+
+- the post-finish report opens as a full-screen read-only screen after the completion is
+  acknowledged; a failed report read offers **Try again** and **Done**, never a completion retry;
+- a queued/offline finish dismisses as before, and the report is reachable from History after the
+  finish syncs;
+- History detail carries a **View session report** action for sessions with a workout record, and
+  explains why imported sessions have none;
+- the iPhone calls the new transport-only facade `GET /api/ios/v1/workouts/<id>/summary`, which
+  returns the existing web summary payload unchanged; no new field, migration or calculation was
+  added;
+- the report renders adherence (final plan, original plan when modified, changes, quality),
+  VBT/velocity, session feedback, top-level quality flags and evidence limitations;
+- the coaching-observation block is omitted because the delivered summary carries no observation
+  object. No client-side observation was manufactured.
+- Tests: 289 iOS unit tests pass, including the summary contract/API/history decoding tests; the
+  iOS API server tests pass. Physical iPhone report acceptance remains owner-run.
 
 ### AFC-3 — longitudinal observations
 

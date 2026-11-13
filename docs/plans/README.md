@@ -5,7 +5,7 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 ## Canonical shared plans
 
 - [iOS client phase plan](IOS-CLIENT-PLAN.md) — cross-repository milestones, scope, dependencies, acceptance criteria, architecture boundaries, and historical completion records. It reflects the Phase 6.2 closure on 2026-11-10; 6.3+ remains pending.
-- [Athlete Feedback & Coaching (AFC) plan](AFC.md) — composition rules over the backend adherence/VBT/feedback services, the shared evidence contract, and phases AFC-2 (completed), AFC-2i (planned native report), AFC-3, AFC-4 and the separate AFC-5. Backend code paths stay authoritative in `strength-training-app`; this plan is the canonical cross-repository statement.
+- [Athlete Feedback & Coaching (AFC) plan](AFC.md) — composition rules over the backend adherence/VBT/feedback services, the shared evidence contract, and phases AFC-2 (completed), AFC-2i (implemented native report), AFC-3, AFC-4 and the separate AFC-5. Backend code paths stay authoritative in `strength-training-app`; this plan is the canonical cross-repository statement.
 - [Server/client contract index](../contracts/README.md) — canonical contracts and ownership of their implementation.
 
 ## Component roadmap and active status
