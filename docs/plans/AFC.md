@@ -322,7 +322,10 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
 - **Verification.** 289 iOS unit tests pass and the report navigation build succeeds; the backend
   `test_ios_api` covers the facade plus 404/409; `docs` consistency and `ruff` pass.
 - **Outstanding.** Physical iPhone acceptance of the report and its offline/retry behaviour is
-  still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`.
+  still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`. The "What stood out" rendering
+  (`7afde09`) was written after the last successful iOS build and is **not compiled yet**; the
+  tracked `afc_device_acceptance` reminder is the proof, and a compile fix is expected to be
+  small.
 
 ### AFC-3 — longitudinal observations
 
