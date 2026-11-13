@@ -6,6 +6,7 @@ The portfolio repository is the canonical home for shared project documentation 
 
 - [Plans and roadmap navigation](plans/README.md) — authoritative entry point; identifies the active shared plan and links to the backend implementation-status roadmap without duplicating it.
 - [Canonical iOS client phase plan](plans/IOS-CLIENT-PLAN.md) — phases, architecture, dependencies, acceptance, rollback gates and retained completion history.
+- [Athlete Feedback & Coaching (AFC) plan](plans/AFC.md) — canonical cross-repository plan for post-workout evaluation and feedback: evidence contract, AFC-2 (completed), AFC-2i native report, AFC-3 observations, AFC-4 nudges and the gated AFC-5.
 
 ## Contracts and specifications
 
