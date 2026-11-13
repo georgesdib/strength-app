@@ -259,14 +259,12 @@ section 6 above.
 | Session feedback | `feedback` `srpe`, `duration_min`, `duration_source`, `session_load_au`, `session_load_status`, `productivity` | Treat a missing value as zero, or collapse "not recorded" and "unavailable" into one state |
 | Data quality | `quality.flags` (`code`, `detail`) and `evidence[].limitations` | Map a code to a client-side severity, or hide a flag on a small screen |
 
-**Delivery note on the observation.** The AFC-2 payload as delivered carries evidence items and
-quality flags; it does not carry a per-workout observation record. AFC-2i therefore ships without a
-coaching-observation block unless a later backend change adds one. That gap is recorded in section
-9; it is not a licence to write client-side coaching logic. **Contract decision (2026-11-13):**
-AFC-3 surfaces longitudinal observations in the web UI and the read-only CLI report and leaves
-`workout.summary()` unchanged. Whether `summary()` gains one gated per-workout observation is
-decided at AFC-2i's kickoff, because that changes the payload AFC-2i renders; neither phase assumes
-it.
+**The per-workout observation (decided 2026-11-13).** `workout.summary()` now carries at most
+one deterministic `observation` — the strongest qualifying family among RIR deviation,
+unperformed prescribed slots and velocity sets outside the calibration band — always with the
+evidence envelope, or `null` when nothing qualifies (`DEC-AFC-08`). The web end screen renders it.
+The iPhone report is a follow-up view change: it must render the field if present, never
+manufacture one, and stay read-only. AFC-3's longitudinal observations remain a separate report.
 
 **Navigation.** The report is reached from the existing finish flow
 (`POST /api/ios/v1/workouts/<id>/complete`), which keeps its current contract:
@@ -419,11 +417,10 @@ beside or after them, but never before AFC-2.
   reaches the deferred second cut, the definition must be written before any stagnation number is
   generated or inspected; a threshold chosen after seeing the output is post-hoc. Do not reuse a
   percentage band invented during Phase 5A.
-- **Per-workout observation (still open).** AFC-2 delivered the evidence envelope and quality
-  flags but no per-workout observation record. AFC-3 deliberately did not add one to
-  `workout.summary()`, and AFC-2i shipped without a coaching block. Whether `summary()` ever
-  gains a single gated observation is now a separate, later decision; nothing synthesises one in
-  Swift, and the native report stays observation-free until then.
+- **Per-workout observation (closed 2026-11-13, native rendering pending).** The decision is
+  taken: `workout.summary()` carries one deterministic, evidence-wrapped observation
+  (`DEC-AFC-08`). The backend and web render it; showing it in the iPhone report is a small
+  follow-up view change, and no client may synthesise or reword it.
 - **Interpretation caveat for the gate.** A declared break depresses `attendance.pct` and can
   raise `ATTENDANCE_LOW` in the Phase 5A read-out. This is expected behaviour under
   `DEC-W7-01`, not a defect. Note it when reading the 2027-01-22 review.
