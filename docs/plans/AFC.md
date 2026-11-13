@@ -3,8 +3,8 @@
 **Canonical location:** this file, in the portfolio repository. The backend `docs/AFC.md` is a
 compatibility pointer and is not authoritative.
 
-**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-3 scoped and its first cut implemented
-2026-11-13. AFC-2i and AFC-4 planned;
+**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-3 first cut and AFC-4 implemented
+2026-11-13. AFC-2i planned;
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
 **Roadmap workstream:** [ROADMAP §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -367,6 +367,12 @@ Rules:
   `original` shown beside it when the plan was modified.
 
 ### AFC-4 — web UI coaching and nudges
+
+**Status: implemented 2026-11-13** (`DEC-AFC-05`). Today promotes at most one AFC-3 observation
+as a review category with the gate, sample size, evidence id and its limitations; dismiss and
+14-day snooze are append-only `maintenance_review` rows. Progress carries the programme-KPI
+panel (target-based attendance, volume patterns, summed adherence, observation count) and the
+AFC-3 observations. No notification channel, no new metric and no prescription effect.
 
 Scope: extend existing hosts only. No new tab.
 
