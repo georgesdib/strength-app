@@ -3,8 +3,8 @@
 **Canonical location:** this file, in the portfolio repository. The backend `docs/AFC.md` is a
 compatibility pointer and is not authoritative.
 
-**Status:** AFC-2, AFC-2i, AFC-3 first cut and AFC-4 are implemented 2026-11-13; physical iPhone
-acceptance of the AFC-2i report is pending. AFC-5 remains separate and gated.
+**Status:** AFC-2, AFC-2i, AFC-3 and AFC-4 are implemented 2026-11-13; physical iPhone acceptance
+of the AFC-2i report is pending. AFC-5 remains separate and gated.
 
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
@@ -327,18 +327,21 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
 
 ### AFC-3 — longitudinal observations
 
-**Status: first cut implemented 2026-11-13** (`DEC-AFC-04`). `features/observations.py` reads the existing
+**Status: completed 2026-11-13** (`DEC-AFC-04`, `DEC-AFC-07`). The second cut is deferred to
+AFC-5 and is not part of this phase. `features/observations.py` reads the existing
 `adherence` and `vbt_performance` payloads, applies `config/observations.v1.yaml` and reports to
 `GET /api/observations` and `strength-coach observations`. Produced observations are appended to
 the new append-only `observation` table, idempotent on the evidence id; abstentions are returned
-with a reason and never stored. No metric is recomputed, `workout.summary()` is unchanged, and
-the second cut remains a separate decision.
+with a reason and never stored. Excluded sessions — imported, abandoned, technique, voided and
+adherence-unavailable — are counted per category and surfaced in `abstain`, so a thin sample is
+explained rather than silent. No metric is recomputed and `workout.summary()` is unchanged. The
+second cut is deferred to AFC-5.
 
 Scope: a read-only observation service over AFC-2's evidence contract.
 
 First cut only: repeated RIR deviation, repeated incomplete work, VBT residual deviation.
-Deferred: "improving performance with stable effort" (no joint model exists) and stagnation
-(no agreed definition).
+Deferred to AFC-5: "improving performance with stable effort" (no joint model exists) and
+stagnation (no agreed definition).
 
 Rules:
 
@@ -387,7 +390,9 @@ Scope: extend existing hosts only. No new tab.
 
 ### AFC-5 — evidence-gated prescription adaptation (separate)
 
-Not part of AFC-1 to AFC-4 and not a dependency of them.
+Not part of AFC-1 to AFC-4 and not a dependency of them. It also owns the deferred AFC-3 second
+cut — stagnation and "improving performance with stable effort" — as a scoping question, before
+any prescription adaptation work.
 
 - AFC-5a historical evaluation of adaptation candidates;
 - AFC-5b prospective shadow proposals;
@@ -400,7 +405,7 @@ recommended without one.
 ## 8. Sequence
 
 Documentation consolidation (AFC-0.5) → AFC-2 (completed) → AFC-2i (implemented) → AFC-3
-(first cut implemented) → AFC-4 (implemented) → AFC-5 (separate and gated).
+(completed) → AFC-4 (implemented) → AFC-5 (separate and gated).
 
 AFC-1 is dissolved and is not a step. AFC-2 came first because it needed no schema, no decision
 change and no new calculation, and because it produces the evidence contract AFC-3, AFC-4 and
@@ -410,10 +415,10 @@ beside or after them, but never before AFC-2.
 
 ## 9. Open items
 
-- **Stagnation definition (deferred).** AFC-3's approved first cut excludes it; re-ask when the
-  second cut is scoped. The definition must be written before any stagnation number is generated
-  or inspected; a threshold chosen after seeing the output is post-hoc. Do not reuse a percentage
-  band invented during Phase 5A.
+- **Stagnation definition (deferred to AFC-5).** AFC-3 closed without it. When AFC-5 scoping
+  reaches the deferred second cut, the definition must be written before any stagnation number is
+  generated or inspected; a threshold chosen after seeing the output is post-hoc. Do not reuse a
+  percentage band invented during Phase 5A.
 - **Per-workout observation (still open).** AFC-2 delivered the evidence envelope and quality
   flags but no per-workout observation record. AFC-3 deliberately did not add one to
   `workout.summary()`, and AFC-2i shipped without a coaching block. Whether `summary()` ever
