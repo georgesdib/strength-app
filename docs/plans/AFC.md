@@ -3,8 +3,8 @@
 **Canonical location:** this file, in the portfolio repository. The backend `docs/AFC.md` is a
 compatibility pointer and is not authoritative.
 
-**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-3 scoped and approved 2026-11-13.
-AFC-2i and AFC-4 planned;
+**Status:** AFC-2 completed 2026-11-13 (`2d0fc15`); AFC-3 scoped and its first cut implemented
+2026-11-13. AFC-2i and AFC-4 planned;
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
 **Roadmap workstream:** [ROADMAP §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -325,6 +325,13 @@ is not expected to change any backend test.
 
 ### AFC-3 — longitudinal observations
 
+**Status: first cut implemented 2026-11-13** (`DEC-AFC-04`). `features/observations.py` reads the existing
+`adherence` and `vbt_performance` payloads, applies `config/observations.v1.yaml` and reports to
+`GET /api/observations` and `strength-coach observations`. Produced observations are appended to
+the new append-only `observation` table, idempotent on the evidence id; abstentions are returned
+with a reason and never stored. No metric is recomputed, `workout.summary()` is unchanged, and
+the second cut remains a separate decision.
+
 Scope: a read-only observation service over AFC-2's evidence contract.
 
 First cut only: repeated RIR deviation, repeated incomplete work, VBT residual deviation.
@@ -384,8 +391,8 @@ recommended without one.
 
 ## 8. Sequence
 
-Documentation consolidation (AFC-0.5) → AFC-2 (completed) → AFC-2i → AFC-3 → AFC-4 → AFC-5
-(separate and gated).
+Documentation consolidation (AFC-0.5) → AFC-2 (completed) → AFC-2i → AFC-3 (first cut
+implemented) → AFC-4 → AFC-5 (separate and gated).
 
 AFC-1 is dissolved and is not a step. AFC-2 came first because it needed no schema, no decision
 change and no new calculation, and because it produces the evidence contract AFC-3, AFC-4 and
