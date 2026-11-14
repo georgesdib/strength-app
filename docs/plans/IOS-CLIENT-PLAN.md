@@ -1093,7 +1093,7 @@ exercise swap, set-count change".
   iPhone picker or any new R8 screen.
 - In progress only, idempotent, full workout payload returned; no schema change.
 
-### iPhone workout follow-up batch (implemented 2026-11-11; device acceptance pending)
+### iPhone workout follow-up batch (implemented 2026-11-11; device acceptance owner-confirmed 2026-11-14)
 
 *Restored 2026-11-14: this section was dropped when a parallel branch rewrote Phase 6 from an
 older base.*
@@ -1115,9 +1115,10 @@ older base.*
 - Unplanned and warm-up sets are indexed above the entire planned range, so logging one before a
   planned set cannot collide with a later working set and suppress it.
 - Verified: 226 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
-  pytest suite. Physical iPhone notification/timer and warm-up acceptance remain owner-run.
+  pytest suite. Physical iPhone notification/timer and warm-up acceptance was owner-confirmed
+  2026-11-14.
 
-### iPhone follow-up batch — 2026-11-14 (implemented; device acceptance pending)
+### iPhone/watch follow-up batch — 2026-11-14 (implemented; device acceptance owner-confirmed 2026-11-14)
 
 - Session reports decode again: `WorkoutAdherence.version` is numeric on the wire.
 - Today's ready-card buttons are independent (borderless), so **Review workout** and **Request
