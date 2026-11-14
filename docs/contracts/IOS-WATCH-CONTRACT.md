@@ -81,7 +81,7 @@ section 21. The watch performs no Home/Away switching and never follows the phon
 | D14 | The watch is pinned to `homeBaseURL`; config changes carry a monotonic `configVersion` and apply only between sessions with an empty outbox. No Home/Away switching. |
 | D15 | Offline-first after start: sets, forms, telemetry, finish and HealthKit are local-first; the network is opportunistic and partially flushed. |
 | D16 | Post-finish sync is foreground retry on the summary plus sync on next open. The phone relay and offline start are deferred. |
-| D17 | The watch captures optional mean and per-rep velocity per set, one 1–5 form rating per exercise, and session productivity at finish; the phone mirror cannot add any of them to a watch-owned session, and take-over is the only path. Correcting a watch-owned set's velocity after acknowledgement is deferred to R10. |
+| D17 | The watch captures optional mean and per-rep velocity per set, one 1–5 form rating per exercise, and session productivity at finish; the phone mirror cannot add any of them to a watch-owned session, and take-over is the only path. Correcting a watch-owned set's velocity after acknowledgement is a post-workout History edit on the server (append-only mean and per-rep VBT overrides); the iOS client's report is read-only for now. |
 
 ## 5. Platform targets and project shape
 
@@ -516,7 +516,8 @@ acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index
 - All of it is captured local-first in the existing ordered outbox; a rating is never inferred, and
   **Not recorded** is a valid outcome everywhere.
 - The watch does not correct a set after acknowledgement. The phone mirror remains read-only for
-  these fields; correcting a watch-owned set's velocity is the deferred R10 capability.
+  these fields. Post-workout correction happens in the server's History edit (append-only VBT
+  overrides), not on the watch.
 
 ## 12. HealthKit idempotency and recovery
 
@@ -576,6 +577,8 @@ the selected exercise, active set or execution state, and closing it restores th
    a marker when the plan was updated. It offers no way to select, start, log or end an exercise;
    the exercise-navigation lock is unchanged, so the Plan screen cannot be used to bypass it.
 
+- **Rest start.** The rest is anchored at the End-set stamp, not at the moment the RIR/velocity
+  entry finishes; that entry time is rest. The set's `performed_at` is the Start-set time.
 - **Rest end.** The watch schedules one local notification for the open rest's end (asked once
   at session start) and re-points or cancels it when the interval is extended, shortened or closed;
   the on-screen haptic remains. A denied permission never blocks logging.
@@ -808,8 +811,10 @@ the token handoff, a relay envelope, per-operation acknowledgement and a partial
 path, and cannot be relied on while the watch app is suspended. Takeover is not a substitute: its
 receipts are phone-device-scoped, so a later watch retry could duplicate.
 
-**Phone-side correction of a watch-owned set (R10).** The watch records velocity; correcting an
-acknowledged watch-owned set's velocity later is deferred until the R10 route exists.
+**iOS post-workout correction.** The server already corrects a completed session from History →
+Edit session, including mean and per-rep VBT overrides, with an append-only audit. The iOS client
+exposes that history read-only; adding an edit screen would reuse the existing service and is not
+part of this contract.
 
 Recovery of an offline session that outlives the abandonment window; a richer hand-back from phone
 to watch after take-over; automatic phone-side surfacing of watch events (there is no

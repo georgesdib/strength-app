@@ -237,11 +237,19 @@ heart rate and bodyweight for readiness only; it does not request or expose work
 samples. Adding workout HR would require a separate opt-in, separate samples, provenance and
 feature gate, and would remain observational rather than a fatigue or readiness input.
 
-### R10 — Set correction and VBT timing (planned; needs an additive contract)
+### R10 — Set correction and VBT timing (closed 2026-11-14)
 
-**Status:** planned 2026-11-11; not started. Restored 2026-11-14 after a plan rewrite dropped this
-section. Supersedes the Phase 4 exclusion "corrections/removals of already-synced sets". Needs an
-additive iOS correction route and a contract update; no schema change.
+**Status:** **closed 2026-11-14.** Restored after a plan rewrite dropped this section.
+- **VBT timing: implemented.** The watch stamps End set and anchors both the set's completion and
+  the rest interval to it; the add-set carries the Start-set time as `performed_at`, so entering RIR
+  and velocity no longer moves the set or shortens the rest. Tests:
+  `WatchExecutionEngineTests.testAddSetIsPerformedWhenTheSetStartedNotWhenItWasSaved`,
+  `.testRestIsAnchoredAtTheEndSetStampNotTheSaveTime`.
+- **Velocity correction: not needed for iOS.** The server already corrects a completed session's
+  velocity, mean and per-rep, through History → Edit session (`history.edit_session` and the
+  append-only `vbt_override` chain), and the report reads the corrected values. An in-progress iOS
+  correction route would duplicate that with a second write path, so it is deliberately not built.
+  The original intent is kept below for the record.
 
 The owner can enter mean and per-rep velocity when logging a set (implemented on the phone and the
 watch) or correct a performed set's velocity from the logged-set list during the following rest. A
@@ -585,10 +593,11 @@ Phase 3B (Apple Workout summaries and related cardio data) remains a separate pr
 its own approved contract. Phase 5 remains optional and separately approved. R7 and R8 are
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
-R10 (set correction and VBT timing) and R11 (rest timer Live Activity) are planned below and
-recorded in section 4; neither is approved to start.
+R11 (rest timer Live Activity) is planned below and recorded in section 4; it is not approved to
+start. R10 closed on 2026-11-14 (timing implemented; iOS velocity correction superseded by the
+server's post-workout edit).
 
-Do not begin Phase 3B, cardio, PCC, R10 or R11 work without separate approval. Phase 4 is closed; Phase 3B
+Do not begin Phase 3B, cardio, PCC or R11 work without separate approval. Phase 4 is closed; Phase 3B
 remains a separate contract; Phase 6.7 is fully confirmed (W1–W12 and R).
 
 ## 12. References
