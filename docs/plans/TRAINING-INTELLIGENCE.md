@@ -270,6 +270,13 @@ Rules:
   operational item is follow-up **C-1**: a background maintenance worker that reconciles the derived
   build automatically on startup, periodically and after exercise-writer changes, replacing the
   manual `analytics build` trigger.
+
+  The ODROID HTTP benchmark (2026-11-14) measured p95 6,201 ms for session details, 4,058 ms for
+  overview, 3,800 ms for the programme summary and 1,663 ms for readiness, so the one-second
+  transport gate is not met. The agreed rollout is a combination of three follow-ups: **T-1**
+  restate the acceptable LLM latency budget and amend ADR-INT-010; **T-2** expose only the
+  already-fast tools over the trusted-LAN transport; **T-3** profile and optimise the four slow
+  capabilities, then re-run the HTTP benchmark before exposing them. None is started.
 - If a cache is added later it keys on `(capability, validated_args, database_stamp, config_revision,
   builder_version)`, where the stamp is the existing `PRAGMA data_version` + `conn.total_changes`
   pair already used by `features/e1rm_calibration.py`, and it lives in process memory.
