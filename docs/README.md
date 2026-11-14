@@ -29,6 +29,11 @@ The portfolio repository is the canonical home for shared project documentation 
 - [Backend documentation index](https://github.com/georgesdib/strength-training-app/blob/development/docs/README.md) — backend implementation docs and its manifest-backed viewer. Its `ROADMAP.md` remains the backend implementation status authority.
 - [iOS/watchOS documentation index](https://github.com/georgesdib/StrengthApp/blob/development/docs/README.md) — client-specific build, test, UI and Apple acceptance documentation.
 
+## Documentation tooling
+
+- [Combined documentation PDF](DOCUMENTATION-PDF.md) — build one repository-labelled PDF from the portfolio, backend and iOS documentation.
+- [`scripts/docs_pdf.py`](../scripts/docs_pdf.py) — canonical cross-repository PDF builder; supports `--list`, repository filters, private-note inclusion and a configurable output path.
+
 ## Status labels and history
 
 Shared plans identify active, completed, superseded, historical and unknown material. Completed phases remain linked as historical evidence. Component implementation status must be read from its authoritative component roadmap/acceptance record; this index deliberately does not reproduce changing status tables.

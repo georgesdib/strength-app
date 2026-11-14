@@ -20,6 +20,10 @@ The portfolio repository (`georgesdib/strength-app`) is the canonical source of 
 - [`docs/contracts/README.md`](contracts/README.md) indexes the canonical server/client phase contracts, including the [Training Intelligence MCP/envelope contract](contracts/TRAINING-INTELLIGENCE-CONTRACT.md).
 - `docs/agent/` is the source for shared task routing, prompts and machine handoff. Machine-only private instructions remain untracked and local.
 
+## Documentation tooling
+
+Cross-repository documentation rendering lives in the portfolio repository. [`scripts/docs_pdf.py`](../scripts/docs_pdf.py) builds one PDF from the portfolio, backend and iOS documentation, grouping and labelling each repository; installation, usage and privacy rules are in [`DOCUMENTATION-PDF.md`](DOCUMENTATION-PDF.md). Component repositories must not keep a duplicate copy of this tool.
+
 A component roadmap may remain local only when it is specifically the component's implementation-status authority and is coupled to that component's code, tests or tools. The backend `ROADMAP.md` is such an exception; it is not a second cross-repository roadmap. Portfolio documents must link to it rather than restating its active phase status.
 
 ## Documentation change rules

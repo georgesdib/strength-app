@@ -2,7 +2,8 @@
 
 This workspace is the portfolio repository for the Strength App project. It contains
 portfolio-wide agent and handoff instructions plus two Git submodules; it does not contain
-application code of its own.
+application code of its own, but it does host project-wide tooling such as the combined
+documentation PDF builder.
 
 | Path | Repository | Role |
 |---|---|---|
@@ -24,6 +25,13 @@ The authoritative iOS docs index is
 
 Start with [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) when adding or moving documentation.
 The rule is simple: one canonical copy, in the repository that owns the subject.
+
+## Combined documentation PDF
+
+[`scripts/docs_pdf.py`](scripts/docs_pdf.py) builds one PDF from the portfolio,
+server and iOS documentation, grouped and labelled by repository. See
+[docs/DOCUMENTATION-PDF.md](docs/DOCUMENTATION-PDF.md) for installation, usage
+and privacy notes.
 
 ## Start here
 
