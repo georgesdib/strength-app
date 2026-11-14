@@ -610,7 +610,16 @@ No phase may silently deliver the next phase's capability.
 
 ### INT-1 — Intelligence foundation and MCP server skeleton
 
-**Scope.** The envelope, error taxonomy, capability registry, context builder skeleton, MCP server
+**Implementation status (2026-11-14): the foundation is delivered; the MCP skeleton moved to
+INT-1b.** The owner-directed INT-1 implementation prompt narrowed this phase to the read-only
+foundation, so the transport, the second tool and the resources are now INT-1b. Implemented and
+tested: the envelope, error taxonomy, capability registry, request validation, execution service,
+bearer authentication, configuration bounds, request-context identity and one reference capability
+(`get_training_overview`). Not implemented: everything in INT-1b, the baseline context package and
+any model path. Implementation detail is in the backend
+[INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
+
+**Scope (as originally written).** The envelope, error taxonomy, capability registry, context builder skeleton, MCP server
 with two tools (`get_training_overview`, `get_session_details`) and one resource
 (`strength://athlete/profile`), bearer auth, limits, logging, config, systemd unit, and the test
 harness (in-memory + HTTP + legacy/modern eras). No model. No new REST route.
@@ -636,6 +645,30 @@ logs; the process opens SQLite read-only and a write attempt fails; `pytest` and
 
 **Exclusions.** No progression/VBT/adherence/review tools; no model; no REST route; no schema change;
 no change to any existing endpoint.
+
+### INT-1b — MCP transport and the second tool
+
+**Scope.** The `mcp>=2,<3` optional dependency and console script; `strength_coach/intelligence/mcp/`
+(Streamable HTTP endpoint, bearer guard, deterministic tool registry, tool/resource schemas,
+`json_response`, limits, deployment unit); `get_session_details` (worker `workout_id` path, reusing
+`workout.summary()` and its real evidence array); the `strength://athlete/profile` resource; legacy
+(2025-11-25) and modern (2026-07-28) protocol tests; the in-process versus MCP parity test.
+
+**Dependencies.** INT-1 (done). No model, no new REST route.
+
+**Acceptance.** The server starts as a separate process with the UI stopped; `tools/list` is
+deterministic and lists exactly two read-only tools and one resource; both protocol eras connect;
+every result validates against the envelope and the tool `outputSchema`; 401 without a token; token
+absent from logs; the process opens SQLite read-only and a write attempt fails; `pytest` and `ruff`
+clean; no `web` import.
+
+**Tests.** Protocol compatibility, tool schemas, invocation, auth and isolation, invalid arguments,
+missing data, error mapping, parity, and the deployment/read-only checks.
+
+**Security.** Tailnet/loopback only; hashed client tokens (ADR-INT-004) or the existing device token
+for the first acceptance; no payload logging; read-only DB; limits live.
+
+**Exclusions.** No model, no REST route, no schema change, no mutation tool, no INT-2 capability.
 
 ### INT-2 — Deterministic capabilities and the full read-only catalogue
 
@@ -811,14 +844,16 @@ review cannot answer. Read-only explanation is already covered by INT-3/INT-5.
 ## 12. Dependencies and sequencing
 
 ```
-INT-1 ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 ──▶ INT-6
-                            │
-                            ├──▶ INT-5 ──▶ INT-6
-                            └──▶ INT-7
+INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 ──▶ INT-6
+                                      │
+                                      ├──▶ INT-5 ──▶ INT-6
+                                      └──▶ INT-7
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
-- INT-1 and INT-2 need no model and no new API route.
+- INT-1 (delivered) and INT-2 need no model and no new API route; INT-1b adds the MCP transport only.
+- INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
+  so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
