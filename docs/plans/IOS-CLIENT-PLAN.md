@@ -261,8 +261,8 @@ capture, rest, finish with sRPE, offline replay with bounded retry, relaunch res
 observed-only execution telemetry. 6.4 adds offline conflicts, 6.5 adds heart rate and the
 exactly-once HealthKit save, and 6.6 adds the phone mirror, plan revisions, active-session Plan,
 refresh/reconnect and the ownership/form corrections. Physical watch acceptance (6.7) was
-owner-confirmed 2026-11-14 on build `8c26af0`; W11 (patchy Wi-Fi), W12 (home config refresh) and
-R (rollback dry run) remain recorded follow-ups, not blockers. The watch UI smoke test
+owner-confirmed 2026-11-14 on build `8c26af0`; W11 (patchy Wi-Fi) and W12 (home config refresh) were
+confirmed in the same run; only R (rollback dry run) remains an owner-run follow-up. The watch UI smoke test
 (`StrengthWatchUITests`) now passes end to end (fetch → start → log → finish) against a disposable
 server, so the flow has automated evidence as well as the physical sign-off.
 
@@ -308,7 +308,8 @@ on boundaries and per-stage acceptance.
    network-path change or an explicit retry), finish queue and foreground retry,
    dim/background/termination/relaunch behaviour, and observed-only execution telemetry with
    original `occurred_at` values. Evidence: `StrengthCore` engine tests, the watch scheme build
-   and `scripts/ci.sh` (208 unit tests). Physical watch acceptance is owner-run.
+   and `scripts/ci.sh` (208 unit tests). Physical watch acceptance was owner-confirmed
+   2026-11-14 (6.7).
 5. **6.4 Offline and conflicts — complete 2026-11-12.** Session-scoped outbox, ordered replay,
    relaunch recovery, flush-before-revision on reconnect, off-plan preservation on
    `plan_item_mismatch`, and no stale-snapshot overwrite.
@@ -329,8 +330,8 @@ on boundaries and per-stage acceptance.
    See contract §13 and §17.
 8. **6.7 Acceptance and CI — complete 2026-11-14 (owner-confirmed).** Watch build and
    deployment-target assertion in `ios-ci`, the scenario tests in contract §17, the physical
-   Ultra acceptance, docs and rollback notes. W11 (patchy Wi-Fi), W12 (home config refresh) and
-   R (rollback dry run) remain owner-run follow-ups. The physical script and sign-off table are
+   Ultra acceptance, docs and rollback notes. W11 and W12 were confirmed in the same run;
+   R (rollback dry run) remains the only owner-run follow-up. The physical script and sign-off table are
    [WATCH-ACCEPTANCE.md](https://github.com/georgesdib/StrengthApp/blob/development/WATCH-ACCEPTANCE.md).
 
 **6.7 scenario evidence.** Client evidence per contract §17 scenario, verified against the test
@@ -545,7 +546,8 @@ its own approved contract. Phase 5 remains optional and separately approved. R7 
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
 Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
-remains a separate contract; Phase 6.7 is owner-confirmed, with W11/W12/R left as follow-ups.
+remains a separate contract; Phase 6.7 is owner-confirmed, with W11 and W12 accepted and only R (rollback dry
+run) left as a follow-up.
 
 ## 12. References
 
@@ -821,7 +823,7 @@ that without checking. The additive table can otherwise remain while the client 
 
 **Phase 0 complete 2026-11-07. Phase 1 complete 2026-11-07. Phase 2 complete and closed
 2026-11-07**, simulator-verified and owner-confirmed on the physical iPhone. Phase 3A and Phase 4
-are closed; Phase 6.0–6.6 are complete and 6.7 physical acceptance is pending. Phase 3B and
+are closed; Phase 6.0–6.7 are complete (6.7 owner-confirmed 2026-11-14). Phase 3B and
 Phase 5 remain separate proposals without an approved contract.
 
 ### Phase 1 completion record

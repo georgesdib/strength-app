@@ -4,7 +4,7 @@
 
 **Status:** Phase 6.2 complete and closed 2026-11-10: 6.0 (S1–S4, shared core), 6.1 (server
 watch contract), 6.2a (embedded watch target), 6.2b (credential handoff) and 6.2c (read-only
-Today). Physical Apple Watch acceptance remains owner-run; 6.3+ are pending.
+Today). Physical Apple Watch acceptance was owner-confirmed 2026-11-14; only the R rollback dry run remains.
 Decisions locked 2026-11-09; design remediation 2026-11-09. The extraction authorises no server
 migration; no migration is created by this design task. Target platforms: **iOS 27.0** and
 **watchOS 27.0**.
@@ -500,8 +500,8 @@ The watch emits only what it observes: `set_started`, `set_completed`, `rest_sta
 `rest_completed`, `rest_extended`, `exercise_started` and `exercise_completed`. It never
 emits `rest_skipped` (a rest ends through one deliberate action, and the server derives duration
 and deviation from the timestamps), `workout_paused`/`workout_resumed` (the watch has no pause),
-or an event for a set or exercise that never started. A rest closes on **End rest**, or at the
-instant the next set starts. `set_completed` gains `set_id` only after the matching add-set is
+or an event for a set or exercise that never started. A rest closes on an explicit end (the watch's −15s
+control ends it once that is all that remains), or at the instant the next set starts. `set_completed` gains `set_id` only after the matching add-set is
 acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index`,
 `prescribed_rest_s`, `added_s`.
 
