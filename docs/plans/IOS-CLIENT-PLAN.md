@@ -237,6 +237,47 @@ heart rate and bodyweight for readiness only; it does not request or expose work
 samples. Adding workout HR would require a separate opt-in, separate samples, provenance and
 feature gate, and would remain observational rather than a fatigue or readiness input.
 
+### R10 — Set correction and VBT timing (planned; needs an additive contract)
+
+**Status:** planned 2026-11-11; not started. Restored 2026-11-14 after a plan rewrite dropped this
+section. Supersedes the Phase 4 exclusion "corrections/removals of already-synced sets". Needs an
+additive iOS correction route and a contract update; no schema change.
+
+The owner can enter mean and per-rep velocity when logging a set (implemented on the phone and the
+watch) or correct a performed set's velocity from the logged-set list during the following rest. A
+correction appends an `update_set` event through the existing `workout.update_set` service; the set
+id, its `performed_at` and the running rest timer are untouched, and the latest value wins for
+display and downstream analysis. Add-set also sends the explicit Start-set time as `performed_at`
+so VBT entry no longer moves the set's recorded time.
+
+- v1 corrects mean and per-rep velocity only; load/reps/RIR corrections remain out of scope.
+- The route is authenticated, owner-checked, idempotent, closed-field, and allowed only while the
+  workout is in progress; a completed or abandoned workout rejects it.
+- Only a server-confirmed set can be corrected from the workout UI; a pending local set keeps its
+  existing cancellation path. Offline correction is a later increment.
+- Acceptance: a correction made during rest is visible after refresh and in execution analytics;
+  the set keeps its original id and timestamp; replay with the same key is a no-op; a correction
+  after finish is rejected; existing set/remove/form paths are unchanged.
+
+### R11 — Rest timer Live Activity (planned; client-only)
+
+**Status:** planned 2026-11-11; not started. Restored 2026-11-14. Depends on the app-level rest
+timer. The watch's end-of-rest local notification (2026-11-14) is a separate, smaller feature and
+does not cover the iPhone.
+
+Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
+does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
+updates and no push); the app starts, extends and ends the activity with the timer and ends it on
+skip, finish, close or abandonment, with a stale date as a backstop. No server, contract or schema
+change.
+
+- A widget extension target is added to `project.xcproj` (Xcode 27 JSON format) plus
+  `NSSupportsLiveActivities`; a small target spike runs first because this is the only unproven
+  project-format change.
+- The iOS 27.0 baseline already satisfies ActivityKit availability.
+- Acceptance: physical iPhone Lock Screen and Dynamic Island start, countdown, +15 s, skip and
+  finish; the activity disappears when the workout ends; no duplicate activity after relaunch.
+
 ### Phase 5 — Optional Enhancements
 
 Only pursue after the core app is useful and stable, with a separate scope/approval decision for each feature:
@@ -261,8 +302,8 @@ capture, rest, finish with sRPE, offline replay with bounded retry, relaunch res
 observed-only execution telemetry. 6.4 adds offline conflicts, 6.5 adds heart rate and the
 exactly-once HealthKit save, and 6.6 adds the phone mirror, plan revisions, active-session Plan,
 refresh/reconnect and the ownership/form corrections. Physical watch acceptance (6.7) was
-owner-confirmed 2026-11-14 on build `8c26af0`; W11 (patchy Wi-Fi) and W12 (home config refresh) were
-confirmed in the same run; only R (rollback dry run) remains an owner-run follow-up. The watch UI smoke test
+owner-confirmed 2026-11-14 on build `8c26af0`; W11 (patchy Wi-Fi), W12 (home config refresh) and
+R (rollback dry run) were confirmed in the same run, so no Phase 6 follow-ups remain. The watch UI smoke test
 (`StrengthWatchUITests`) now passes end to end (fetch → start → log → finish) against a disposable
 server, so the flow has automated evidence as well as the physical sign-off.
 
@@ -330,8 +371,8 @@ on boundaries and per-stage acceptance.
    See contract §13 and §17.
 8. **6.7 Acceptance and CI — complete 2026-11-14 (owner-confirmed).** Watch build and
    deployment-target assertion in `ios-ci`, the scenario tests in contract §17, the physical
-   Ultra acceptance, docs and rollback notes. W11 and W12 were confirmed in the same run;
-   R (rollback dry run) remains the only owner-run follow-up. The physical script and sign-off table are
+   Ultra acceptance, docs and rollback notes. W11, W12 and R (rollback dry run) were
+   confirmed in the same run. The physical script and sign-off table are
    [WATCH-ACCEPTANCE.md](https://github.com/georgesdib/StrengthApp/blob/development/WATCH-ACCEPTANCE.md).
 
 **6.7 scenario evidence.** Client evidence per contract §17 scenario, verified against the test
@@ -537,17 +578,18 @@ Phase 6.2 (watchOS companion) has a completed plan and contract
 6.1 server contract, 6.2a watch target, 6.2b credential handoff and 6.2c read-only Today are
 complete, and 6.3's execution lifecycle closed 2026-11-11. 6.4 (offline conflicts), 6.5 (heart
 rate and HealthKit) and 6.6 (phone mirror, plan revisions and active-session corrections) are
-complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14; the only Phase 6
-follow-ups are W11 (patchy Wi-Fi), W12 (home config refresh) and R (rollback dry run), all
-owner-run and recorded in the client acceptance checklist.
+complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
+the R rollback dry run all confirmed; no Phase 6 follow-ups remain.
 
 Phase 3B (Apple Workout summaries and related cardio data) remains a separate proposal and needs
 its own approved contract. Phase 5 remains optional and separately approved. R7 and R8 are
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
-Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
-remains a separate contract; Phase 6.7 is owner-confirmed, with W11 and W12 accepted and only R (rollback dry
-run) left as a follow-up.
+R10 (set correction and VBT timing) and R11 (rest timer Live Activity) are planned below and
+recorded in section 4; neither is approved to start.
+
+Do not begin Phase 3B, cardio, PCC, R10 or R11 work without separate approval. Phase 4 is closed; Phase 3B
+remains a separate contract; Phase 6.7 is fully confirmed (W1–W12 and R).
 
 ## 12. References
 

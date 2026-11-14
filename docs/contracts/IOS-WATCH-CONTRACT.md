@@ -4,7 +4,7 @@
 
 **Status:** Phase 6.2 complete and closed 2026-11-10: 6.0 (S1–S4, shared core), 6.1 (server
 watch contract), 6.2a (embedded watch target), 6.2b (credential handoff) and 6.2c (read-only
-Today). Physical Apple Watch acceptance was owner-confirmed 2026-11-14; only the R rollback dry run remains.
+Today). Physical Apple Watch acceptance was owner-confirmed 2026-11-14 (W1–W12 and R all confirmed).
 Decisions locked 2026-11-09; design remediation 2026-11-09. The extraction authorises no server
 migration; no migration is created by this design task. Target platforms: **iOS 27.0** and
 **watchOS 27.0**.
@@ -26,8 +26,8 @@ the session.
   `configVersion`, never the phone's currently active Away route.
 - Plan fetch and start from the watch, within the existing issued-plan rules. Start is the only
   online gate in v1; everything after it is offline-first.
-- Set logging with an optional mean velocity (VBT), rest timer, form rating and finish with sRPE
-  on the watch.
+- Set logging with optional mean and per-rep velocity (only when the plan supplies a velocity
+  target), rest timer, form rating and finish with sRPE and productivity on the watch.
 - Execution telemetry (rest and set events with their original `occurred_at`) so the server
   timeline keeps the times the user acted, not the replay times.
 - Offline-first execution: every mutation is persisted locally before the network call and
@@ -81,6 +81,7 @@ section 21. The watch performs no Home/Away switching and never follows the phon
 | D14 | The watch is pinned to `homeBaseURL`; config changes carry a monotonic `configVersion` and apply only between sessions with an empty outbox. No Home/Away switching. |
 | D15 | Offline-first after start: sets, forms, telemetry, finish and HealthKit are local-first; the network is opportunistic and partially flushed. |
 | D16 | Post-finish sync is foreground retry on the summary plus sync on next open. The phone relay and offline start are deferred. |
+| D17 | The watch captures optional mean and per-rep velocity per set, one 1–5 form rating per exercise, and session productivity at finish; the phone mirror cannot add any of them to a watch-owned session, and take-over is the only path. Correcting a watch-owned set's velocity after acknowledgement is deferred to R10. |
 
 ## 5. Platform targets and project shape
 
@@ -563,14 +564,17 @@ the selected exercise, active set or execution state, and closing it restores th
    a marker when the plan was updated. It offers no way to select, start, log or end an exercise;
    the exercise-navigation lock is unchanged, so the Plan screen cannot be used to bypass it.
 
+- **Rest end.** The watch schedules one local notification for the open rest's end (asked once
+  at session start) and re-points or cancels it when the interval is extended, shortened or closed;
+  the on-screen haptic remains. A denied permission never blocks logging.
 - **Idle warning.** The server-derived stale state is advisory and shown on Set, Session and Plan:
   “No activity for 3h — the server may abandon this session.” It never blocks a set, changes the
   workout or terminates anything locally.
 - **Ended elsewhere.** A completed or abandoned server session uses explicit wording (“Workout
   completed elsewhere” / “Workout abandoned elsewhere”); the raw status identifier is never shown.
   Locally captured sets stay visible and the clear-record action remains available.
-- End flow: summary, sRPE picker (Digital Crown, 1–10), **Finish**. Productivity is not captured
-  here; it defaults to “not recorded” and stays a phone concern.
+- End flow: summary, sRPE picker (Digital Crown, 1–10), productivity (1–5 or **Not recorded**),
+  **Finish**. Productivity defaults to “not recorded” and is a real input, matching the phone.
 - Persistent states: offline banner with pending count (“offline · 4 pending”), “Plan updated”,
   “Logging moved to phone”, plan-expired/regenerate, “credentials missing”, “resume session”,
   “finish saved on watch — syncing”.
@@ -791,6 +795,9 @@ watch token over WatchConnectivity, so the server sees the same `device_id` and
 the token handoff, a relay envelope, per-operation acknowledgement and a partial-relay recovery
 path, and cannot be relied on while the watch app is suspended. Takeover is not a substitute: its
 receipts are phone-device-scoped, so a later watch retry could duplicate.
+
+**Phone-side correction of a watch-owned set (R10).** The watch records velocity; correcting an
+acknowledged watch-owned set's velocity later is deferred until the R10 route exists.
 
 Recovery of an offline session that outlives the abandonment window; a richer hand-back from phone
 to watch after take-over; automatic phone-side surfacing of watch events (there is no

@@ -15,4 +15,4 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 
 ## Status and change control
 
-The plan records current status plus historical completion evidence. Do not infer completion from branch existence or code alone; reconcile against implementation, acceptance record and owner decision before changing status. Physical Apple Watch acceptance was owner-confirmed 2026-11-14; only the R rollback dry run remains. Completed phase records remain historical evidence and are not deleted. Superseded documents must point to their replacement.
+The plan records current status plus historical completion evidence. Do not infer completion from branch existence or code alone; reconcile against implementation, acceptance record and owner decision before changing status. Physical Apple Watch acceptance was owner-confirmed 2026-11-14 (W1–W12 and R). Completed phase records remain historical evidence and are not deleted. Superseded documents must point to their replacement.
