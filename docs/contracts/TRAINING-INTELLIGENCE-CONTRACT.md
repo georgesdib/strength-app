@@ -255,7 +255,7 @@ and record the reason in `limitations`. The field-level outbound inventory requi
 | 7 | `get_vbt_analysis` | **yes** (INT-2) | yes | limited | `features/vbt_performance.py` |
 | 8 | `get_programme_block_summary` | **yes** (INT-2) | yes | yes | `features/deload.py`, `features/regime_change.py`, `prescribe/volume_budget.py` |
 | 9 | `compare_training_periods` | **yes** (INT-2) | yes | yes | `features/attendance.py`, `features/adherence_analytics.py`, `features/volume.py` |
-| 10 | `get_weekly_review` | INT-3 | yes | yes | composition of 5, 8, and the trends |
+| 10 | `get_weekly_review` | **yes** (INT-3) | yes | yes | composition of 5, 8, and the trends |
 | — | `explain_prescription` | **rejected as a tool** | — | — | model capability over tool 6 (see §7.9) |
 
 `get_weekly_review_data` is not a separate tool: `get_weekly_review` returns the deterministic
@@ -564,7 +564,7 @@ measured week reports which sections are unavailable rather than zero.
 
 **iOS.** Yes, as `weeklyReview`.
 
-**MVP.** INT-3.
+**Status.** Implemented 2026-11-14 (backend capability and REST route; the iOS screen is INT-3b).
 
 **Representative output** (synthetic, trimmed to the fact keys):
 
@@ -715,8 +715,8 @@ headers. Error messages are reduced to their code. A logging failure MUST NOT ch
 
 - Base: `/api/ios/v1/intelligence/`, existing device bearer token, existing error envelope,
   existing idempotency rules do not apply (all reads).
-- Routes (INT-3 onward):
-  - `GET /api/ios/v1/intelligence/weekly-review?week_end=YYYY-MM-DD`
+- Routes (INT-3 onward; the weekly review is implemented, the rest are not):
+  - `GET /api/ios/v1/intelligence/weekly-review?week_end=YYYY-MM-DD` — **implemented 2026-11-14**
   - `GET /api/ios/v1/intelligence/overview?as_of=&window_weeks=`
   - `GET /api/ios/v1/intelligence/exercises/{id}/progression?window_days=`
   - `GET /api/ios/v1/intelligence/readiness?from=&to=&fields=`

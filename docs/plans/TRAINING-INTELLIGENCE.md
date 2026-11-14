@@ -770,6 +770,12 @@ heaviest tools (informational, not a gate).
 
 ### INT-3 — Weekly Training Review (deterministic) and the iOS read surface
 
+**Implementation status (2026-11-14): backend delivered; iOS pending (INT-3b).**
+`intelligence/reports/weekly_review.py`, the `get_weekly_review` tool and
+`GET /api/ios/v1/intelligence/weekly-review` are implemented and tested; the `StrengthCore`
+adapter, the SwiftUI review screen and the Week navigation are not. No narrative or model was
+added.
+
 **Scope.** `intelligence/reports/weekly_review.py` composing the sections in §8.2;
 `get_weekly_review` tool; a new read-only iOS route
 `GET /api/ios/v1/intelligence/weekly-review?week_end=YYYY-MM-DD`; `StrengthCore` envelope models and
