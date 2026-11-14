@@ -655,8 +655,9 @@ the Streamable HTTP server on revision 2026-07-28 with legacy clients served by 
 dedicated per-client tokens (hash-only, CLI create/list/rotate/revoke) with a bearer guard, Host
 allowlist, body cap, rate and concurrency limits; strict tool-argument checking (unknown keys and
 type coercion rejected before the SDK); `get_session_details`; the `strength://athlete/profile`
-resource; read-only SQLite (`mode=ro`); and a synthetic performance baseline. No REST route, model
-provider or write tool was added. Implementation detail, operation instructions, schemas and the
+resource; read-only SQLite (`mode=ro`); and a synthetic performance baseline (measured on the
+development machine; it must be repeated on the slower deployment host before enabling). No REST
+route, model provider or write tool was added. Implementation detail, operation instructions, schemas and the
 baseline are in the backend
 [INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
 The contract's profile-resource payload was corrected to the fields that actually exist: goal and
