@@ -5,6 +5,10 @@
 > device-acceptance procedures remain in `StrengthApp/`; server implementation detail remains in
 > `strength-training-app/`. Shared iOS phase contracts are indexed in the portfolio
 > `docs/contracts/` directory.
+>
+> **Apple Intelligence and PCC (2026-11-14):** the two Apple-platform items in §5 are superseded
+> by the portfolio [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7 (INT-4/INT-5). All
+> completed phases, the watch contract and the rest of this plan are unchanged.
 
 **Status:** Phase 0 complete 2026-11-07 (owner-confirmed); **Phase 1 complete 2026-11-07**
 (owner-confirmed on the physical iPhone); **Phase 2 complete and closed 2026-11-07**
@@ -62,7 +66,7 @@ Form ratings and the post-session review use existing server review/form contrac
 
 ### Explicitly not a first-release prerequisite
 
-HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B), manual cardio, advanced Longevity analytics, background processing, Apple Intelligence, and PCC remain deferred. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
+HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B), manual cardio, advanced Longevity analytics, background processing, Apple Intelligence, and PCC remain deferred — they are now specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-5), which supersedes the two Apple Intelligence/PCC bullets in §5. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
 
 ## 2. Architectural invariants
 
@@ -294,6 +298,13 @@ change.
 ### Phase 5 — Optional Enhancements
 
 Only pursue after the core app is useful and stable, with a separate scope/approval decision for each feature:
+
+**Superseded in part (2026-11-14).** The **Apple Intelligence** and **PCC** bullets below are
+superseded by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7 (INT-4/INT-5), which
+specifies the capability envelopes, the five-tool on-device adapter, availability checks, the token
+budget and the no-silent-cloud-fallback rule. The bullets stay as the original scope record and their
+privacy conditions are carried forward unchanged. The HealthKit, cardio and Longevity items in this
+phase are unaffected.
 
 - **Apple Intelligence:** optional tools may parse a spoken/typed set entry into an uncommitted draft, explain a server-produced prescription, summarize completed training, or structure free-text notes. The user reviews/accepts any draft before it reaches server validation. The model never controls training decisions or computes numbers.
 - **PCC:** an explicitly selected Apple Private Cloud Compute option for a user-invoked AI task; disabled by default, visibly identified as Apple server processing, with a preview of the context and consent before personal workout/health data is included. It is not used by pairing, readiness, prescription, capture, or sync; no automatic fallback from on-device mode; core functionality remains available with PCC disabled or offline.
@@ -571,7 +582,7 @@ sRPE precedence and no prescription/rubric changes.
 | Session RPE source | Manual remains first choice. Future Apple effort is source-labelled, only associated after confirmation, and usable only when no manual value exists. Current storage needs additive provenance. |
 | Rubric use | Reuse server's current review payload and rubric version. Marks are human optional feedback; do not implement scoring or calibration logic in Swift. |
 | HealthKit scope | HRV/RHR/bodyweight first; all other types later by explicit scope. No sleep/sleep score in this plan. |
-| PCC privacy and availability | Separate future decision; disabled by default, user-invoked, context preview/consent, no health data by default, no core dependency. |
+| PCC privacy and availability | Specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7.3; disabled by default, user-invoked, context preview/consent, no health data by default, no core dependency, no automatic fallback from on-device. |
 | Offline complexity | Defer durable offline mutation until an online session loop is proven. Cached reads do not imply the ability to prescribe or sync offline. |
 
 ## 11. Status and next task

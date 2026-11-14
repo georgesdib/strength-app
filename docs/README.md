@@ -7,13 +7,13 @@ The portfolio repository is the canonical home for shared project documentation 
 - [Plans and roadmap navigation](plans/README.md) — authoritative entry point; identifies the active shared plan and links to the backend implementation-status roadmap without duplicating it.
 - [Canonical iOS client phase plan](plans/IOS-CLIENT-PLAN.md) — phases, architecture, dependencies, acceptance, rollback gates and retained completion history.
 - [Athlete Feedback & Coaching (AFC) plan](plans/AFC.md) — canonical cross-repository plan for post-workout evaluation and feedback: evidence contract, AFC-2 (completed), AFC-2i native report, AFC-3 observations, AFC-4 nudges and the gated AFC-5.
-- [Training Intelligence plan](plans/TRAINING-INTELLIGENCE.md) — canonical cross-repository plan for the read-only intelligence capability layer, the standalone MCP server, the iOS Foundation Models adapters and phases INT-1 to INT-8. Its [implementation audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) records the verified starting state.
+- [Training Intelligence plan](plans/TRAINING-INTELLIGENCE.md) — canonical cross-repository plan for the read-only intelligence capability layer, the standalone MCP server, the iOS Foundation Models adapters and phases INT-1 to INT-8. It **supersedes the forward-planning content** of the backend LLM integration plan and the Apple Intelligence/PCC items in the iOS client plan; the retained constraints are listed in its §16. Its [implementation audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) records the verified starting state.
 
 ## Contracts and specifications
 
 - [Server/client contract index](contracts/README.md) — canonical iOS phase/R7/R8/watchOS contracts and the Training Intelligence MCP/envelope contract. Backend implementation is in `strength-training-app`; client implementation and Apple acceptance are in `StrengthApp`.
 - [Training Intelligence contract](contracts/TRAINING-INTELLIGENCE-CONTRACT.md) — response envelope, evidence rules, MCP tool/resource catalogue, error semantics, limits and the iOS native adapter contract.
-- [Training Intelligence architecture decision records](decisions/TRAINING-INTELLIGENCE-ADR.md) — cross-repository decisions ADR-INT-001 to ADR-INT-012 with alternatives and unresolved questions.
+- [Training Intelligence architecture decision records](decisions/TRAINING-INTELLIGENCE-ADR.md) — cross-repository decisions ADR-INT-001 to ADR-INT-013 with alternatives and unresolved questions.
 - Project-wide architecture/decision/specification/operations categories should be added here only when a canonical document is established; do not create a competing copy of component-coupled implementation docs.
 
 ## Agent instructions

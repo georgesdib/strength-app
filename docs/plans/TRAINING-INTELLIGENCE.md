@@ -3,6 +3,10 @@
 **Canonical location:** this file, in the portfolio repository.
 **Status:** proposed 2026-11-14 (INT-0, planning only). No runtime, API, schema, dependency,
 prompt or training-rule change is implemented by this plan.
+**Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
+`strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
+Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
+plan for training intelligence. See §16.
 **Owner:** the athlete. INT-1 may not start without explicit approval of the decisions in section 13.
 **Roadmap:** phases INT-1 to INT-8, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
@@ -837,6 +841,7 @@ INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 | 10 | No caching in INT-1/INT-2; revisit only with measured latency | approve | `ADR-INT-010` |
 | 11 | Siri AI Developer Preview excluded; stable App Intents only | approve | `ADR-INT-011` |
 | 12 | Phase 1b (retire the minimal LLM selector) before INT-5 | approve; otherwise two model surfaces coexist | `ADR-INT-012` |
+| 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
 
 Two further points need an owner answer rather than an architecture decision:
 
@@ -887,6 +892,69 @@ Deliberately **not** built:
 - No fourth repository.
 
 The only new runtime dependency is the MCP SDK, and only in an optional extra.
+
+## 16. Supersession and authority
+
+### 16.1 One authority
+
+This plan is the single forward plan for training intelligence across the three repositories. Any new
+LLM, MCP, Apple Intelligence or Siri proposal amends this plan and records a new ADR; it does not
+create a second plan. The stable-API boundary, the capability layer and the read-only constraint are
+described here and nowhere else.
+
+### 16.2 What this plan supersedes
+
+| Superseded document or section | Disposition | Replaced by |
+|---|---|---|
+| `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` §3 analyst/explainer boundaries | superseded | §4–§6 and the contract |
+| §4 shared context and evidence layer, including the `agents/context.py` path | superseded | §4, `intelligence/context.py`, `ADR-INT-002` |
+| §5 athlete-analyst reports | superseded | §4, `get_weekly_review`, model capabilities |
+| §6 programme explainer | superseded | `get_prescription` plus a model capability (§7.4, `ADR-INT-006`) |
+| §9.2 MCP server over Tailscale (Iteration 2 candidate) | superseded | §5, `ADR-INT-003`, `ADR-INT-004` |
+| §10 phases 1, 2 and 3 | superseded | INT-1 to INT-5 |
+| §11 future areas for context, analyst, explainer and `mcp/` | superseded | §3.2 |
+| `docs/plans/IOS-CLIENT-PLAN.md` §5 Apple Intelligence and PCC bullets | superseded | §7.2–§7.3, INT-4/INT-5 |
+| `ROADMAP.md` §4.24 phases 1–3 and the Iteration-2 MCP clause; §4.18 forward idea | superseded | §12, INT-1 to INT-8 |
+| Any earlier uncommitted Apple Intelligence or MCP scope | superseded | this plan |
+
+The superseded documents remain in place as **historical and requirements records**. They are not
+deleted and their headings are not rewritten, because they record decisions that still bind the
+retained items in §16.3.
+
+### 16.3 What remains in force
+
+| Item | Why it is not superseded | Owner |
+|---|---|---|
+| `DEC-LLM-01` to `DEC-LLM-06` | output is an event; structural edits are rebuilt; menus are Python-computed; essential-lift rules | backend `docs/DECISIONS.md` |
+| `LLM-INTEGRATION-PLAN.md` §8.1 field-level outbound-data inventory | the privacy precondition for every model path; adopted by reference in §9 | backend, unchanged |
+| `LLM-INTEGRATION-PLAN.md` §9 evaluation and rollout gates | gate vocabulary for any narrated or write path; adopted by reference where an INT phase narrates | backend, unchanged |
+| Phase 1b selector retirement (`DEC-LLM-14`) | still required before INT-5 so only one model surface exists (`ADR-INT-012`) | backend work item |
+| Constrained proposer (`DEC-LLM-09`, LLM plan §7, phases 4–5) | a **write** capability outside this read-only workstream; **reclassified as deferred/unscheduled**, requirements retained, any future work needs a new decision | backend, unscheduled |
+| AFC (`docs/plans/AFC.md`) | not an LLM plan; it is the deterministic producer of the evidence consumed here | portfolio |
+| iOS phase contracts (Phase 1/2/3A/4/R7/R8/watch) | they exclude AI surfaces and are unchanged | portfolio contracts |
+| `docs/ARCHITECTURE.md` §3 boundaries and `PRIVACY.md` §7 | they constrain every model path and remain true | backend docs |
+
+### 16.4 Status changes this supersession makes
+
+- **MCP moves** from a conditional Iteration-2 candidate to the primary AI-facing interface of INT-1
+  (`ADR-INT-003`), still read-only and still reusing the existing core.
+- **The context and evidence builder moves** from the planned `agents/context.py` to the
+  provider-neutral `strength_coach/intelligence/context.py` (`ADR-INT-002`).
+- **Apple Intelligence and PCC move** from an unscheduled Phase 5 bullet to a specified, independently
+  disableable INT-4/INT-5 scope with no silent cloud fallback (`ADR-INT-007`).
+- **The constrained proposer becomes deferred/unscheduled.** It is not dropped: its decision,
+  requirements and gates stay recorded, and re-activating it requires a new decision.
+- **No completed phase is reopened.** All previously closed work (iOS Phases 0–6, R1–R10,
+  AFC-2 to AFC-4) keeps its recorded status.
+
+### 16.5 Change control
+
+- A new LLM or Apple-platform proposal MUST amend this plan and add an ADR; it MUST NOT create a
+  parallel plan or extend a superseded document.
+- A change that would make any intelligence path write-capable, or that re-introduces a second
+  calculation, is a new decision outside this plan.
+- If this plan is itself superseded, it MUST name and link its replacement, and the replacement MUST
+  carry forward §16.3.
 
 ## Related
 

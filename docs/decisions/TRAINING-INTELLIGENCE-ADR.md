@@ -283,6 +283,43 @@ read-only workstream.
 
 **Status.** Proposed.
 
+## ADR-INT-013 — This plan supersedes the earlier LLM and Apple Intelligence forward plans
+
+**Context.** Three documents described overlapping future work: `strength-training-app/docs/LLM-INTEGRATION-PLAN.md`
+(analyst, explainer, constrained proposer, context builder, MCP as a conditional Iteration-2
+candidate), `ROADMAP.md` §4.24 (the same workstream in status form) and
+`docs/plans/IOS-CLIENT-PLAN.md` §5 (Apple Intelligence and PCC as unscheduled optional enhancements).
+Keeping four forward descriptions means four sets of phases, statuses and acceptance criteria that
+drift the moment one changes. Two of the old items are still binding: the outbound-data inventory and
+the evaluation gates, plus the minimal-selector retirement.
+
+**Decision.** The Training Intelligence plan is the single forward plan for training intelligence. It
+supersedes the forward-planning content listed in its §16.2 — the analyst/explainer boundaries, the
+shared context/evidence layer and its `agents/context.py` path, the MCP Iteration-2 candidate, phases
+1–3, and the Apple Intelligence/PCC bullets. The superseded documents are **retained, not deleted**, as
+historical and requirements records for the items that remain in force (§16.3): `DEC-LLM-01` to
+`DEC-LLM-06`, the §8.1 outbound-data inventory, the §9 evaluation gates, the Phase 1b selector
+retirement, and the constrained proposer (`DEC-LLM-09`), which is **deferred/unscheduled** rather than
+dropped.
+
+**Alternatives considered.**
+
+- *Delete or blank the old plan.* Rejected: it is the requirements record for the proposer, the
+  privacy inventory and the evaluation gates, and the repository rule prohibits dropping content from
+  a rewrite.
+- *Leave everything live and add a cross-reference.* Rejected: that is the current state, and it is
+  what causes the drift the owner asked to remove.
+- *Fold the constrained proposer into this plan.* Rejected: it is a write capability with its own
+  approval gates; mixing it into a read-only plan would weaken both boundaries.
+
+**Consequences.** One plan, one phase list, one status source for intelligence. Any new LLM or
+Apple-platform proposal amends this plan and adds an ADR. The proposer is explicitly unscheduled, so
+it cannot be started by momentum. The supersession is recorded in the backend Superseded table for
+`DEC-LLM-12` and `DEC-LLM-13` (item 7), and as a status banner in the LLM plan itself.
+
+**Status.** Proposed; takes effect on owner approval of this plan. **Open question:** confirm that the
+constrained proposer should be deferred/unscheduled rather than kept as a parallel workstream.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
@@ -312,6 +349,8 @@ read-only workstream.
 6. Is a server-side narration path (INT-5) wanted at all, given on-device narration (INT-4) may be
    sufficient for one athlete?
 7. Should INT-8 (controlled plan review) be closed now rather than left gated?
+8. Confirm the deferral of the constrained proposer (`DEC-LLM-09`) that ADR-INT-013 records, or
+   keep it as a parallel unscheduled workstream.
 
 ## Related
 
