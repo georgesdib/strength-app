@@ -268,8 +268,9 @@ on-demand fallback), documented in the backend
 [`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md).
 It is not an in-process cache and does not change the decision recorded here. **Milestone A**
 (revision ledger, build state, coordinator and safe publication) is implemented and audited, and
-**Milestone B** (core per-set/session materialisation and progress/strength-trend migration) is
-implemented 2026-11-14; Milestone C is not started.
+**Milestone B** (core per-set/session materialisation and progress/strength-trend migration) and
+**Milestone C** (weekly spinal exposures; deload, outcomes and monitoring migration) are implemented
+2026-11-14. Snapshots remain optional and deferred.
 
 | Option | What changes | Gains | Costs / risks |
 |---|---|---|---|
