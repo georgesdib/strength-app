@@ -645,6 +645,8 @@ is versioned there, and must not be discoverable as protocol content.
 | `invalid_state` | `isError` result | in-progress workout, unconsumed plan requested as a prescription | states the state and the next valid action |
 | `unavailable` | `isError` result | capability disabled by config, data source unavailable | states what is unavailable |
 | `internal` | `isError` result | unexpected exception | fixed text only; traceback stays in the server log |
+| `tool_timeout` | `isError` result | the adapter's `tool_timeout_seconds` expired | names the deadline; no partial payload |
+| `result_too_large` | `isError` result | the serialized envelope exceeds `max_tool_result_bytes` | names the cap; the envelope is never truncated |
 | `401` / `403` | HTTP | missing/invalid/revoked token | none (no JSON-RPC parse) |
 | `-32601` | JSON-RPC | unknown tool | standard |
 | `-32602` | JSON-RPC | malformed params / unknown resource | standard |
@@ -664,11 +666,36 @@ error for "no data"; that is `status: "no_data"`.
 | Observability rows per tool | 2 |
 | Concurrency | 4 |
 | Rate | 60 calls/minute per token |
-| Timeout | 20 s |
+| Timeout | 20 s (configurable 1-300 s) |
+| Result size | 1 MiB serialized (configurable 1 KiB-10 MiB); over-limit is a typed error, never a truncated envelope |
+| Worker cancellation | none: the deadline bounds the response, and the worker finishes its bounded read |
 | Open transaction | one read transaction per call; no transaction survives the call |
 
 Exceeding a result limit truncates deterministically and records it in `coverage.truncated` and
 `missing`. Silent truncation is a defect.
+
+
+### 7.10 Audit record
+
+Every tool invocation and resource read MUST produce exactly one structured record on a dedicated
+audit logger. The schema is metadata-only by construction:
+
+| Field | Required | Meaning |
+|---|---|---|
+| `schema` | yes | `intelligence.audit.v1` |
+| `request_id` | yes | unique per invocation |
+| `kind` | yes | `tool` or `resource` |
+| `name` | yes | tool name or resource URI |
+| `client_id` | yes | authenticated client identity, never a token |
+| `arguments_hash` | yes | canonical-JSON SHA-256 prefix; correlation, not redaction |
+| `duration_ms` | yes | handler wall time |
+| `result_rows` | when available | rows the capability considered, from its coverage block |
+| `response_bytes` | yes | serialized envelope size; 0 on failure |
+| `outcome` | yes | `ok` or the stable error code |
+| `status` | when a payload exists | envelope status |
+
+The record MUST NOT contain arguments, payloads, notes, health values, tokens or authorization
+headers. Error messages are reduced to their code. A logging failure MUST NOT change the result.
 
 ## 8. Taxonomies
 
