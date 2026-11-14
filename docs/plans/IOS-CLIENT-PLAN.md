@@ -245,6 +245,8 @@ feature gate, and would remain observational rather than a fatigue or readiness 
   and velocity no longer moves the set or shortens the rest. Tests:
   `WatchExecutionEngineTests.testAddSetIsPerformedWhenTheSetStartedNotWhenItWasSaved`,
   `.testRestIsAnchoredAtTheEndSetStampNotTheSaveTime`.
+  On the phone the anchor is the **first edit of the log sheet** (fallback: sheet open), used for
+  both `performed_at` and the rest start; `RestTimerTests` cover the anchored start.
 - **Velocity correction: not needed for iOS.** The server already corrects a completed session's
   velocity, mean and per-rep, through History → Edit session (`history.edit_session` and the
   append-only `vbt_override` chain), and the report reads the corrected values. An in-progress iOS
