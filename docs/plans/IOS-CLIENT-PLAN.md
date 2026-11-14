@@ -1,7 +1,7 @@
 # Native iPhone Client — Online-First Implementation Plan
 
 > **Canonical shared plan:** this cross-repository phase plan is maintained in the portfolio
-> repository. It reflects the Phase 6.6 implementation on 2026-11-12. iOS build, UI, live-test and
+> repository. It reflects the Phase 6.7 acceptance on 2026-11-14. iOS build, UI, live-test and
 > device-acceptance procedures remain in `StrengthApp/`; server implementation detail remains in
 > `strength-training-app/`. Shared iOS phase contracts are indexed in the portfolio
 > `docs/contracts/` directory.
