@@ -272,15 +272,23 @@ Rules:
   manual `analytics build` trigger.
 
   The ODROID HTTP benchmark (2026-11-14) measured p95 6,201 ms for session details, 4,058 ms for
-  overview, 3,800 ms for the programme summary and 1,663 ms for readiness, so the one-second
-  transport gate is not met. The rollout now tracks four items: **C-1** automatic maintenance
+  overview, 3,800 ms for the programme summary and 1,663 ms for readiness. The owner accepted a
+  latency-aware budget (T-1): fast ≤ 500 ms p95, slow/very-slow ≤ 7 s p95, no hard rejection, 20 s
+  tool timeout; the transport is enabled with the full nine-tool catalogue. The rollout tracks four
+  items: **C-1** automatic maintenance
   worker (systemd oneshot + timer sharing the backend checkout/venv, plus a post-restart run;
-  carried by the same deployment, tested but not yet deployed); **T-1** the owner decision on the
-  acceptable LLM latency budget and ADR-INT-010 amendment; **T-2** full catalogue exposure with
-  transparent measured latency metadata in every tool description, with no hiding of slow tools;
-  **T-3** optimisation of the slow capabilities and remeasurement. T-2 does not depend on hiding
-  slow tools, and T-3 improves performance rather than unlocking basic LLM functionality. Existing
-  benchmark numbers remain valid until remeasurement.
+  parked until the next production release, units tested but not installed); **T-1** accepted
+  2026-11-14 with ADR-INT-010 amended; **T-2** implemented - full catalogue with measured latency
+  metadata in every tool description and no hiding of slow tools; **T-3** in progress, profiling
+  started, then optimisation and remeasurement. T-3 improves performance rather than unlocking basic
+  LLM functionality. Existing benchmark numbers remain valid until remeasurement.
+
+  Operational 2026-11-14: the MCP server runs as a user-level process on 127.0.0.1:8765 with the
+  full catalogue (no systemd unit installed because the host requires sudo for that). It reads the
+  production database read-only. A deployment blocker exists: the production database records
+  migration 0060 with an older checksum and no analytics tables, so write-open/migration fails;
+  reconciling it requires a backup and owner approval. T-3 profiling has started on a copied
+  database; no optimisation is implemented yet.
 - If a cache is added later it keys on `(capability, validated_args, database_stamp, config_revision,
   builder_version)`, where the stamp is the existing `PRAGMA data_version` + `conn.total_changes`
   pair already used by `features/e1rm_calibration.py`, and it lives in process memory.

@@ -290,8 +290,18 @@ ODROID against a copied production database with the core family verified ready:
 (session details), 4,058 ms (overview), 3,800 ms (programme), 1,663 ms (readiness); the one-second
 gate is not met, so the transport stays disabled.
 
-**Status.** Proposed, partly implemented: **B and C implemented 2026-11-14**. Options **A**,
-**C**, **D** and **E** are outstanding, and the trigger remains met on the deployment host.
+**T-1 decision — accepted latency budget (2026-11-14).** The owner accepts a latency-aware full
+catalogue rather than the original blanket one-second gate: fast capabilities target p95 ≤ 500 ms;
+slow and very_slow capabilities target p95 ≤ 7 s, are callable without a hard latency rejection,
+and carry measured-latency guidance in their tool descriptions. The server tool timeout is 20 s.
+Measured p95 values are historical benchmarks, not guarantees. Repeated costly calls are
+discouraged in the descriptions; correctness must never be traded for latency. The transport is
+enabled on the trusted LAN with the full nine-tool catalogue; T-3 remains the optimisation and
+remeasurement work. Option **E** (do not enable) is rejected for now.
+
+**Status.** **Accepted 2026-11-14.** The transport is enabled with a full catalogue (operationally
+as a user-level process until the systemd unit is installed); options A, C and D remain future
+optimisations, and T-3 profiling/optimisation is in progress. B and C are implemented.
 
 ## ADR-INT-011 — Stable App Intents now; Siri AI Developer Preview excluded
 
