@@ -262,6 +262,12 @@ frame, plus 689 ms evaluating all five rules to read one verdict — and
 `progress.dashboard` 1,050 ms (34%), of which `performance_points` is 507 ms (16%) and the
 all-history set load 221 ms. The e1RM/ratio rebuild hypothesis is confirmed but secondary.
 
+A broader response is proposed separately: a versioned, rebuildable derived-analytics layer
+(per-set, session/exercise and weekly materialisation owned by the existing modules, with
+on-demand fallback), documented in the backend
+[`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md).
+It is not an in-process cache, is not implemented, and does not change the decision recorded here.
+
 | Option | What changes | Gains | Costs / risks |
 |---|---|---|---|
 | **A. Bound the deload context** | Pass a `start` (≈12 weeks) to `RuleContext.from_store` in `reactive_reason` | 1,349 → 209 ms for the context; deload path 1,976 → ~260 ms | **Behavioural**: the verdict's weekly-cost details shrink (109 → 13 weeks); the last-two-week decision is unchanged on the fixture, but this needs an explicit decision and tests |
