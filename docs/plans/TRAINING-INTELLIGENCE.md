@@ -615,8 +615,9 @@ INT-1b.** The owner-directed INT-1 implementation prompt narrowed this phase to 
 foundation, so the transport, the second tool and the resources are now INT-1b. Implemented and
 tested: the envelope, error taxonomy, capability registry, request validation, execution service,
 bearer authentication, configuration bounds, request-context identity and one reference capability
-(`get_training_overview`). Not implemented: everything in INT-1b, the baseline context package and
-any model path. Implementation detail is in the backend
+(`get_training_overview`). INT-1b has since delivered the transport, the second tool and the resource
+(see below). Still not implemented: the baseline context package and any model path. Implementation
+detail is in the backend
 [INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
 
 **Scope (as originally written).** The envelope, error taxonomy, capability registry, context builder skeleton, MCP server
@@ -648,7 +649,20 @@ no change to any existing endpoint.
 
 ### INT-1b — MCP transport and the second tool
 
-**Scope.** The `mcp>=2,<3` optional dependency and console script; `strength_coach/intelligence/mcp/`
+**Implementation status (2026-11-14): implemented and tested.** Delivered: the `intelligence`
+optional extra and `strength-intelligence-mcp`/`strength-coach intelligence serve` entry points;
+the Streamable HTTP server on revision 2026-07-28 with legacy clients served by the same app;
+dedicated per-client tokens (hash-only, CLI create/list/rotate/revoke) with a bearer guard, Host
+allowlist, body cap, rate and concurrency limits; strict tool-argument checking (unknown keys and
+type coercion rejected before the SDK); `get_session_details`; the `strength://athlete/profile`
+resource; read-only SQLite (`mode=ro`); and a synthetic performance baseline. No REST route, model
+provider or write tool was added. Implementation detail, operation instructions, schemas and the
+baseline are in the backend
+[INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
+The contract's profile-resource payload was corrected to the fields that actually exist: goal and
+priority columns are retired (DEC-STATE-02), and injury constraints are withheld and only counted.
+
+**Scope (as written).** The `mcp>=2,<3` optional dependency and console script; `strength_coach/intelligence/mcp/`
 (Streamable HTTP endpoint, bearer guard, deterministic tool registry, tool/resource schemas,
 `json_response`, limits, deployment unit); `get_session_details` (worker `workout_id` path, reusing
 `workout.summary()` and its real evidence array); the `strength://athlete/profile` resource; legacy

@@ -322,6 +322,11 @@ Exactly one of `workout_id`/`session_id`. Both or neither → `invalid_argument`
 **Coverage.** In-progress workout → `invalid_state` tool error (not `no_data`). Voided session →
 `no_data` with the void reason.
 
+**Imported sessions.** When the identifier resolves to a session with no workout row, the facts are
+`session`, `sets` (bounded and allowlisted), `adherence` and `vbt` as status/reason only, and
+`feedback`; `strength`, `dose` and `quality` are workout-only. The response reports the analysis as
+unavailable instead of estimating it.
+
 **Privacy.** `free_text` excluded: no notes field, no note parameter.
 
 **iOS.** Yes; identical to the existing summary route, so the app may reuse its decoder.
@@ -609,7 +614,7 @@ Resources are compact, cacheable context the host may attach without a tool call
 
 | URI | Payload | `ttlMs` | `cacheScope` | Privacy |
 |---|---|---|---|---|
-| `strength://athlete/profile` | goal, priority order, days/week, structured constraints, units, training-age band | 300000 | `private` | training (no injuries by default) |
+| `strength://athlete/profile` | training profile (days/week, session cap, block start, volume budget, main-lift policy) and non-injury structured constraints | 300000 | `private` | training (injuries withheld and counted) |
 | `strength://programme/current` | sessions/week, session-type rotation, deload state, volume policy summary | 60000 | `private` | training |
 | `strength://overview/current` | the `get_training_overview` fact set at 4 weeks, compacted | 300000 | `private` | training |
 
@@ -620,7 +625,11 @@ Rules:
 - No `resources/subscribe`; `subscribe: false`.
 - A resource payload MUST be a valid envelope (same schema, smaller facts), so one decoder handles
   both.
-- The profile resource MUST NOT include free text, notes, injuries or measurements in v1.
+- The profile resource MUST NOT include free text, notes, injuries or measurements. Injury
+  constraints are withheld and reported only as a count. Goal, goal-rank and focus-lift fields are
+  retired (`DEC-STATE-02`) and are not part of the payload.
+- The resource payload is a valid envelope with `capability: athlete_profile`; it is not a
+  registered tool and cannot be invoked as one.
 
 ### 7.7 Prompts
 
