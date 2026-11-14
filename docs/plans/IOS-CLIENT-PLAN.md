@@ -30,10 +30,10 @@ Server contracts:
 [`design/IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) and
 [`design/IOS-R8-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R8-CONTRACT.md). Later phases remain proposals and need
 separate approval. **Phase 6.3 (watchOS companion) closed 2026-11-11; 6.4–6.6 are
-complete and 6.7 physical acceptance is pending**: the watch can start a watch-targeted plan,
+complete and 6.7 physical acceptance was owner-confirmed 2026-11-14**: the watch can start a watch-targeted plan,
 log sets with rest, form and velocity, finish with sRPE, replay offline work, reconcile plan
 revisions, mirror on the phone with take-over, and show the active Set, Session and Plan
-destinations. Physical Apple Watch acceptance remains owner-run:
+destinations. Physical Apple Watch acceptance was owner-run:
 [`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md).
 
 **Purpose:** deliver a practical iPhone interface for one person's existing strength-training workflow, without porting the training method or making a public cloud service a prerequisite. Start with an ordinary, connected strength session. Add offline capture, HealthKit, and Apple Intelligence only after the smaller client proves useful and reliable.
@@ -248,7 +248,7 @@ Only pursue after the core app is useful and stable, with a separate scope/appro
 
 **Acceptance:** each enhancement is independently disableable and does not become a dependency of pairing, readiness, prescription, workout capture, or review. On-device AI and PCC outputs are suggestions/text only; all numeric training data still pass through explicit user review and existing server validation.
 
-### Phase 6 — watchOS companion (6.0–6.6 complete; 6.7 acceptance pending)
+### Phase 6 — watchOS companion (6.0–6.7 complete)
 
 The phone plans; the watch executes. Full contract:
 [`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md). Decisions locked 2026-11-09 and
@@ -260,8 +260,11 @@ migration `0058_watch_companion.sql`. 6.3 adds the execution lifecycle: start, p
 capture, rest, finish with sRPE, offline replay with bounded retry, relaunch restore and
 observed-only execution telemetry. 6.4 adds offline conflicts, 6.5 adds heart rate and the
 exactly-once HealthKit save, and 6.6 adds the phone mirror, plan revisions, active-session Plan,
-refresh/reconnect and the ownership/form corrections. Physical watch acceptance (6.7) remains
-owner-run.
+refresh/reconnect and the ownership/form corrections. Physical watch acceptance (6.7) was
+owner-confirmed 2026-11-14 on build `8c26af0`; W11 (patchy Wi-Fi), W12 (home config refresh) and
+R (rollback dry run) remain recorded follow-ups, not blockers. The watch UI smoke test
+(`StrengthWatchUITests`) now passes end to end (fetch → start → log → finish) against a disposable
+server, so the flow has automated evidence as well as the physical sign-off.
 
 **Scope.** The phone requests a plan with an explicit `execution_target` (`phone` or `watch`);
 the watch fetches the plan targeted for it, starts the session, logs sets, rest, form ratings and
@@ -324,9 +327,10 @@ on boundaries and per-stage acceptance.
    form ratings and optional mean velocity. The phone
    mirror hides form/velocity controls and rejects phone form mutations before any offline queue.
    See contract §13 and §17.
-8. **6.7 Acceptance and CI — pending physical acceptance.** Watch build and deployment-target
-   assertion in `ios-ci`, the twelve scenario tests in contract §17, physical Ultra
-   acceptance, docs and rollback notes. The physical script and sign-off table are
+8. **6.7 Acceptance and CI — complete 2026-11-14 (owner-confirmed).** Watch build and
+   deployment-target assertion in `ios-ci`, the scenario tests in contract §17, the physical
+   Ultra acceptance, docs and rollback notes. W11 (patchy Wi-Fi), W12 (home config refresh) and
+   R (rollback dry run) remain owner-run follow-ups. The physical script and sign-off table are
    [WATCH-ACCEPTANCE.md](https://github.com/georgesdib/StrengthApp/blob/development/WATCH-ACCEPTANCE.md).
 
 **6.7 scenario evidence.** Client evidence per contract §17 scenario, verified against the test
@@ -532,14 +536,16 @@ Phase 6.2 (watchOS companion) has a completed plan and contract
 6.1 server contract, 6.2a watch target, 6.2b credential handoff and 6.2c read-only Today are
 complete, and 6.3's execution lifecycle closed 2026-11-11. 6.4 (offline conflicts), 6.5 (heart
 rate and HealthKit) and 6.6 (phone mirror, plan revisions and active-session corrections) are
-complete. Physical watch acceptance (6.7) remains owner-run and is the only open Phase 6 step.
+complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14; the only Phase 6
+follow-ups are W11 (patchy Wi-Fi), W12 (home config refresh) and R (rollback dry run), all
+owner-run and recorded in the client acceptance checklist.
 
 Phase 3B (Apple Workout summaries and related cardio data) remains a separate proposal and needs
 its own approved contract. Phase 5 remains optional and separately approved. R7 and R8 are
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
 Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
-remains a separate contract; Phase 6.6 is complete, with 6.7 physical acceptance pending.
+remains a separate contract; Phase 6.7 is owner-confirmed, with W11/W12/R left as follow-ups.
 
 ## 12. References
 
