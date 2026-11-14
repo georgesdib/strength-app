@@ -657,7 +657,14 @@ allowlist, body cap, rate and concurrency limits; strict tool-argument checking 
 type coercion rejected before the SDK); `get_session_details`; the `strength://athlete/profile`
 resource; read-only SQLite (`mode=ro`); and a synthetic performance baseline (measured on the
 development machine; it must be repeated on the slower deployment host before enabling). No REST
-route, model provider or write tool was added. Implementation detail, operation instructions, schemas and the
+route, model provider or write tool was added.
+
+**Audit remediation (2026-11-14):** token revoke/rotate now take effect without a restart (the
+store is re-read per request, atomic writes, fail closed on a malformed file); every tool and
+resource emits one structured metadata-only audit record; the MCP adapter enforces a configurable
+20-second response deadline and 1 MiB serialized-result cap with typed errors rather than a
+truncated envelope; a dedicated systemd unit and deployment guide exist (not yet deployed); and a
+live HTTP integration test drives both tools and the resource through the official client. Implementation detail, operation instructions, schemas and the
 baseline are in the backend
 [INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
 The contract's profile-resource payload was corrected to the fields that actually exist: goal and
