@@ -1,8 +1,9 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE AND IMPLEMENTATION PLAN
 
 **Canonical location:** this file, in the portfolio repository.
-**Status:** proposed 2026-11-14 (INT-0, planning only). No runtime, API, schema, dependency,
-prompt or training-rule change is implemented by this plan.
+**Status:** proposed 2026-11-14 (INT-0, planning only). INT-1, INT-1b and the INT-2 catalogue have
+since been delivered (§11); this plan document itself changes no runtime, API, schema, dependency,
+prompt or training rule.
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
