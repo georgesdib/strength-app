@@ -269,11 +269,12 @@ so VBT entry no longer moves the set's recorded time.
   the set keeps its original id and timestamp; replay with the same key is a no-op; a correction
   after finish is rejected; existing set/remove/form paths are unchanged.
 
-### R11 — Rest timer Live Activity (planned; client-only)
+### R11 — Rest timer Live Activity (dropped 2026-11-14)
 
-**Status:** planned 2026-11-11; not started. Restored 2026-11-14. Depends on the app-level rest
-timer. The watch's end-of-rest local notification (2026-11-14) is a separate, smaller feature and
-does not cover the iPhone.
+**Status:** **dropped 2026-11-14; not needed.** Restored earlier the same day after a plan rewrite
+dropped it, then closed: the watch schedules a local end-of-rest notification, the phone shows its
+rest timer in-app, and a Live Activity could not cover watch-owned sessions without a
+WatchConnectivity event channel (contract §21). The original scope is kept below for the record.
 
 Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
 does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
@@ -595,11 +596,11 @@ Phase 3B (Apple Workout summaries and related cardio data) remains a separate pr
 its own approved contract. Phase 5 remains optional and separately approved. R7 and R8 are
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
-R11 (rest timer Live Activity) is planned below and recorded in section 4; it is not approved to
-start. R10 closed on 2026-11-14 (timing implemented; iOS velocity correction superseded by the
-server's post-workout edit).
+R10 closed on 2026-11-14 (timing implemented on both devices; iOS velocity correction superseded by
+the server's post-workout History edit). R11 (rest timer Live Activity) was dropped on 2026-11-14 as
+unnecessary.
 
-Do not begin Phase 3B, cardio, PCC or R11 work without separate approval. Phase 4 is closed; Phase 3B
+Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
 remains a separate contract; Phase 6.7 is fully confirmed (W1–W12 and R).
 
 ## 12. References
