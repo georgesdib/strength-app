@@ -323,12 +323,18 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
   History; the view is read-only, shows the observation when present, adherence, VBT, feedback,
   quality flags and evidence, and renders unavailable data with its reason. No client arithmetic,
   no synthesised observation, and no second completion request (`00eda49`, `7afde09`).
+- **Slow summary handling (2026-11-14).** The iPhone report read allows up to 60 seconds and
+  does not retry internally; the server logs the summary request start, elapsed completion time
+  and an unhandled-exception traceback with a 500. The server also added a summary fast path
+  (`acf03ac`: one clean-set snapshot and no relative-strength ratios for the native caller),
+  reducing the native path from 13.3 s to 7.0 s. This keeps a slow server from appearing
+  unreachable at the old 10-second limit.
 - **Review remediation.** The report now shows the unattributable prescribed-slot count and
   preserves unknown counts instead of substituting zero. The evidence envelope carries
   `evidence_version` and `source_fingerprint`; `source_ids` name exact contributing rows, and
   RIR evidence uses only evaluated RIR set IDs (`DEC-AFC-10`). Snooze semantics are documented as
   hiding through the inclusive expiry date.
-- **Verification.** 292 iOS unit tests pass and the report build succeeds; the backend evidence,
+- **Verification.** 298 iOS unit tests pass and the report build succeeds; the backend evidence,
   observations, adherence, summary and iOS API tests pass; `docs` consistency and `ruff` pass.
 - **Outstanding.** Physical iPhone acceptance of the report (including its observation) and its
   offline/retry behaviour is still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`.
