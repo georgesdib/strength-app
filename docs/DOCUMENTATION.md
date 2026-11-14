@@ -16,7 +16,8 @@ The portfolio repository (`georgesdib/strength-app`) is the canonical source of 
 - [`docs/plans/README.md`](plans/README.md) is the portfolio-level plan and roadmap locator. It links the backend implementation roadmap without duplicating it because that file is consumed by backend tests and the docs viewer.
 - [`docs/plans/IOS-CLIENT-PLAN.md`](plans/IOS-CLIENT-PLAN.md) is the canonical cross-repository iOS phase plan.
 - [`docs/plans/AFC.md`](plans/AFC.md) is the canonical cross-repository Athlete Feedback & Coaching plan; the backend `docs/AFC.md` is a compatibility pointer.
-- [`docs/contracts/README.md`](contracts/README.md) indexes the canonical server/client phase contracts.
+- [`docs/plans/TRAINING-INTELLIGENCE.md`](plans/TRAINING-INTELLIGENCE.md) is the canonical cross-repository Training Intelligence plan (capability layer, MCP server, iOS adapters, phases INT-1 to INT-8); its [audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) is a dated record, and [`docs/decisions/TRAINING-INTELLIGENCE-ADR.md`](decisions/TRAINING-INTELLIGENCE-ADR.md) holds its cross-repository decisions.
+- [`docs/contracts/README.md`](contracts/README.md) indexes the canonical server/client phase contracts, including the [Training Intelligence MCP/envelope contract](contracts/TRAINING-INTELLIGENCE-CONTRACT.md).
 - `docs/agent/` is the source for shared task routing, prompts and machine handoff. Machine-only private instructions remain untracked and local.
 
 A component roadmap may remain local only when it is specifically the component's implementation-status authority and is coupled to that component's code, tests or tools. The backend `ROADMAP.md` is such an exception; it is not a second cross-repository roadmap. Portfolio documents must link to it rather than restating its active phase status.

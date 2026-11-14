@@ -6,6 +6,7 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 
 - [iOS client phase plan](IOS-CLIENT-PLAN.md) — cross-repository milestones, scope, dependencies, acceptance criteria, architecture boundaries, and historical completion records. It reflects the Phase 6 closure: 6.0–6.7 complete, with 6.7 owner-confirmed 2026-11-14.
 - [Athlete Feedback & Coaching (AFC) plan](AFC.md) — composition rules over the backend adherence/VBT/feedback services, the shared evidence contract, and phases AFC-2 (completed), AFC-2i (implemented native report), AFC-3, AFC-4 and the separate AFC-5. Backend code paths stay authoritative in `strength-training-app`; this plan is the canonical cross-repository statement.
+- [Training Intelligence plan](TRAINING-INTELLIGENCE.md) — read-only intelligence capability layer, standalone MCP server, iOS Foundation Models adapters and phases INT-1 to INT-8. Status: proposed 2026-11-14; INT-1 requires owner approval of its decisions. The verified starting state is in the [implementation audit](TRAINING-INTELLIGENCE-AUDIT.md).
 - [Server/client contract index](../contracts/README.md) — canonical contracts and ownership of their implementation.
 
 ## Component roadmap and active status
