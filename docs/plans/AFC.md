@@ -4,7 +4,7 @@
 compatibility pointer and is not authoritative.
 
 **Status:** AFC-2, AFC-2i, AFC-3 and AFC-4 are implemented 2026-11-13; physical iPhone acceptance
-of the AFC-2i report is pending. AFC-5 is scoped (docs only) and remains separate and gated.
+of the AFC-2i report and its observation was owner-confirmed 2026-11-14. AFC-5 is scoped (docs only) and remains separate and gated.
 
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
@@ -227,7 +227,7 @@ per-workout observation record: the payload carries evidence items and quality f
 
 ### AFC-2i — native post-workout feedback report
 
-**Status: implemented 2026-11-13; physical iPhone acceptance pending.** The backend exposes a
+**Status: implemented 2026-11-13; physical iPhone acceptance owner-confirmed 2026-11-14.** The backend exposes a
 transport-only facade and the iPhone renders the same payload read-only. It depends on AFC-2 and
 the report contract AFC-2 delivered; it does not depend on AFC-3 or AFC-4 and does not reopen
 AFC-2.
@@ -454,14 +454,15 @@ beside or after them, but never before AFC-2.
   no positive e1RM trend over 12 weeks at median RIR within tolerance, with at least 8 comparable
   sessions; otherwise *unknown*. It must not be retuned after seeing output, and no number has
   been produced under it yet.
-- **Per-workout observation (closed 2026-11-13, native rendering pending).** The decision is
+- **Per-workout observation (closed 2026-11-13; iPhone rendering owner-confirmed 2026-11-14).** The decision is
   taken: `workout.summary()` carries one deterministic, evidence-wrapped observation
   (`DEC-AFC-08`). The backend, web end screen and iPhone report render it; no client may
   synthesise or reword it.
 - **Tracked follow-ups (review tasks, not code).** Two pending items are now reminders in the
   app's periodic-review panel, so they cannot be forgotten: `afc_device_acceptance` (physical
-  iPhone acceptance of the report and its observation; due now) and `afc_5a_historical` (AFC-5a
-  historical analysis; waits until 2027-01-23, the day after the Phase 5A gate). Neither starts
+  iPhone acceptance of the report and its observation; **closed 2026-11-14 — the reminder can be
+  closed in the review panel**) and `afc_5a_historical` (AFC-5a historical analysis; waits until
+  2027-01-23, the day after the Phase 5A gate). Neither starts
   work by itself; the first is a checklist and the second is a precondition.
 - **Interpretation caveat for the gate.** A declared break depresses `attendance.pct` and can
   raise `ATTENDANCE_LOW` in the Phase 5A read-out. This is expected behaviour under
