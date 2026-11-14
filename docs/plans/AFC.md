@@ -151,8 +151,10 @@ per cohort (`set_ids`, `method_versions`, `calibration_ids`, `target_sources`, `
 
 Each evidence item carries:
 
-- a deterministic `evidence_id` derived from source, source rows and window;
-- `source` and `source_ids` (the rows actually used);
+- a deterministic `evidence_id` derived from source, source identities and window;
+- `evidence_version` and `source_fingerprint`, the latter hashing the exact contributing
+  source rows;
+- `source` and `source_ids` (the exact contributing rows, not a containing session inventory);
 - the analysis `window`;
 - `value` and `unit`;
 - `n` and the comparability verdict;
@@ -164,7 +166,9 @@ Each evidence item carries:
 
 Rules:
 
-- a changed window or a changed input row changes the id;
+- a changed window, source identity or value changes the id;
+- a changed source revision changes `source_fingerprint` even when the aggregate value and
+  `evidence_id` stay the same;
 - an observation without evidence is allowed only when labelled as interpretation;
 - the UI can expand a claim to its evidence;
 - no consumer computes a metric to build an evidence item.
@@ -309,23 +313,25 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
     the summary API tests and the Phase 5A guards remain authoritative; the client adds no
     expected-value arithmetic.
 
-**As implemented (2026-11-13).**
+**As implemented (2026-11-13; review remediation 2026-11-14).**
 
-- **Transport resolved.** The backend added the transport-only facade
+- **Transport resolved.** The backend exposes the transport-only facade
   `GET /api/ios/v1/workouts/<id>/summary` (`9e85865`), returning `workout.summary()` unchanged;
-  unknown id 404, in-progress 409. `workout.summary()` itself was not extended, so the
-  per-workout observation decision stays open.
+  unknown id 404, in-progress 409. The summary carries at most one deterministic
+  observation (`823d991`, `DEC-AFC-08`).
 - **Client.** The iPhone opens the report after an acknowledged completion and reopens it from
-  History; the view is read-only, shows adherence, VBT, feedback, quality flags and evidence, and
-  renders unavailable data with its reason. No client arithmetic, no coaching observation, and no
-  second completion request (`00eda49`).
-- **Verification.** 289 iOS unit tests pass and the report navigation build succeeds; the backend
-  `test_ios_api` covers the facade plus 404/409; `docs` consistency and `ruff` pass.
-- **Outstanding.** Physical iPhone acceptance of the report and its offline/retry behaviour is
-  still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`. The "What stood out" rendering
-  (`7afde09`) was written after the last successful iOS build and is **not compiled yet**; the
-  tracked `afc_device_acceptance` reminder is the proof, and a compile fix is expected to be
-  small.
+  History; the view is read-only, shows the observation when present, adherence, VBT, feedback,
+  quality flags and evidence, and renders unavailable data with its reason. No client arithmetic,
+  no synthesised observation, and no second completion request (`00eda49`, `7afde09`).
+- **Review remediation.** The report now shows the unattributable prescribed-slot count and
+  preserves unknown counts instead of substituting zero. The evidence envelope carries
+  `evidence_version` and `source_fingerprint`; `source_ids` name exact contributing rows, and
+  RIR evidence uses only evaluated RIR set IDs (`DEC-AFC-10`). Snooze semantics are documented as
+  hiding through the inclusive expiry date.
+- **Verification.** 292 iOS unit tests pass and the report build succeeds; the backend evidence,
+  observations, adherence, summary and iOS API tests pass; `docs` consistency and `ruff` pass.
+- **Outstanding.** Physical iPhone acceptance of the report (including its observation) and its
+  offline/retry behaviour is still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`.
 
 ### AFC-3 — longitudinal observations
 
@@ -387,8 +393,9 @@ Scope: extend existing hosts only. No new tab.
 - the end screen carries the per-workout report;
 - Today carries at most one nudge, expressed as a review category rather than a competing list;
 - one shared nudge component with expandable trigger and evidence;
-- suppression uses the `maintenance_review` pattern: snooze 14 days, permanent dismissal per
-  key and window, at most one nudge per surface per day.
+- suppression uses the `maintenance_review` pattern: snooze 14 days, with the expiry date
+  inclusive (1 March → hidden through 15 March, returns 16 March), permanent dismissal per key
+  and window, at most one nudge per surface per day.
 
 ### AFC-5 — evidence-gated prescription adaptation (separate)
 
