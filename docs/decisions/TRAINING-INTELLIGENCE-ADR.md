@@ -248,7 +248,25 @@ cross-request cache that ignores writes.
 **Consequences.** Predictable correctness; latency measured before it is optimised. The envelope
 already exposes the revision, so a future cache is auditable.
 
-**Status.** Proposed.
+**Addendum — deployment-host measurement and options (2026-11-14).** The trigger is met. On the
+deployment-class host (Linux aarch64, 4 cores, Python 3.13.5, local SQLite) the synthetic baseline
+at the real history size measured **p50 3,101.9 ms / p95 3,169.4 ms / max 3,284.2 ms** over 20
+runs (377 sessions, 6,786 sets, 6.5 MB), all `status: ok`. The development Mac measured 220 ms
+p50 at 200 sessions and 573 ms at 600, so this is host speed, not dataset size.
+
+| Option | What changes | Gains | Costs / risks |
+|---|---|---|---|
+| **A. Bounded lookback for the performance ratio** | Cap the history the ratio rebuilds (e.g. 26 weeks) or materialise a per-session e1RM series | Removes the dominant cost for every consumer; no stale reads | A **metric definition change**: the ratio's comparison window changes, historical numbers are not comparable, needs a decision record, Phase 5A care and tests |
+| **B. In-process cache keyed on the full stamp** | Cache by `data_version` + `total_changes` + capability + validated args + builder version | No metric change; correctness preserved by the stamp; auditable through `provenance` | Cold call still ~3.1 s; memory; config revisions must be in the key; only helps repeated reads |
+| **C. Do not enable the transport on this host** | Keep web/CLI only | Zero risk | The intelligence workstream cannot ship on the target hardware |
+
+**Recommendation.** Prefer **A** if the ratio can accept a bounded window — it fixes the cost for
+every caller rather than hiding it — and add **B** only if cold-start latency still exceeds the
+threshold after the bound. Do not ship C silently: it stalls INT-1 on the deployment host.
+
+**Status.** Proposed (trigger met; measurement recorded). No cache and no lookback are
+implemented, and the transport must not be enabled on the deployment host until this addendum is
+decided.
 
 ## ADR-INT-011 — Stable App Intents now; Siri AI Developer Preview excluded
 
