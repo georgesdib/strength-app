@@ -883,6 +883,32 @@ INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 - INT-7 is independent of the model work and could run in parallel with INT-4/5.
 - INT-8 has no implementation dependency that justifies starting it early.
 
+### Later-stage candidate — retrieval-augmented generation (not a phase, not scheduled)
+
+RAG is a possible **later** addition. It is not part of INT-1 to INT-8, is not a prerequisite for
+any of them, and is not approved. Today's tools return structured facts from the authoritative
+services; retrieval would add a reviewed text corpus — methodology notes, decision records,
+published evidence summaries — so a model can ground an explanation in sources the tools cannot
+express.
+
+It stays a candidate until all of the following hold:
+
+1. a recurring question that the fact tools demonstrably cannot answer is written down;
+2. the corpus is defined, reviewed and versioned, with an explicit sensitivity class per document;
+3. a deterministic keyword/BM25-style baseline is built and measured first; embeddings and a vector
+   store are permitted only if that baseline is insufficient;
+4. a pre-registered evaluation set measures citation precision and recall, staleness and
+   unsupported claims, with a stop rule that prefers the simpler option;
+5. privacy review covers both the corpus and the queries (health-adjacent text is excluded by
+   default, per the field-level inventory in `LLM-INTEGRATION-PLAN.md` §8.1);
+6. the owner approves it and a new ADR records the corpus, retrieval method, citation contract and
+   limits.
+
+Boundaries that do not change: retrieval may add **sources**, never compute a training value, never
+override a rule or measurement, never become a hard constraint, and never open a write path.
+Retrieved text is data, not instructions. If adopted it extends the model layer (§7) and leaves the
+MCP tool boundary facts-only.
+
 ## 13. Decisions requiring explicit approval
 
 | # | Decision | Recommendation | ADR |
