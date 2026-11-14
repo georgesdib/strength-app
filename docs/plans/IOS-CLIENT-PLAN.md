@@ -1,7 +1,7 @@
 # Native iPhone Client — Online-First Implementation Plan
 
 > **Canonical shared plan:** this cross-repository phase plan is maintained in the portfolio
-> repository. It reflects the Phase 6.6 implementation on 2026-11-12. iOS build, UI, live-test and
+> repository. It reflects the Phase 6.7 acceptance on 2026-11-14. iOS build, UI, live-test and
 > device-acceptance procedures remain in `StrengthApp/`; server implementation detail remains in
 > `strength-training-app/`. Shared iOS phase contracts are indexed in the portfolio
 > `docs/contracts/` directory.
@@ -17,8 +17,9 @@ completion/abandon, Progress, opt-in HealthKit HRV/RHR/bodyweight readiness, Key
 Home/Away server routing by Home Server reachability with a Prefer Home manual override (no
 Wi-Fi SSID, Location or Access Wi-Fi Information entitlement), Settings Exercise Library with read-only configurations, e1RM and paginated
 working-set history,
-172 unit tests
-after R1/R3/R5/Phase 3A and the Phase 6 watch slices, plus optional live UI smoke tests. Phase 3A is closed 2026-11-08; physical
+296 unit tests
+after R1–R10, Phase 3A, Phase 4 and the Phase 6 watch slices (2026-11-14), plus optional live UI
+smoke tests. Phase 3A is closed 2026-11-08; physical
 HealthKit acceptance was owner-confirmed and Phase 3B is out of scope. R7 (asynchronous
 prescription request with session-type and minimum-session settings) is **implemented and closed
 2026-11-08**: the app builds with an iOS 27.0 deployment target and the client tests pass on the
@@ -30,10 +31,10 @@ Server contracts:
 [`design/IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) and
 [`design/IOS-R8-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R8-CONTRACT.md). Later phases remain proposals and need
 separate approval. **Phase 6.3 (watchOS companion) closed 2026-11-11; 6.4–6.6 are
-complete and 6.7 physical acceptance is pending**: the watch can start a watch-targeted plan,
+complete and 6.7 physical acceptance was owner-confirmed 2026-11-14**: the watch can start a watch-targeted plan,
 log sets with rest, form and velocity, finish with sRPE, replay offline work, reconcile plan
 revisions, mirror on the phone with take-over, and show the active Set, Session and Plan
-destinations. Physical Apple Watch acceptance remains owner-run:
+destinations. Physical Apple Watch acceptance was owner-run:
 [`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md).
 
 **Purpose:** deliver a practical iPhone interface for one person's existing strength-training workflow, without porting the training method or making a public cloud service a prerequisite. Start with an ordinary, connected strength session. Add offline capture, HealthKit, and Apple Intelligence only after the smaller client proves useful and reliable.
@@ -91,7 +92,7 @@ HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-rele
 
 ## 4. Phased implementation plan
 
-Each phase is separately reviewable. Add only the endpoints, migrations, client screens, and tests needed for that phase. The first connected vertical slice was implemented before any offline queue, HealthKit importer, or model feature. Phases 0–2, Phase 3A, Phase 4, and R1–R5, R7 and R8 are closed; Phase 3B and Phase 5 need separate approval before they start.
+Each phase is separately reviewable. Add only the endpoints, migrations, client screens, and tests needed for that phase. The first connected vertical slice was implemented before any offline queue, HealthKit importer, or model feature. Phases 0–2, Phase 3A, Phase 4, Phase 6.0–6.7 and R1–R5/R7–R10 are closed; R11 was dropped; Phase 3B and Phase 5 need separate approval before they start.
 
 **Implementation order (owner decision, 2026-11-07):** Phases 0–2, 3A and 4 are complete; next are
 3B (Apple Workout imports) and Phase 5. Phase numbers stay stable so existing references do not move;
@@ -223,8 +224,9 @@ capture, ordered replay and conflict handling); physical offline acceptance was 
 
 ### R9 — Execution telemetry and timeline
 
-**Status:** server and client implemented on `development`; simulator/unit gates pass. Physical-device
-acceptance remains an owner step before this section is marked closed.
+**Status:** **closed 2026-11-14 (owner-confirmed).** Server and client are implemented on
+`development`; simulator/unit gates pass and the physical acceptance was confirmed with the rest of
+Phase 6.
 
 The additive server stream (`workout_execution_event`, migration 0057) records explicit set/rest/
 exercise start and completion events without changing `workout_set` or `workout_event`. Events are
@@ -237,6 +239,58 @@ heart rate and bodyweight for readiness only; it does not request or expose work
 samples. Adding workout HR would require a separate opt-in, separate samples, provenance and
 feature gate, and would remain observational rather than a fatigue or readiness input.
 
+### R10 — Set correction and VBT timing (closed 2026-11-14)
+
+**Status:** **closed 2026-11-14.** Restored after a plan rewrite dropped this section.
+- **VBT timing: implemented.** The watch stamps End set and anchors both the set's completion and
+  the rest interval to it; the add-set carries the Start-set time as `performed_at`, so entering RIR
+  and velocity no longer moves the set or shortens the rest. Tests:
+  `WatchExecutionEngineTests.testAddSetIsPerformedWhenTheSetStartedNotWhenItWasSaved`,
+  `.testRestIsAnchoredAtTheEndSetStampNotTheSaveTime`.
+  On the phone the anchor is the **first edit of the log sheet** (fallback: sheet open), used for
+  both `performed_at` and the rest start; `RestTimerTests` cover the anchored start.
+- **Velocity correction: not needed for iOS.** The server already corrects a completed session's
+  velocity, mean and per-rep, through History → Edit session (`history.edit_session` and the
+  append-only `vbt_override` chain), and the report reads the corrected values. An in-progress iOS
+  correction route would duplicate that with a second write path, so it is deliberately not built.
+  The original intent is kept below for the record.
+
+The owner can enter mean and per-rep velocity when logging a set (implemented on the phone and the
+watch) or correct a performed set's velocity from the logged-set list during the following rest. A
+correction appends an `update_set` event through the existing `workout.update_set` service; the set
+id, its `performed_at` and the running rest timer are untouched, and the latest value wins for
+display and downstream analysis. Add-set also sends the explicit Start-set time as `performed_at`
+so VBT entry no longer moves the set's recorded time.
+
+- v1 corrects mean and per-rep velocity only; load/reps/RIR corrections remain out of scope.
+- The route is authenticated, owner-checked, idempotent, closed-field, and allowed only while the
+  workout is in progress; a completed or abandoned workout rejects it.
+- Only a server-confirmed set can be corrected from the workout UI; a pending local set keeps its
+  existing cancellation path. Offline correction is a later increment.
+- Acceptance: a correction made during rest is visible after refresh and in execution analytics;
+  the set keeps its original id and timestamp; replay with the same key is a no-op; a correction
+  after finish is rejected; existing set/remove/form paths are unchanged.
+
+### R11 — Rest timer Live Activity (dropped 2026-11-14)
+
+**Status:** **dropped 2026-11-14; not needed.** Restored earlier the same day after a plan rewrite
+dropped it, then closed: the watch schedules a local end-of-rest notification, the phone shows its
+rest timer in-app, and a Live Activity could not cover watch-owned sessions without a
+WatchConnectivity event channel (contract §21). The original scope is kept below for the record.
+
+Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
+does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
+updates and no push); the app starts, extends and ends the activity with the timer and ends it on
+skip, finish, close or abandonment, with a stale date as a backstop. No server, contract or schema
+change.
+
+- A widget extension target is added to `project.xcproj` (Xcode 27 JSON format) plus
+  `NSSupportsLiveActivities`; a small target spike runs first because this is the only unproven
+  project-format change.
+- The iOS 27.0 baseline already satisfies ActivityKit availability.
+- Acceptance: physical iPhone Lock Screen and Dynamic Island start, countdown, +15 s, skip and
+  finish; the activity disappears when the workout ends; no duplicate activity after relaunch.
+
 ### Phase 5 — Optional Enhancements
 
 Only pursue after the core app is useful and stable, with a separate scope/approval decision for each feature:
@@ -248,7 +302,7 @@ Only pursue after the core app is useful and stable, with a separate scope/appro
 
 **Acceptance:** each enhancement is independently disableable and does not become a dependency of pairing, readiness, prescription, workout capture, or review. On-device AI and PCC outputs are suggestions/text only; all numeric training data still pass through explicit user review and existing server validation.
 
-### Phase 6 — watchOS companion (6.0–6.6 complete; 6.7 acceptance pending)
+### Phase 6 — watchOS companion (6.0–6.7 complete)
 
 The phone plans; the watch executes. Full contract:
 [`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md). Decisions locked 2026-11-09 and
@@ -260,8 +314,11 @@ migration `0058_watch_companion.sql`. 6.3 adds the execution lifecycle: start, p
 capture, rest, finish with sRPE, offline replay with bounded retry, relaunch restore and
 observed-only execution telemetry. 6.4 adds offline conflicts, 6.5 adds heart rate and the
 exactly-once HealthKit save, and 6.6 adds the phone mirror, plan revisions, active-session Plan,
-refresh/reconnect and the ownership/form corrections. Physical watch acceptance (6.7) remains
-owner-run.
+refresh/reconnect and the ownership/form corrections. Physical watch acceptance (6.7) was
+owner-confirmed 2026-11-14 on build `8c26af0`; W11 (patchy Wi-Fi), W12 (home config refresh) and
+R (rollback dry run) were confirmed in the same run, so no Phase 6 follow-ups remain. The watch UI smoke test
+(`StrengthWatchUITests`) now passes end to end (fetch → start → log → finish) against a disposable
+server, so the flow has automated evidence as well as the physical sign-off.
 
 **Scope.** The phone requests a plan with an explicit `execution_target` (`phone` or `watch`);
 the watch fetches the plan targeted for it, starts the session, logs sets, rest, form ratings and
@@ -305,7 +362,8 @@ on boundaries and per-stage acceptance.
    network-path change or an explicit retry), finish queue and foreground retry,
    dim/background/termination/relaunch behaviour, and observed-only execution telemetry with
    original `occurred_at` values. Evidence: `StrengthCore` engine tests, the watch scheme build
-   and `scripts/ci.sh` (208 unit tests). Physical watch acceptance is owner-run.
+   and `scripts/ci.sh` (208 unit tests). Physical watch acceptance was owner-confirmed
+   2026-11-14 (6.7).
 5. **6.4 Offline and conflicts — complete 2026-11-12.** Session-scoped outbox, ordered replay,
    relaunch recovery, flush-before-revision on reconnect, off-plan preservation on
    `plan_item_mismatch`, and no stale-snapshot overwrite.
@@ -324,9 +382,10 @@ on boundaries and per-stage acceptance.
    form ratings and optional mean velocity. The phone
    mirror hides form/velocity controls and rejects phone form mutations before any offline queue.
    See contract §13 and §17.
-8. **6.7 Acceptance and CI — pending physical acceptance.** Watch build and deployment-target
-   assertion in `ios-ci`, the twelve scenario tests in contract §17, physical Ultra
-   acceptance, docs and rollback notes. The physical script and sign-off table are
+8. **6.7 Acceptance and CI — complete 2026-11-14 (owner-confirmed).** Watch build and
+   deployment-target assertion in `ios-ci`, the scenario tests in contract §17, the physical
+   Ultra acceptance, docs and rollback notes. W11, W12 and R (rollback dry run) were
+   confirmed in the same run. The physical script and sign-off table are
    [WATCH-ACCEPTANCE.md](https://github.com/georgesdib/StrengthApp/blob/development/WATCH-ACCEPTANCE.md).
 
 **6.7 scenario evidence.** Client evidence per contract §17 scenario, verified against the test
@@ -517,7 +576,8 @@ sRPE precedence and no prescription/rubric changes.
 
 ## 11. Status and next task
 
-Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7/R8 reliability work are complete. Phase 2 delivered
+Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7–R10 reliability work are complete; R11 was
+dropped as unnecessary. Phase 2 delivered
 the online strength workflow (readiness write, server-issued prescription, start by issued-plan id,
 active workout, add set, complete/abandon, session RPE, optional form ratings, history/progress,
 manual VBT and idempotency receipts) under
@@ -532,14 +592,19 @@ Phase 6.2 (watchOS companion) has a completed plan and contract
 6.1 server contract, 6.2a watch target, 6.2b credential handoff and 6.2c read-only Today are
 complete, and 6.3's execution lifecycle closed 2026-11-11. 6.4 (offline conflicts), 6.5 (heart
 rate and HealthKit) and 6.6 (phone mirror, plan revisions and active-session corrections) are
-complete. Physical watch acceptance (6.7) remains owner-run and is the only open Phase 6 step.
+complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
+the R rollback dry run all confirmed; no Phase 6 follow-ups remain.
 
 Phase 3B (Apple Workout summaries and related cardio data) remains a separate proposal and needs
 its own approved contract. Phase 5 remains optional and separately approved. R7 and R8 are
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
+R10 closed on 2026-11-14 (timing implemented on both devices; iOS velocity correction superseded by
+the server's post-workout History edit). R11 (rest timer Live Activity) was dropped on 2026-11-14 as
+unnecessary.
+
 Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
-remains a separate contract; Phase 6.6 is complete, with 6.7 physical acceptance pending.
+remains a separate contract; Phase 6.7 is fully confirmed (W1–W12 and R).
 
 ## 12. References
 
@@ -815,7 +880,7 @@ that without checking. The additive table can otherwise remain while the client 
 
 **Phase 0 complete 2026-11-07. Phase 1 complete 2026-11-07. Phase 2 complete and closed
 2026-11-07**, simulator-verified and owner-confirmed on the physical iPhone. Phase 3A and Phase 4
-are closed; Phase 6.0–6.6 are complete and 6.7 physical acceptance is pending. Phase 3B and
+are closed; Phase 6.0–6.7 are complete (6.7 owner-confirmed 2026-11-14). Phase 3B and
 Phase 5 remain separate proposals without an approved contract.
 
 ### Phase 1 completion record
@@ -1028,6 +1093,42 @@ exercise swap, set-count change".
   iPhone picker or any new R8 screen.
 - In progress only, idempotent, full workout payload returned; no schema change.
 
+### iPhone workout follow-up batch (implemented 2026-11-11; device acceptance owner-confirmed 2026-11-14)
+
+*Restored 2026-11-14: this section was dropped when a parallel branch rewrote Phase 6 from an
+older base.*
+
+- The ready card routes to a read-only **Review workout** screen; Start lives there, so the plan is
+  always visible before it is consumed and a watch-targeted plan never exposes a phone Start.
+- The exercise catalogue is cached on disk per server URL, so the library and pickers keep working
+  offline for browsing and off-plan capture; plan edits remain online.
+- The rest timer is app-level and rendered above the tab bar on every screen. Completion is
+  recorded once in the AppModel, dismisses the bar, and cancels the pending notification; the
+  local notification has a **Done** action and is presented in the foreground.
+- Form rating is available on the exercise screen with the existing current-rating/correction
+  semantics.
+- Workout-detail sets expose the stable plan-item identity as `plan_item_index`; the planned-set
+  completion and the swap/set-count guards use it.
+- Warm-up rows render on the exercise screen. The server prepends `min(20 kg, first ramp set)`
+  (10 reps, configurable) and de-duplicates it when it equals the first rung; skipping warm-ups
+  never gates working sets.
+- Unplanned and warm-up sets are indexed above the entire planned range, so logging one before a
+  planned set cannot collide with a later working set and suppress it.
+- Verified: 226 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
+  pytest suite. Physical iPhone notification/timer and warm-up acceptance was owner-confirmed
+  2026-11-14.
+
+### iPhone/watch follow-up batch — 2026-11-14 (implemented; device acceptance owner-confirmed 2026-11-14)
+
+- Session reports decode again: `WorkoutAdherence.version` is numeric on the wire.
+- Today's ready-card buttons are independent (borderless), so **Review workout** and **Request
+  another workout** no longer fire together.
+- The watch rest bar offers **−15s** instead of End rest, and schedules a local end-of-rest
+  notification (the on-screen haptic stays).
+- Bar-speed fields appear only when the plan item carries a `velocity_target`.
+- The watch finish captures productivity and acknowledges a `409 workout_not_active` from a
+  retried finish instead of staying on the finish screen.
+
 ### Phase 3A — HealthKit HRV/RHR/bodyweight readiness (closed 2026-11-08)
 
 - Server: migrations 0054_healthkit_readiness.sql and 0055_healthkit_bodyweight.sql, the
@@ -1040,7 +1141,7 @@ exercise swap, set-count change".
   selection, single-flight import, the healthkitReadiness mutation-journal kind, Settings opt-in
   and Today import/provenance display.
 - Verification: 1,685 server tests, 102 client tests, simulator build and the live UI workflow pass.
-  Physical HealthKit acceptance with real samples remains pending.
+  Physical HealthKit acceptance with real samples was owner-confirmed (Phase 3A closed 2026-11-08).
 - Rollback: remove the client importer and canonical-merge integration, drop healthkit_readiness
   with the paired 0054/0055 migration rows, and leave readiness_day/readiness_entry untouched.
 

@@ -4,7 +4,7 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 
 ## Canonical shared plans
 
-- [iOS client phase plan](IOS-CLIENT-PLAN.md) — cross-repository milestones, scope, dependencies, acceptance criteria, architecture boundaries, and historical completion records. It reflects the Phase 6.2 closure on 2026-11-10; 6.3+ remains pending.
+- [iOS client phase plan](IOS-CLIENT-PLAN.md) — cross-repository milestones, scope, dependencies, acceptance criteria, architecture boundaries, and historical completion records. It reflects the Phase 6 closure: 6.0–6.7 complete, with 6.7 owner-confirmed 2026-11-14.
 - [Athlete Feedback & Coaching (AFC) plan](AFC.md) — composition rules over the backend adherence/VBT/feedback services, the shared evidence contract, and phases AFC-2 (completed), AFC-2i (implemented native report), AFC-3, AFC-4 and the separate AFC-5. Backend code paths stay authoritative in `strength-training-app`; this plan is the canonical cross-repository statement.
 - [Server/client contract index](../contracts/README.md) — canonical contracts and ownership of their implementation.
 
@@ -15,4 +15,4 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 
 ## Status and change control
 
-The plan records current status plus historical completion evidence. Do not infer completion from branch existence or code alone; reconcile against implementation, acceptance record and owner decision before changing status. Physical Apple Watch acceptance remains owner-run. Completed phase records remain historical evidence and are not deleted. Superseded documents must point to their replacement.
+The plan records current status plus historical completion evidence. Do not infer completion from branch existence or code alone; reconcile against implementation, acceptance record and owner decision before changing status. Physical Apple Watch acceptance was owner-confirmed 2026-11-14 (W1–W12 and R). Completed phase records remain historical evidence and are not deleted. Superseded documents must point to their replacement.
