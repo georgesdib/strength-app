@@ -265,18 +265,19 @@ all-history set load 221 ms. The e1RM/ratio rebuild hypothesis is confirmed but 
 | Option | What changes | Gains | Costs / risks |
 |---|---|---|---|
 | **A. Bound the deload context** | Pass a `start` (≈12 weeks) to `RuleContext.from_store` in `reactive_reason` | 1,349 → 209 ms for the context; deload path 1,976 → ~260 ms | **Behavioural**: the verdict's weekly-cost details shrink (109 → 13 weeks); the last-two-week decision is unchanged on the fixture, but this needs an explicit decision and tests |
-| **B. Evaluate one rule** | `evaluate(..., rule_ids=["PRG-SPINE-001"])` in `reactive_reason` | 714 → 381 ms, identical verdict details (verified) | None identified; semantics-preserving and easy to assert |
+| **B. Evaluate one rule** — **implemented 2026-11-14** | `evaluate(..., rule_ids=("PRG-SPINE-001",))` in `reactive_reason` | Measured: deload 2,021 → 1,696 ms; request p50 3,102 → **2,730 ms** (−12%); identical verdict details (tests) | None identified; semantics preserved |
 | **C. Bounded lookback for the ratio** | Cap the history `performance_points` rebuilds, or materialise per-session e1RM | ~0.5 s | **Metric definition change**; historical comparability, decision record, Phase 5A care |
 | **D. In-process cache keyed on the full stamp** | Cache by `data_version` + `total_changes` + capability + args + builder version | Helps repeated reads only | Cold call unchanged; memory; config revisions in the key |
 | **E. Do not enable the transport on this host** | Keep web/CLI only | Zero risk | INT-1 cannot ship on the target hardware |
 
-**Recommendation.** Do **B** then **A** first — no metric change, and together they project the
-request to about 1.4 s, below the earlier 3.1 s. Re-measure before considering **C**; only then
-**D**, and never **E** silently.
+**Recommendation.** **B is done** (measured −12%, no metric change). Next is **A**, which still
+needs the behavioural decision on the verdict's weekly-cost details and the history horizon; after
+A, re-measure before considering **C** (metric change) and then **D** (cache). Never choose **E**
+silently.
 
-**Status.** Proposed (trigger met; measurement and profiling recorded). No bound, cache, rule
-filter or lookback is implemented, and the transport must not be enabled on the deployment host
-until this addendum is decided.
+**Status.** Proposed, partly implemented: **B implemented 2026-11-14**. Options **A**, **C**, **D**
+and **E** are outstanding, and the trigger is still met — 2,730 ms p50 remains above the
+one-second gate, so the MCP transport stays disabled on the deployment host.
 
 ## ADR-INT-011 — Stable App Intents now; Siri AI Developer Preview excluded
 
