@@ -695,7 +695,19 @@ for the first acceptance; no payload logging; read-only DB; limits live.
 
 ### INT-2 — Deterministic capabilities and the full read-only catalogue
 
-**Scope.** `get_exercise_progression`, `get_readiness_history`, `get_adherence_analysis`,
+**Implementation status (2026-11-14): delivered.** Nine read-only capabilities and three resources
+are registered and exposed over MCP: the INT-1 tools plus `get_exercise_progression`,
+`get_readiness_history`, `get_adherence_analysis`, `get_prescription`, `get_vbt_analysis`,
+`get_programme_block_summary` and `compare_training_periods`. Every value comes from its owning
+service; the only arithmetic added is the difference between two owner outputs in
+`compare_training_periods`. Evidence arrays remain empty where owners do not emit evidence.
+`get_weekly_review_data` is not a separate capability: the weekly review package is INT-3 and will
+compose these. MCP tool schemas spell date bounds `start`/`end` (`from` is a Python keyword); the
+capability API keeps `from`/`to`. Implementation detail, limits and the development-machine timings
+are in the backend
+[INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
+
+**Scope (as written).** `get_exercise_progression`, `get_readiness_history`, `get_adherence_analysis`,
 `get_vbt_analysis`, `get_prescription`, `compare_training_periods`,
 `get_programme_block_summary`, `get_weekly_review_data`; two more resources
 (`strength://programme/current`, `strength://overview/current`); the parity test between in-process
@@ -874,7 +886,7 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
-- INT-1 (delivered) and INT-2 need no model and no new API route; INT-1b adds the MCP transport only.
+- INT-1 (delivered), INT-1b (delivered) and INT-2 (delivered) need no model and no new REST route.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.

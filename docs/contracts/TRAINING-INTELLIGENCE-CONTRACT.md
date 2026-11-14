@@ -248,13 +248,13 @@ and record the reason in `limitations`. The field-level outbound inventory requi
 |---|---|---|---|---|---|
 | 1 | `get_training_overview` | **yes** | yes | yes | `features/progress.py`, `features/attendance.py`, `features/strength_trend.py` |
 | 2 | `get_session_details` | **yes** | yes | yes | `workout.summary()`, `history.detail()` |
-| 3 | `get_exercise_progression` | INT-2 | yes | yes | `features/strength_trend.py`, `features/exercise_history.py` |
-| 4 | `get_readiness_history` | INT-2 | yes | yes | `queries.readiness_series()`, `features/readiness_score.py` |
-| 5 | `get_adherence_analysis` | INT-2 | yes | yes | `features/adherence_analytics.py` |
-| 6 | `get_prescription` | INT-2 | yes | yes | `prescribe/persistence.py`, `features/prescription_provenance.py` |
-| 7 | `get_vbt_analysis` | INT-2 | yes | limited | `features/vbt_performance.py` |
-| 8 | `get_programme_block_summary` | INT-2 | yes | yes | `features/deload.py`, `features/regime_change.py`, `prescribe/volume_budget.py` |
-| 9 | `compare_training_periods` | INT-2 | yes | yes | `features/attendance.py`, `features/adherence_analytics.py`, `features/volume.py` |
+| 3 | `get_exercise_progression` | **yes** (INT-2) | yes | yes | `features/strength_trend.py`, `features/exercise_history.py` |
+| 4 | `get_readiness_history` | **yes** (INT-2) | yes | yes | `queries.readiness_series()`, `features/readiness_score.py` |
+| 5 | `get_adherence_analysis` | **yes** (INT-2) | yes | yes | `features/adherence_analytics.py` |
+| 6 | `get_prescription` | **yes** (INT-2) | yes | yes | `queries.prescription_detail()`, `prescribe/persistence.py` |
+| 7 | `get_vbt_analysis` | **yes** (INT-2) | yes | limited | `features/vbt_performance.py` |
+| 8 | `get_programme_block_summary` | **yes** (INT-2) | yes | yes | `features/deload.py`, `features/regime_change.py`, `prescribe/volume_budget.py` |
+| 9 | `compare_training_periods` | **yes** (INT-2) | yes | yes | `features/attendance.py`, `features/adherence_analytics.py`, `features/volume.py` |
 | 10 | `get_weekly_review` | INT-3 | yes | yes | composition of 5, 8, and the trends |
 | — | `explain_prescription` | **rejected as a tool** | — | — | model capability over tool 6 (see §7.9) |
 
@@ -414,13 +414,17 @@ not applied unless the owning service says so; a changed load basis breaks the s
 
 | Field | Type | Required | Rule |
 |---|---|---|---|
-| `from` | string (date) | yes | inclusive start |
-| `to` | string (date) | yes | inclusive end; `from` ≤ `to`; span ≤ 366 days |
+| `start` | string (date) | yes | inclusive start |
+| `end` | string (date) | yes | inclusive end; `start` ≤ `end`; span ≤ 366 days |
 | `fields` | array of enum | no | default `["score"]`; the enum is generated from `strength_coach.utils.readiness.READINESS_FIELDS` plus `score`; unknown names rejected |
 
-**Output facts.** `points` (observed entries only, one object per date with the requested fields and
-their sources), `score_series` (when `score` requested; derived by the server), `coverage`
-(`observed_days`, `window_days`, `missing_days`), `sources`.
+**Argument spelling.** MCP tools spell the bounds `start`/`end`; the capability API keeps the
+contract's `from`/`to` internally. A tool MUST reject the other spelling rather than accept both.
+
+**Output facts.** `readiness` (observed entries only, one object per date with the requested raw
+fields and their sources), `score_series` (when `score` requested; each score derived by the owning
+service, limited to the most recent 120 observed days), `coverage` (`observed_days`,
+`window_days`, `missing_days`, `score_days`, `score_truncated`).
 
 **Source.** `queries.readiness_series()` for observations; `features/readiness_score.py` for the
 score. No fill, no interpolation, no imputation.
@@ -476,8 +480,9 @@ rule that an issued plan is a preview applies).
 
 #### 7.5.7 `get_vbt_analysis`
 
-**Input.** `from`/`to` **or** `window_days` (28–365, default 84); `exercise_id` optional.
-Providing both a window and explicit dates → `invalid_argument`.
+**Input.** `start`/`end` **or** `window_days` (28–365, default 84); `exercise_id` optional.
+Providing both a window and explicit dates → `invalid_argument`. MCP spells the bounds
+`start`/`end`; the capability API uses `from`/`to`.
 
 **Output facts.** `cohorts` (target, load basis, sets, residuals, band), `weekly`,
 `drift`, `gates`, `abstentions` (reason per cohort).
@@ -615,8 +620,8 @@ Resources are compact, cacheable context the host may attach without a tool call
 | URI | Payload | `ttlMs` | `cacheScope` | Privacy |
 |---|---|---|---|---|
 | `strength://athlete/profile` | training profile (days/week, session cap, block start, volume budget, main-lift policy) and non-injury structured constraints | 300000 | `private` | training (injuries withheld and counted) |
-| `strength://programme/current` | sessions/week, session-type rotation, deload state, volume policy summary | 60000 | `private` | training |
-| `strength://overview/current` | the `get_training_overview` fact set at 4 weeks, compacted | 300000 | `private` | training |
+| `strength://programme/current` | current settings profile and volume budget, deload state, regime-finding count, active declared breaks | 60000 | `private` | training |
+| `strength://overview/current` | the four-week `get_training_overview` fact set, projected as a resource envelope | 300000 | `private` | training |
 
 Rules:
 
