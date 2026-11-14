@@ -35,6 +35,10 @@ A component roadmap may remain local only when it is specifically the component'
 10. If a document is obsolete, historical or has uncertain ownership, leave it at its existing repository/path and preserve or clarify its status; do not move or delete it just to fit a new taxonomy. If a page mixes clearly current shared requirements with component-specific implementation or historical material, move only the clearly maintained shared portion and preserve the component-specific/history content at its existing location, with links as needed.
 11. Keep submodule boundaries and Git safety: inspect status, fetch before branch changes, use separate task branches, do not force-push, and do not update portfolio submodule pointers unless the task explicitly requires it.
 12. Never publish private machine notes, credentials, health data, training exports, databases, generated artifacts or ignored local files.
+13. Never commit a shared plan or contract rewrite without checking what it dropped: run
+    `scripts/check-doc-headings.sh` and account for every heading that disappears. Wholesale section
+    rewrites are the known way content added on a parallel branch is lost (2026-11-12: R10, R11, the
+    iPhone follow-up batch and contract §11.7 disappeared this way and were restored on 2026-11-14).
 
 ## Link and status conventions
 
