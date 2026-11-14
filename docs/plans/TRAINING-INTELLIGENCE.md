@@ -692,9 +692,11 @@ dedicated per-client tokens (hash-only, CLI create/list/rotate/revoke) with a be
 allowlist, body cap, rate and concurrency limits; strict tool-argument checking (unknown keys and
 type coercion rejected before the SDK); `get_session_details`; the `strength://athlete/profile`
 resource; read-only SQLite (`mode=ro`); and a synthetic performance baseline (development machine,
-plus the deployment host on 2026-11-14: p50 3.10 s / p95 3.17 s at 377 sessions). The host figure
-exceeds the ADR-INT-010 threshold, so the transport is **gated** there until that addendum is
-decided. No REST route, model provider or write tool was added.
+plus the deployment host on 2026-11-14: p50 3.10 s / p95 3.17 s at 377 sessions). Those host
+figures exceed the one-second threshold, so ADR-INT-010 adopted a latency-aware budget and option B,
+and the transport is enabled there with the full nine-tool catalogue; the measured p95 values are
+guidance, not a guarantee, and T-3 remains the optimisation track. No REST route, model provider or
+write tool was added.
 
 **Audit remediation (2026-11-14):** token revoke/rotate now take effect without a restart (the
 store is re-read per request, atomic writes, fail closed on a malformed file); every tool and
