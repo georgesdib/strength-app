@@ -1078,6 +1078,41 @@ exercise swap, set-count change".
   iPhone picker or any new R8 screen.
 - In progress only, idempotent, full workout payload returned; no schema change.
 
+### iPhone workout follow-up batch (implemented 2026-11-11; device acceptance pending)
+
+*Restored 2026-11-14: this section was dropped when a parallel branch rewrote Phase 6 from an
+older base.*
+
+- The ready card routes to a read-only **Review workout** screen; Start lives there, so the plan is
+  always visible before it is consumed and a watch-targeted plan never exposes a phone Start.
+- The exercise catalogue is cached on disk per server URL, so the library and pickers keep working
+  offline for browsing and off-plan capture; plan edits remain online.
+- The rest timer is app-level and rendered above the tab bar on every screen. Completion is
+  recorded once in the AppModel, dismisses the bar, and cancels the pending notification; the
+  local notification has a **Done** action and is presented in the foreground.
+- Form rating is available on the exercise screen with the existing current-rating/correction
+  semantics.
+- Workout-detail sets expose the stable plan-item identity as `plan_item_index`; the planned-set
+  completion and the swap/set-count guards use it.
+- Warm-up rows render on the exercise screen. The server prepends `min(20 kg, first ramp set)`
+  (10 reps, configurable) and de-duplicates it when it equals the first rung; skipping warm-ups
+  never gates working sets.
+- Unplanned and warm-up sets are indexed above the entire planned range, so logging one before a
+  planned set cannot collide with a later working set and suppress it.
+- Verified: 226 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
+  pytest suite. Physical iPhone notification/timer and warm-up acceptance remain owner-run.
+
+### iPhone follow-up batch — 2026-11-14 (implemented; device acceptance pending)
+
+- Session reports decode again: `WorkoutAdherence.version` is numeric on the wire.
+- Today's ready-card buttons are independent (borderless), so **Review workout** and **Request
+  another workout** no longer fire together.
+- The watch rest bar offers **−15s** instead of End rest, and schedules a local end-of-rest
+  notification (the on-screen haptic stays).
+- Bar-speed fields appear only when the plan item carries a `velocity_target`.
+- The watch finish captures productivity and acknowledges a `409 workout_not_active` from a
+  retried finish instead of staying on the finish screen.
+
 ### Phase 3A — HealthKit HRV/RHR/bodyweight readiness (closed 2026-11-08)
 
 - Server: migrations 0054_healthkit_readiness.sql and 0055_healthkit_bodyweight.sql, the

@@ -506,6 +506,18 @@ control ends it once that is all that remains), or at the instant the next set s
 acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index`,
 `prescribed_rest_s`, `added_s`.
 
+### 11.7 Form rating, VBT and productivity (6.6; extended 2026-11-14)
+
+- A watch-owned session records one 1–5 form rating per exercise after **Done with exercise** (or
+  at finish) and, when the plan supplies a velocity target, optional mean and per-rep velocity per
+  set. Bodyweight or uncalibrated work is not asked for a speed.
+- Session productivity (1–5 or **Not recorded**) is captured on the finish screen; it defaults to
+  not recorded and matches the phone input.
+- All of it is captured local-first in the existing ordered outbox; a rating is never inferred, and
+  **Not recorded** is a valid outcome everywhere.
+- The watch does not correct a set after acknowledgement. The phone mirror remains read-only for
+  these fields; correcting a watch-owned set's velocity is the deferred R10 capability.
+
 ## 12. HealthKit idempotency and recovery
 
 ### 12.1 One workout per session
