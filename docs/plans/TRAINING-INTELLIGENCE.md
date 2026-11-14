@@ -285,10 +285,11 @@ Rules:
 
   Operational 2026-11-14: the MCP server runs as a user-level process on 127.0.0.1:8765 with the
   full catalogue (no systemd unit installed because the host requires sudo for that). It reads the
-  production database read-only. A deployment blocker exists: the production database records
-  migration 0060 with an older checksum and no analytics tables, so write-open/migration fails;
-  reconciling it requires a backup and owner approval. T-3 profiling has started on a copied
-  database; no optimisation is implemented yet.
+  production database read-only. The migration collision is resolved: production 0060 is
+  development's plank-variants migration (applied at 22:17); analytics migrations are renumbered
+  0061-0063 on `llm-integration`, and a fresh production copy migrated 0060-0063 and built ready
+  without deleting the recorded row. T-3 profiling has started on a copied database; no
+  optimisation is implemented yet.
 - If a cache is added later it keys on `(capability, validated_args, database_stamp, config_revision,
   builder_version)`, where the stamp is the existing `PRAGMA data_version` + `conn.total_changes`
   pair already used by `features/e1rm_calibration.py`, and it lives in process memory.
