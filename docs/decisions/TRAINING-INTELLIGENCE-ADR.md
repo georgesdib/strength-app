@@ -266,9 +266,10 @@ A broader response is proposed separately: a versioned, rebuildable derived-anal
 (per-set, session/exercise and weekly materialisation owned by the existing modules, with
 on-demand fallback), documented in the backend
 [`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md).
-It is not an in-process cache and does not change the decision recorded here. Its **Milestone A**
-infrastructure (revision ledger, build state, coordinator and safe publication) is implemented and
-audited 2026-11-14; no analytical data is materialised and Milestones B and C are not started.
+It is not an in-process cache and does not change the decision recorded here. **Milestone A**
+(revision ledger, build state, coordinator and safe publication) is implemented and audited, and
+**Milestone B** (core per-set/session materialisation and progress/strength-trend migration) is
+implemented 2026-11-14; Milestone C is not started.
 
 | Option | What changes | Gains | Costs / risks |
 |---|---|---|---|

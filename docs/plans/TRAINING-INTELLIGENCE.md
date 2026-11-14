@@ -260,10 +260,12 @@ Rules:
 - **Shared derived analytics is a separate, broader design**, not an in-process cache:
   [`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md)
   (2026-11-14). It proposes versioned, rebuildable per-set, session/exercise and weekly tables owned
-  by the existing analytical modules, with on-demand fallback. Phase 0 is approved and **Milestone A**
-  (revision ledger, build state, coordinator and safe publication; no analytical data) is implemented
-  and audited 2026-11-14; **Milestones B and C are not started**. INT-1b and INT-2 keep measuring on
-  demand until materialisation is delivered.
+  by the existing analytical modules, with on-demand fallback. Phase 0 is approved; **Milestone A**
+  (revision ledger, build state, coordinator and safe publication) is implemented and audited, and
+  **Milestone B** (core `derived_set`/`derived_session_exercise` materialisation, progress and
+  strength-trend migration behind a readiness check) is implemented 2026-11-14 with parity and
+  ODROID measurements recorded. **Milestone C is not started.** INT-1b and INT-2 keep measuring on
+  demand until the remaining materialisation is delivered.
 - If a cache is added later it keys on `(capability, validated_args, database_stamp, config_revision,
   builder_version)`, where the stamp is the existing `PRAGMA data_version` + `conn.total_changes`
   pair already used by `features/e1rm_calibration.py`, and it lives in process memory.
