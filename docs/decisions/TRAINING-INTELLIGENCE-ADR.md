@@ -285,10 +285,11 @@ needs the behavioural decision on the verdict's weekly-cost details and the hist
 A, re-measure before considering **C** (metric change) and then **D** (cache). Never choose **E**
 silently.
 
-**HTTP measurement (2026-11-14).** The extended benchmark ran the real MCP transport on the
-ODROID against a copied production database with the core family verified ready: HTTP p95 6,201 ms
-(session details), 4,058 ms (overview), 3,800 ms (programme), 1,663 ms (readiness); the one-second
-gate is not met, so the transport stays disabled.
+**HTTP measurement after the T-3 first pass (2026-11-14).** Real MCP transport on the ODROID
+against a fresh production copy, core family ready, 30 requests and 5 warm-ups: HTTP p95 672 ms
+(overview), 278 ms (programme), 377 ms (readiness), 5,684 ms (session details), 45-189 ms for the
+fast tools. Under the accepted T-1 budget (fast <= 500 ms, slow/very_slow <= 7 s) all tools fit;
+session details remains the one very_slow capability and a documented follow-up.
 
 **T-1 decision — accepted latency budget (2026-11-14).** The owner accepts a latency-aware full
 catalogue rather than the original blanket one-second gate: fast capabilities target p95 ≤ 500 ms;

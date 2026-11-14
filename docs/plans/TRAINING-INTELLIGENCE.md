@@ -279,17 +279,18 @@ Rules:
   worker (systemd oneshot + timer sharing the backend checkout/venv, plus a post-restart run;
   parked until the next production release, units tested but not installed); **T-1** accepted
   2026-11-14 with ADR-INT-010 amended; **T-2** implemented - full catalogue with measured latency
-  metadata in every tool description and no hiding of slow tools; **T-3** in progress, profiling
-  started, then optimisation and remeasurement. T-3 improves performance rather than unlocking basic
-  LLM functionality. Existing benchmark numbers remain valid until remeasurement.
+  metadata in every tool description and no hiding of slow tools; **T-3** first pass implemented and
+  remeasured (deload flare lookup bounded, readiness config cached, one summary rule context):
+  overview HTTP p95 672 ms, programme 278 ms, readiness 377 ms, session details 5,684 ms (still
+  very_slow, follow-up). T-3 improves performance rather than unlocking basic LLM functionality.
 
   Operational 2026-11-14: the MCP server runs as a user-level process on 127.0.0.1:8765 with the
   full catalogue (no systemd unit installed because the host requires sudo for that). It reads the
   production database read-only. The migration collision is resolved: production 0060 is
   development's plank-variants migration (applied at 22:17); analytics migrations are renumbered
   0061-0063 on `llm-integration`, and a fresh production copy migrated 0060-0063 and built ready
-  without deleting the recorded row. T-3 profiling has started on a copied database; no
-  optimisation is implemented yet.
+  without deleting the recorded row. T-3 profiling and its first remediation pass are recorded; the
+  remaining session-details cost is a follow-up within the accepted budget.
 - If a cache is added later it keys on `(capability, validated_args, database_stamp, config_revision,
   builder_version)`, where the stamp is the existing `PRAGMA data_version` + `conn.total_changes`
   pair already used by `features/e1rm_calibration.py`, and it lives in process memory.
