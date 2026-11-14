@@ -17,8 +17,9 @@ completion/abandon, Progress, opt-in HealthKit HRV/RHR/bodyweight readiness, Key
 Home/Away server routing by Home Server reachability with a Prefer Home manual override (no
 Wi-Fi SSID, Location or Access Wi-Fi Information entitlement), Settings Exercise Library with read-only configurations, e1RM and paginated
 working-set history,
-172 unit tests
-after R1/R3/R5/Phase 3A and the Phase 6 watch slices, plus optional live UI smoke tests. Phase 3A is closed 2026-11-08; physical
+296 unit tests
+after R1–R10, Phase 3A, Phase 4 and the Phase 6 watch slices (2026-11-14), plus optional live UI
+smoke tests. Phase 3A is closed 2026-11-08; physical
 HealthKit acceptance was owner-confirmed and Phase 3B is out of scope. R7 (asynchronous
 prescription request with session-type and minimum-session settings) is **implemented and closed
 2026-11-08**: the app builds with an iOS 27.0 deployment target and the client tests pass on the
@@ -91,7 +92,7 @@ HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-rele
 
 ## 4. Phased implementation plan
 
-Each phase is separately reviewable. Add only the endpoints, migrations, client screens, and tests needed for that phase. The first connected vertical slice was implemented before any offline queue, HealthKit importer, or model feature. Phases 0–2, Phase 3A, Phase 4, and R1–R5, R7 and R8 are closed; Phase 3B and Phase 5 need separate approval before they start.
+Each phase is separately reviewable. Add only the endpoints, migrations, client screens, and tests needed for that phase. The first connected vertical slice was implemented before any offline queue, HealthKit importer, or model feature. Phases 0–2, Phase 3A, Phase 4, Phase 6.0–6.7 and R1–R5/R7–R10 are closed; R11 was dropped; Phase 3B and Phase 5 need separate approval before they start.
 
 **Implementation order (owner decision, 2026-11-07):** Phases 0–2, 3A and 4 are complete; next are
 3B (Apple Workout imports) and Phase 5. Phase numbers stay stable so existing references do not move;
@@ -223,8 +224,9 @@ capture, ordered replay and conflict handling); physical offline acceptance was 
 
 ### R9 — Execution telemetry and timeline
 
-**Status:** server and client implemented on `development`; simulator/unit gates pass. Physical-device
-acceptance remains an owner step before this section is marked closed.
+**Status:** **closed 2026-11-14 (owner-confirmed).** Server and client are implemented on
+`development`; simulator/unit gates pass and the physical acceptance was confirmed with the rest of
+Phase 6.
 
 The additive server stream (`workout_execution_event`, migration 0057) records explicit set/rest/
 exercise start and completion events without changing `workout_set` or `workout_event`. Events are
@@ -574,7 +576,8 @@ sRPE precedence and no prescription/rubric changes.
 
 ## 11. Status and next task
 
-Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7/R8 reliability work are complete. Phase 2 delivered
+Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7–R10 reliability work are complete; R11 was
+dropped as unnecessary. Phase 2 delivered
 the online strength workflow (readiness write, server-issued prescription, start by issued-plan id,
 active workout, add set, complete/abandon, session RPE, optional form ratings, history/progress,
 manual VBT and idempotency receipts) under
@@ -1137,7 +1140,7 @@ older base.*
   selection, single-flight import, the healthkitReadiness mutation-journal kind, Settings opt-in
   and Today import/provenance display.
 - Verification: 1,685 server tests, 102 client tests, simulator build and the live UI workflow pass.
-  Physical HealthKit acceptance with real samples remains pending.
+  Physical HealthKit acceptance with real samples was owner-confirmed (Phase 3A closed 2026-11-08).
 - Rollback: remove the client importer and canonical-merge integration, drop healthkit_readiness
   with the paired 0054/0055 migration rows, and leave readiness_day/readiness_entry untouched.
 
