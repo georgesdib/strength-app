@@ -279,10 +279,11 @@ Rules:
   worker (systemd oneshot + timer sharing the backend checkout/venv, plus a post-restart run;
   parked until the next production release, units tested but not installed); **T-1** accepted
   2026-11-14 with ADR-INT-010 amended; **T-2** implemented - full catalogue with measured latency
-  metadata in every tool description and no hiding of slow tools; **T-3** first pass implemented and
-  remeasured (deload flare lookup bounded, readiness config cached, one summary rule context):
-  overview HTTP p95 672 ms, programme 278 ms, readiness 377 ms, session details 5,684 ms (still
-  very_slow, follow-up). T-3 improves performance rather than unlocking basic LLM functionality.
+  metadata in every tool description and no hiding of slow tools; **T-3** closed 2026-11-14 as a
+  first pass, remeasured (deload flare lookup bounded, readiness config cached, one summary rule
+  context): overview HTTP p95 672 ms, programme 278 ms, readiness 377 ms, session details 5,684 ms
+  (still very_slow). **T-3a** is the optional, not-started session-details follow-up; T-3 improves
+  performance rather than unlocking basic LLM functionality.
 
   Operational 2026-11-14: the MCP server runs as a user-level process on 127.0.0.1:8765 with the
   full catalogue (no systemd unit installed because the host requires sudo for that). It reads the

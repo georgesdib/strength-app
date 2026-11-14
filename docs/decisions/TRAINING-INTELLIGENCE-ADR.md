@@ -288,8 +288,9 @@ silently.
 **HTTP measurement after the T-3 first pass (2026-11-14).** Real MCP transport on the ODROID
 against a fresh production copy, core family ready, 30 requests and 5 warm-ups: HTTP p95 672 ms
 (overview), 278 ms (programme), 377 ms (readiness), 5,684 ms (session details), 45-189 ms for the
-fast tools. Under the accepted T-1 budget (fast <= 500 ms, slow/very_slow <= 7 s) all tools fit;
-session details remains the one very_slow capability and a documented follow-up.
+fast tools. Under the accepted T-1 budget (fast <= 500 ms, slow/very_slow <= 7 s) all tools fit.
+**T-3 first pass closed 2026-11-14**; session details remains the one very_slow capability and is
+tracked as optional follow-up **T-3a**.
 
 **T-1 decision — accepted latency budget (2026-11-14).** The owner accepts a latency-aware full
 catalogue rather than the original blanket one-second gate: fast capabilities target p95 ≤ 500 ms;
@@ -300,9 +301,10 @@ discouraged in the descriptions; correctness must never be traded for latency. T
 enabled on the trusted LAN with the full nine-tool catalogue; T-3 remains the optimisation and
 remeasurement work. Option **E** (do not enable) is rejected for now.
 
-**Status.** **Accepted 2026-11-14.** The transport is enabled with a full catalogue (operationally
-as a user-level process until the systemd unit is installed); options A, C and D remain future
-optimisations, and T-3 profiling/optimisation is in progress. B and C are implemented.
+**Status.** **Accepted and closed 2026-11-14.** The transport is enabled with a full catalogue
+(operationally as a user-level process until the systemd unit is installed). T-3's first pass is
+closed; options A, C and D remain future optimisations and T-3a is the optional session-details
+follow-up. B and C are implemented.
 
 ## ADR-INT-011 — Stable App Intents now; Siri AI Developer Preview excluded
 
