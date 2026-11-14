@@ -285,9 +285,13 @@ needs the behavioural decision on the verdict's weekly-cost details and the hist
 A, re-measure before considering **C** (metric change) and then **D** (cache). Never choose **E**
 silently.
 
-**Status.** Proposed, partly implemented: **B implemented 2026-11-14**. Options **A**, **C**, **D**
-and **E** are outstanding, and the trigger is still met — 2,730 ms p50 remains above the
-one-second gate, so the MCP transport stays disabled on the deployment host.
+**HTTP measurement (2026-11-14).** The extended benchmark ran the real MCP transport on the
+ODROID against a copied production database with the core family verified ready: HTTP p95 6,201 ms
+(session details), 4,058 ms (overview), 3,800 ms (programme), 1,663 ms (readiness); the one-second
+gate is not met, so the transport stays disabled.
+
+**Status.** Proposed, partly implemented: **B and C implemented 2026-11-14**. Options **A**,
+**C**, **D** and **E** are outstanding, and the trigger remains met on the deployment host.
 
 ## ADR-INT-011 — Stable App Intents now; Siri AI Developer Preview excluded
 
