@@ -274,10 +274,10 @@ Rules:
   The ODROID HTTP benchmark (2026-11-14) measured p95 6,201 ms for session details, 4,058 ms for
   overview, 3,800 ms for the programme summary and 1,663 ms for readiness. The owner accepted a
   latency-aware budget (T-1): fast ≤ 500 ms p95, slow/very-slow ≤ 7 s p95, no hard rejection, 20 s
-  tool timeout; the transport is enabled with the full nine-tool catalogue. The rollout tracks four
+  tool timeout; the transport is enabled with the full ten-tool catalogue. The rollout tracks four
   items: **C-1** automatic maintenance
   worker (systemd oneshot + timer sharing the backend checkout/venv, plus a post-restart run;
-  parked until the next production release, units tested but not installed); **T-1** accepted
+  installed and active on the ODROID 2026-11-15); **T-1** accepted
   2026-11-14 with ADR-INT-010 amended; **T-2** implemented - full catalogue with measured latency
   metadata in every tool description and no hiding of slow tools; **T-3** closed 2026-11-14 as a
   first pass, remeasured (deload flare lookup bounded, readiness config cached, one summary rule
@@ -285,11 +285,13 @@ Rules:
   (still very_slow). **T-3a** is the optional, not-started session-details follow-up; T-3 improves
   performance rather than unlocking basic LLM functionality.
 
-  Operational 2026-11-14: the MCP server runs as a user-level process on 127.0.0.1:8765 with the
-  full catalogue (no systemd unit installed because the host requires sudo for that). It reads the
-  production database read-only. The migration collision is resolved: production 0060 is
-  development's plank-variants migration (applied at 22:17); analytics migrations are renumbered
-  0061-0063 on `llm-integration`, and a fresh production copy migrated 0060-0063 and built ready
+  Operational 2026-11-15: the MCP server runs as a systemd unit on 10.0.0.44:8765 with the full
+  ten-tool catalogue and an explicit Host allowlist (address and `odroid.local`). It reads the
+  production database read-only; the unit grants `ReadWritePaths` on the data directory because
+  SQLite WAL needs `-shm`/`-wal` even for a read-only connection. The migration collision is
+  resolved: production 0060 is development's plank-variants migration (applied at 22:17); analytics
+  migrations are renumbered 0061-0063 on `development`, and a fresh production copy migrated
+  0060-0063 and built ready
   without deleting the recorded row. T-3 profiling and its first remediation pass are recorded; the
   remaining session-details cost is a follow-up within the accepted budget.
 - If a cache is added later it keys on `(capability, validated_args, database_stamp, config_revision,
@@ -694,7 +696,7 @@ type coercion rejected before the SDK); `get_session_details`; the `strength://a
 resource; read-only SQLite (`mode=ro`); and a synthetic performance baseline (development machine,
 plus the deployment host on 2026-11-14: p50 3.10 s / p95 3.17 s at 377 sessions). Those host
 figures exceed the one-second threshold, so ADR-INT-010 adopted a latency-aware budget and option B,
-and the transport is enabled there with the full nine-tool catalogue; the measured p95 values are
+and the transport is enabled there with the full ten-tool catalogue; the measured p95 values are
 guidance, not a guarantee, and T-3 remains the optimisation track. No REST route, model provider or
 write tool was added.
 
@@ -702,8 +704,9 @@ write tool was added.
 store is re-read per request, atomic writes, fail closed on a malformed file); every tool and
 resource emits one structured metadata-only audit record; the MCP adapter enforces a configurable
 20-second response deadline and 1 MiB serialized-result cap with typed errors rather than a
-truncated envelope; a dedicated systemd unit and deployment guide exist (not yet deployed); and a
-live HTTP integration test drives both tools and the resource through the official client. Implementation detail, operation instructions, schemas and the
+truncated envelope; a dedicated systemd unit and deployment guide exist (installed on the ODROID
+2026-11-15); and a live HTTP integration test drives both tools and the resource through the
+official client. Implementation detail, operation instructions, schemas and the
 baseline are in the backend
 [INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
 The contract's profile-resource payload was corrected to the fields that actually exist: goal and

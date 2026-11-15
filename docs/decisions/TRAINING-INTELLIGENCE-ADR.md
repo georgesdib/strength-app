@@ -1,7 +1,7 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
 **Status:** proposed 2026-11-14, except ADR-INT-010, which was accepted and closed on
-2026-11-14 and is implemented (the MCP transport is enabled with the nine-tool catalogue). The
+2026-11-14 and is implemented (the MCP transport is enabled with the ten-tool catalogue). The
 remaining records are pending owner approval and are not implemented.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
@@ -300,11 +300,11 @@ slow and very_slow capabilities target p95 ≤ 7 s, are callable without a hard 
 and carry measured-latency guidance in their tool descriptions. The server tool timeout is 20 s.
 Measured p95 values are historical benchmarks, not guarantees. Repeated costly calls are
 discouraged in the descriptions; correctness must never be traded for latency. The transport is
-enabled on the trusted LAN with the full nine-tool catalogue; T-3 remains the optimisation and
+enabled on the trusted LAN with the full ten-tool catalogue; T-3 remains the optimisation and
 remeasurement work. Option **E** (do not enable) is rejected for now.
 
 **Status.** **Accepted and closed 2026-11-14.** The transport is enabled with a full catalogue
-(operationally as a user-level process until the systemd unit is installed). T-3's first pass is
+(installed as a systemd unit on the ODROID on 2026-11-15, with host-specific paths). T-3's first pass is
 closed; options A, C and D remain future optimisations and T-3a is the optional session-details
 follow-up. B and C are implemented.
 
