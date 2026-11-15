@@ -1352,7 +1352,8 @@ isolation that 7b-2 and 7b-3 reuse.
 `NSHomeKitUsageDescription`, `HMHomeManager` authorisation, a picker limited to the user's homes, and
 execution through `executeActionSet` by whichever device owns the session.
 
-*Owner decisions 2026-11-15.* The HomeKit capability is confirmed enableable on the App ID. The watch
+*Owner decisions 2026-11-15.* The HomeKit capability is confirmed enableable on **both** App IDs — the iOS app and
+the watch app. The watch
 does **not** get its own scene picker: it takes the selection **from the phone over WatchConnectivity**
 (option b), keeping one place to choose scenes.
 
