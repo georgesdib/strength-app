@@ -850,9 +850,10 @@ injection fixtures.
 **Status.** **Complete (2026-11-15).** The app has a dedicated Chat screen reached from Progress, a
 separate default-off consent toggle, suggested prompts, non-streaming answers, a sources line per
 reply and a session-only transcript (leaving the screen clears it). The five tools are registered
-for chat with a 5-to-3 fallback on a context overflow; the answer is grounded against the envelopes
-the tools actually returned, and an ungrounded number is rejected with the number named. Session
-details resolve the most recently completed session when the model has no id. The manual device
+for chat with a 5-to-3 fallback on a context overflow; the answer is checked against the envelopes
+the tools actually returned: an ungrounded digit gets one corrective retry and, if it survives, a
+visible "Unverified numbers" warning. Session details resolve the most recently completed session
+when the model has no id. The manual device
 matrix passed: weekly review, overview, progression, session details without an id, readiness,
 refusal of plan/medical prompts, and transcript clearing. No UI test by owner decision.
 
@@ -866,8 +867,9 @@ the app loses it.
 **Dependencies.** INT-4; a physical Apple Intelligence device; no backend change.
 
 **Acceptance.**
-- Every number in an answer exists in the fetched facts; an invented number is rejected and the
-  answer falls back to a plain "I cannot answer that from your data", never to an unchecked reply.
+- Every digit in an answer is checked against the fetched facts. An ungrounded digit triggers one
+  corrective retry; if it survives, the answer is shown with an "Unverified numbers" warning, never
+  silently accepted. Number words are prose and are not treated as claims.
 - Questions outside the facts (medical advice, plan changes, other athletes) are refused plainly.
 - Multi-turn context stays within the model window: tool results are trimmed, old turns are
   trimmed to the most recent ones, and a context overflow is a clear message, never a raw token
