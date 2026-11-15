@@ -1029,8 +1029,8 @@ tools with four history messages and 60 fact lines also passed.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
 
-**Tests.** 42 chat-related tests pass, including structured DeepSeek answers and plan-tool gating.
-The backend route tests pass (12).
+**Tests.** 43 chat-related tests pass, including structured DeepSeek answers, plan-tool gating and
+today/yesterday resolution. The backend route tests pass (12).
 
 **Open.** Device acceptance on both models. A visible “plan data omitted” note on the context
 fallback is not implemented yet; the current fallback silently drops to the base three tools.
