@@ -1420,6 +1420,15 @@ MCP involvement.
 rest timer is not a pause, and the session engine has no paused state. The Action + Side pair therefore
 does nothing in this app. No open question remains in this phase.
 
+**Implementation status (2026-11-15): implemented, device checks pending.** The watch target links
+`StrengthIntents` and registers a watch-side provider over its own device credential.
+`ActionButtonStartWorkoutIntent` (one `Strength` style, `suggestedWorkouts`, the 30-second start
+budget) starts the plan the phone already requested for the watch and answers "Request a workout on
+your iPhone first" when there is none. `ActionButtonOpenFinishIntent` is donated as the button's next
+action after a successful start and, per the owner's choice, only brings the session forward — it never
+finishes, so sRPE is still entered by hand. Four read-only intents and a watch-local
+`AppShortcutsProvider` give watch Siri the same answers as the phone, dialog-only.
+
 ### INT-8 — Controlled plan review and recommendations (closed 2026-11-15)
 
 **Owner decision (2026-11-15): closed.** No concrete question justified the phase, and read-only
