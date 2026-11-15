@@ -1055,8 +1055,8 @@ Multi-tool orchestration is deferred to INT-6.
 **Scope.** `intelligence/model/` orchestration, `NarrativeProvider` with `NullProvider` and the
 existing OpenAI-compatible adapter, `IntelligenceClient` (`InProcessClient` / `MCPClient`), JSON
 output contract and validator, `run`/`run_event` trace, cost budget, CLI command
-(`strength-coach intelligence review --narrate`), and the evaluation harness. No new public
-endpoint.
+(`strength-coach intelligence narrate --capability NAME --payload JSON [--json]`), and the
+evaluation harness. No new public endpoint.
 
 **Dependencies.** INT-3; INT-2 parity test; Phase 1b selector retirement recommended first
 (`DEC-LLM-14`) so there is exactly one model surface.
@@ -1174,6 +1174,17 @@ INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 - INT-6 needs at least one working narrative path.
 - INT-7 is independent of the model work and could run in parallel with INT-4/5.
 - INT-8 has no implementation dependency that justifies starting it early.
+
+### Deferred — web access (web UI and iOS)
+
+Web access is **not approved and not scheduled** for either the web UI or the iOS app. No browsing,
+web search, arbitrary URL fetch, page-content tool or web citation is added by INT-1 to INT-8. The
+existing narration surfaces use structured capability facts only.
+
+A future phase would need its own ADR covering: an allow-listed search/fetch tool or server-side
+fetch path; outbound-network and privacy policy; untrusted-content and prompt-injection handling;
+a citation contract; and an evaluation set. Web content would be kept visibly separate from
+training facts and could never compute or override a training value.
 
 ### Later-stage candidate — retrieval-augmented generation (not a phase, not scheduled)
 
