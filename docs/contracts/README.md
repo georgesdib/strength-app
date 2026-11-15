@@ -11,5 +11,6 @@ These contracts define cross-repository behavior and are authoritative in this p
 | [iOS R7](IOS-R7-CONTRACT.md) | Asynchronous prescription request | Completed per source plan | Backend + iOS |
 | [iOS R8](IOS-R8-CONTRACT.md) | Active-workout plan editing | Completed per source plan | Backend + iOS |
 | [watchOS Phase 6](IOS-WATCH-CONTRACT.md) | Watch companion contract | Phase 6.7 owner-confirmed 2026-11-14 (W1–W12 and R) | Backend + iOS/watchOS |
+| [Training Intelligence](TRAINING-INTELLIGENCE-CONTRACT.md) | Envelope, evidence rules, MCP tools/resources, error semantics, limits, iOS native adapter | Proposed 2026-11-14; not implemented | Backend + iOS |
 
-The iOS client plan is in [`../plans/IOS-CLIENT-PLAN.md`](../plans/IOS-CLIENT-PLAN.md). The backend HTTP API reference, Python architecture, schemas, migrations and implementation details remain backend-owned; this contract index does not replace those documents.
+The Training Intelligence plan is in [`../plans/TRAINING-INTELLIGENCE.md`](../plans/TRAINING-INTELLIGENCE.md). The iOS client plan is in [`../plans/IOS-CLIENT-PLAN.md`](../plans/IOS-CLIENT-PLAN.md). The backend HTTP API reference, Python architecture, schemas, migrations and implementation details remain backend-owned; this contract index does not replace those documents.

@@ -1,0 +1,6 @@
+# Optional dependencies for scripts/docs_pdf.py (cross-repository documentation PDF).
+# Install once into a local virtual environment:
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r scripts/requirements-docs.txt
+Markdown>=3.5
+WeasyPrint>=62
