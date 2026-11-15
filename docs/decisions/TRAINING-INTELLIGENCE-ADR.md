@@ -531,6 +531,51 @@ source of prescriptions.
 
 **Status.** Accepted 2026-11-15; implemented, device test pending.
 
+## ADR-INT-018 — Workout lifecycle surfaces: Action button and HomeKit scenes (proposed 2026-11-15)
+
+**Context.** The owner wants two local automations around the existing session lifecycle: a HomeKit
+scene when a workout starts and another when it ends, on either phone or watch; and Action-button
+support on Apple Watch Ultra for starting and ending a workout. The plan's §1.2 excludes
+"workout-execution changes" and INT-7's acceptance forbids an intent that writes, so the feature needs
+an explicit, narrow carve-out or it cannot exist.
+
+**Decision.** Add INT-7b as a local surface layer, not an intelligence capability:
+
+- `StartWorkoutIntent` in the watch app (`title`, `suggestedWorkouts`, `workoutStyle` over an
+  `AppEnum`, `displayRepresentation`, `perform()`), which registers the app under
+  Settings > Action button > Workout. The system allows 30 seconds to start an `HKWorkoutSession`
+  and return success, and the intent must be compiled into the watch app, never an
+  `AppIntentsExtension`.
+- An end `AppIntent` **donated as the Action button's next action** while the session is active.
+  Apple defines no `EndWorkoutIntent` protocol; the next action is a single slot, replaced by each
+  new donation, so the donation state must follow the session state.
+- Two user-selected HomeKit scenes executed by the device that owns the session through
+  `HMHomeManager` and `HMHome.executeActionSet(_:completionHandler:)` (iOS 8+/watchOS 2+), gated by
+  the `com.apple.developer.homekit` entitlement and `NSHomeKitUsageDescription`.
+- **Boundary.** These intents call the existing start and finish operations. They do not change how a
+  session is executed, validated or recorded, compute nothing, and add no server call, MCP tool, model
+  call or envelope field.
+
+**Alternatives rejected.** (1) HomeKit's own automation engine: its triggers are accessory-, time- and
+people-based, not "a third-party app started a workout". (2) A server-side automation: HomeKit lives on
+the phone and watch, the server cannot reach it, and it would put physical-home control behind a
+network token. (3) A user-built Shortcut: possible today, but the device token sits in an editable
+shortcut and there is no Action-button start. (4) Mapping `PauseWorkoutIntent`/`ResumeWorkoutIntent`
+onto the rest timer: a rest timer is not a pause; refused until a decision.
+
+**Consequences.** A HomeKit entitlement and usage string; a scene picker and executor; a donation state
+machine; failure isolation so a HomeKit error never blocks, delays or rolls back the training record;
+acceptance on phone-only, watch-only and both, including the rule that exactly one device executes the
+scenes for a given session. The HomeKit mapping stays on the device and never enters the repository,
+the server, the envelopes or a prompt. A device check is needed for the watch case, where the home must
+be reachable through the user's iCloud home sharing.
+
+**Security.** Scenes can unlock doors, so: explicit opt-in, one scene per event, selection only from the
+user's HomeKit list, no Siri- or model-supplied scene name, no execution from a stale donation, and no
+scene/home/accessory identifier in any log sent off the device.
+
+**Status.** Proposed 2026-11-15 at the owner's request. Not implemented and not scheduled.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |

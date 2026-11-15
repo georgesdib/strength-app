@@ -306,6 +306,11 @@ budget and the no-silent-cloud-fallback rule. The bullets stay as the original s
 privacy conditions are carried forward unchanged. The HealthKit, cardio and Longevity items in this
 phase are unaffected.
 
+**Siri and surface automation (2026-11-15).** Siri, App Intents and Shortcuts are specified in the
+[Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7.5–§7.6 and INT-7 (read-only intents), not
+here; the watch Action button and the HomeKit scenes on workout start and end are INT-7b in the same
+plan with `ADR-INT-018`. This client plan does not restate them.
+
 - **Apple Intelligence:** optional tools may parse a spoken/typed set entry into an uncommitted draft, explain a server-produced prescription, summarize completed training, or structure free-text notes. The user reviews/accepts any draft before it reaches server validation. The model never controls training decisions or computes numbers.
 - **PCC:** an explicitly selected Apple Private Cloud Compute option for a user-invoked AI task; disabled by default, visibly identified as Apple server processing, with a preview of the context and consent before personal workout/health data is included. It is not used by pairing, readiness, prescription, capture, or sync; no automatic fallback from on-device mode; core functionality remains available with PCC disabled or offline.
 - Additional HealthKit observations (steps, body mass, VO₂max), richer cardio imports, richer but descriptive Longevity views, background delivery, or historical XML backfill only when a concrete use case justifies their added privacy/schema/testing cost. The watchOS companion is Phase 6, not part of this bucket.

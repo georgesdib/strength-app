@@ -4,8 +4,10 @@
 **Status:** proposed 2026-11-14 (INT-0, planning only). INT-1, INT-1b, the INT-2 catalogue and
 INT-3 have since been delivered, and INT-3 is closed (§11); this plan document itself changes no
 runtime, API, schema, dependency, prompt or training rule. Amended 2026-11-15: §7.2 gains the iOS 27.0
-framework facts, §7.5 refreshes the Siri AI preview status, §7.6 adds the Siri AI readiness design, and
-INT-7 and decision 14 carry it (`ADR-INT-011` amendment).
+framework facts and the measured context size, §7.5 refreshes the Siri AI preview status, §7.6 adds
+the Siri AI readiness design and records that MCP is not a Siri transport, INT-7 and decision 14 carry
+it (`ADR-INT-011` amendment), and INT-7b with decision 15 adds the workout lifecycle surfaces
+(Action button and HomeKit scenes, `ADR-INT-018`).
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
@@ -59,6 +61,11 @@ of the system can change a prescription, a readiness score, a load or a training
   intelligence.
 - Depending on beta-only Apple APIs, including the iOS 27.3 Siri AI Developer Preview.
 - Storing model output as a training artifact or as a prescription.
+
+One carve-out, recorded in `ADR-INT-018`: the lifecycle surfaces in INT-7b may **call** the existing
+session start and finish operations from Siri, Shortcuts, the watch Action button and a HomeKit
+automation, and may run a user-configured HomeKit scene. They may not change how a session is
+executed, validated or recorded, and they add no training policy.
 
 ## 2. Architectural invariants
 
@@ -521,6 +528,10 @@ None of the three framework rows above changes INT-4's shape: the weekly review 
 `SystemLanguageModel`, and needs no image, no protocol abstraction and no per-model prompt matrix
 beyond re-running the evaluation on each OS release.
 
+The **4,096** in the table is the documented base context. The INT-4b device probe measured **8,192**
+tokens with tool calling and guided generation on the current OS (`ADR-INT-017`), so the estimator
+reads `contextSize` at runtime rather than hard-coding either number.
+
 ### 7.3 Apple Private Cloud Compute
 
 `PrivateCloudComputeLanguageModel` (iOS 27.0+) provides a **32K** context and reasoning levels, uses
@@ -585,6 +596,15 @@ documentation (links under Related). They update §7.5; they do not reopen §7.2
 | Cost | Server-side Apple Intelligence features are subject to daily usage limits; expanded access will be "for a fee"; Apple has not published the terms |
 | Schemas | There is **no health or fitness app-schema domain**, so a strength app cannot adopt a primary domain; its actions are custom tool intents |
 
+**Why MCP is not a Siri transport.** Siri has no MCP client, cannot be pointed at a URL or a
+JSON-RPC endpoint, and calls only your app's App Intents or schema actions; a `SKILL.md` is prose
+guidance about those intents, not a transport descriptor. The MCP server therefore reaches Siri only
+through the app: an intent calls the same envelope that a tool wraps. This is the plan's standing rule
+— one capability layer, several projections (MCP tools, REST routes, App Intents) — and it is why no
+MCP endpoint, token or tool catalogue is ever exposed to Siri. Consequences for the surfaces: "how
+long was my previous workout" is a read-only intent over `history.list_sessions()`, not an MCP call;
+it works on stable APIs today, without the preview and without the app knowing that MCP exists.
+
 Design consequences:
 
 - **Determinism stays in Python.** A `SKILL.md` is guidance to a model, not a specification. No
@@ -605,7 +625,9 @@ Readiness INT-7 ships now, so the later upgrade is additive:
    `IndexedEntity` (`IndexedEntityQuery` where lookup by identifier is needed) so Spotlight can find
    it without the app;
 3. snippet views are ordinary SwiftUI views that a `CardSnippet` can host later;
-4. `perform()` stays side-effect-free, so turning the intent into a tool changes no behaviour;
+4. `perform()` stays side-effect-free for the read-only intents, so turning one into a tool changes
+   no behaviour; the only intents allowed a side effect are the INT-7b lifecycle ones, and their
+   effect is a user-configured HomeKit scene, never a training mutation;
 5. a shipped build contains no `@AppIntent(.tool)`, no `Skills.skillsbundle` and no preview symbol.
 
 Deferred to adoption: the tool annotation, the skills bundle and its `SKILL.md` files,
@@ -1201,6 +1223,63 @@ conversational Siri, and any fee-bearing Apple-hosted path. The readiness in §7
 preview itself is not. Revisit only after it ships to customers, Apple publishes its terms, and a new
 ADR approves it.
 
+### INT-7b — Workout lifecycle surfaces: Action button and HomeKit scenes (owner-requested 2026-11-15)
+
+**Scope.** Two *local* surfaces around the existing session lifecycle, on iPhone and watch. They are
+not intelligence capabilities and add no training policy.
+
+1. `StartWorkoutIntent` in the watch app, so an Apple Watch Ultra Action button
+   (**Settings > Action button > Workout > StrengthApp**) starts the workout.
+2. An end-workout `AppIntent` **donated as the Action button's next action** while a session is
+   active, so a second press ends it. Apple defines no `EndWorkoutIntent` protocol; donating an intent
+   sets the next action, only one exists at a time, and re-donating replaces it.
+3. Two user-selected **HomeKit scenes** — one on start, one on end — executed by whichever device owns
+   the session (phone or watch) through `HMHomeManager` and
+   `HMHome.executeActionSet(_:completionHandler:)`.
+
+**Dependencies.** The Phase 6 watch session engine (start, finish, HealthKit authorization, exactly one
+HealthKit save) and the phone's session path. Independent of INT-3, INT-4 and INT-7's read-only intents.
+
+**Files/repos.** iOS/watchOS: `StrengthApp/Intents/`, `StrengthWatch/`, `StrengthApp/Home/`
+(scene picker and executor), tests. The Action-button intents are compiled **into the watch app**:
+Apple forbids implementing them in an `AppIntentsExtension`.
+
+**Facts (2026-11-15).**
+
+- `StartWorkoutIntent` is a protocol (watchOS 9+, iOS 16+): `title`, `suggestedWorkouts`,
+  `workoutStyle` as a `@Parameter` over an `AppEnum`/`AppEntity`, `displayRepresentation` and
+  `perform()`; `invalidateSuggestedWorkouts()` refreshes the list. The system allows **30 seconds** to
+  start an `HKWorkoutSession` and return success.
+- `PauseWorkoutIntent`/`ResumeWorkoutIntent` are the Action + Side button pair; they need a pausable
+  session engine, which strength training does not have — **not adopted** (open question below).
+- `HMHome.executeActionSet` is iOS 8+/watchOS 2+. HomeKit needs the `com.apple.developer.homekit`
+  entitlement plus `NSHomeKitUsageDescription` and the user's authorisation. Scenes are `HMActionSet`
+  values read from the user's homes; the app never invents one.
+- HomeKit's own automations trigger on accessory, time and people events, not on a third-party app
+  event, which is why the app executes the scene itself.
+
+**Acceptance.** One Action-button press starts the configured workout on the watch; a second press
+during the session ends it. The start scene runs once on the device that started the session, and the
+end scene once when that session finishes or is abandoned. A HomeKit failure never blocks, delays or
+rolls back the training record and is reported only in the app. The feature is off by default, with one
+scene per event chosen from the user's HomeKit list. No scene, home or accessory identifier reaches the
+server, the intelligence envelopes, the MCP surface or any model prompt.
+
+**Tests.** Intent and donation-state unit tests; scene-selection and executor tests with a stub HomeKit
+adapter; a device matrix on phone-only, watch-only and both; failure injection for authorisation denied,
+home removed and scene missing.
+
+**Security.** Scenes can unlock doors, so: explicit opt-in, no execution without a confirmed session
+transition, no model- or Siri-supplied scene name, no scene execution from a stale donation, and the
+device token stays in the app. The scene mapping lives on the device, not in the repository.
+
+**Exclusions.** No change to workout-execution semantics (§1.2): the intents call the existing start and
+finish operations. No pause/resume, no accessory-level control beyond a scene, no HomeKit data in the
+intelligence layer, no server or MCP involvement.
+
+**Open question.** Whether `PauseWorkoutIntent`/`ResumeWorkoutIntent` should map to the app's rest
+timer (which is not a pause) or be refused outright. Default: refused until a decision.
+
 ### INT-8 — Controlled plan review and recommendations (closed 2026-11-15)
 
 **Owner decision (2026-11-15): closed.** No concrete question justified the phase, and read-only
@@ -1225,6 +1304,7 @@ INT-4d (external chat model): delivered; chat only
 INT-4e (plan-aware chat): delivered
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
+INT-7b (Action button + HomeKit scenes): independent; no model, MCP or server dependency
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
@@ -1238,6 +1318,8 @@ INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
 - INT-7 is independent of the model work and could run in parallel with INT-4/5.
+- INT-7b (workout lifecycle surfaces) is independent of INT-7's read-only intents and of every model
+  phase; it can ship before or after them and is the only phase allowed a side effect (`ADR-INT-018`).
 - INT-8 is closed; it does not block or extend the remaining phases.
 
 ### Deferred — web access (web UI and iOS)
@@ -1295,6 +1377,7 @@ MCP tool boundary facts-only.
 | 12 | Phase 1b (retire the minimal LLM selector) before INT-5 | approve; otherwise two model surfaces coexist | `ADR-INT-012` |
 | 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
 | 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, and no preview symbol in a shipped build | approve; a post-launch adoption becomes additive rather than a rewrite (§7.6) | `ADR-INT-011` (amended 2026-11-15) |
+| 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, and user-selected HomeKit scenes on start and end, on phone and watch | approve; local automation around the existing session path, no training-policy change (§1.2 carve-out) | `ADR-INT-018` |
 
 Two further points need an owner answer rather than an architecture decision:
 
@@ -1422,6 +1505,9 @@ retained items in §16.3.
 - [MCP Python SDK](https://py.sdk.modelcontextprotocol.io/)
 - [Apple Foundation Models](https://developer.apple.com/documentation/foundationmodels)
 - [Siri AI Developer Preview](https://developer.apple.com/documentation/appintents/siri-ai-developer-preview)
+- [StartWorkoutIntent](https://developer.apple.com/documentation/appintents/startworkoutintent)
+- [Responding to the Action button on Apple Watch Ultra](https://developer.apple.com/documentation/appintents/actionbuttonarticle)
+- [HMHome.executeActionSet(_:completionHandler:)](<https://developer.apple.com/documentation/homekit/hmhome/executeactionset(_:completionhandler:)>)
 - [Orchestrating complex actions with app skills](https://developer.apple.com/documentation/appintents/orchestrating-complex-actions-with-app-skills)
 - [iOS & iPadOS 27.3 beta release notes](https://developer.apple.com/documentation/ios-ipados-release-notes/ios-ipados-27_3-release-notes)
 - [Siri AI is now open to all developers (2026-11-03)](https://developer.apple.com/news/?id=gdk2umrf)
