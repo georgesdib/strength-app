@@ -518,9 +518,9 @@ Design consequences:
 the same `LanguageModelSession` API, needs a network, has a **per-day quota** and requires Apple's
 managed entitlement. It is a stable API in a released OS but **gated access**, so it cannot be the
 default or a dependency. Its privacy story is Apple-mediated, not owner-mediated, and it must be
-presented as server processing with explicit consent and a context preview, per
-`IOS-CLIENT-PLAN.md` §5. Quota errors (`.quotaLimitReached`) are a normal state with a clear
-message, never a retry loop.
+presented as server processing with a single Settings choice and a one-line disclosure. The owner
+waived the earlier context preview and per-request consent flow (2026-11-15). Quota errors
+(`.quotaLimitReached`) are a normal state with a clear message, never a retry loop.
 
 ### 7.4 Backend LLM
 
@@ -888,6 +888,61 @@ by the owner.
 **Exclusions.** No Siri AI Developer Preview, no PCC/cloud fallback, no server narration, no write,
 no new analytical capability, and no INT-5 work.
 
+### INT-4c — User-selectable model: on-device or Private Cloud (scope proposed 2026-11-15)
+
+**Status.** Scoped, not started. **Blocking prerequisite:** Apple's managed entitlement
+`com.apple.developer.private-cloud-compute` and PCC eligibility. Without it the model is
+unavailable and this phase does not ship; there is no dead picker.
+
+**Goal.** One app-wide setting: **On-device (default)** or **Private Cloud Compute**, applied to the
+weekly/overview explanations and Chat. Each surface states which model produced the answer.
+
+**Privacy — deliberately simple.** One picker plus one line: “Private Cloud sends your question and
+training facts to Apple's private cloud; On-device keeps them on this iPhone.” No per-request
+consent modal, no context preview, no audit log, no telemetry. The transcript stays session-only.
+The owner waived the earlier context-preview requirement.
+
+**Prerequisite spike (must pass before UI work).** Apply for access and add the entitlement to the
+app profile, then on the iPhone verify:
+- `PrivateCloudComputeLanguageModel().isAvailable`;
+- `.capabilities` contains `.toolCalling` and `.guidedGeneration`;
+- `contextSize` (expected 32K);
+- `quotaUsage.status`;
+- one chat turn and one explanation.
+If any check fails, stop and report; do not ship a partial picker.
+
+**Implementation.**
+- `NarrativeModelChoice` (`onDevice`, `privateCloud`) persisted in UserDefaults; default on-device.
+- A small session factory switches on the choice; both generators take it. Tools, budgets,
+  grounding, soft verification and session-only transcripts are unchanged.
+- Settings picker with the one-line disclosure. The PCC option appears only when entitled,
+  available and capable; otherwise the surface stays on-device with a clear reason.
+- Errors: `.networkFailure`, `.quotaLimitReached` and `.serviceUnavailable` map to short
+  messages; quota includes the reset date when Apple provides it; no retry loop and **no silent
+  fallback**.
+- Chat requires `.toolCalling`; explanations require `.guidedGeneration`. If either is missing, that
+  surface stays on-device with a clear line.
+
+**Acceptance.**
+- Default remains on-device; changing the picker persists and both surfaces use it.
+- PCC is offered only when entitled, available and capable; otherwise a clear reason, no dead
+  control.
+- No silent fallback; a PCC failure stops with a message and leaves the deterministic review intact.
+- Grounding/soft verification, sources, refusal behaviour and session-only transcript are identical.
+- Quota, network and service errors are differentiated.
+- Device matrix on both models: weekly explanation, overview explanation, chat with the five tools,
+  refusal, transcript clearing.
+
+**Tests.** Model-choice persistence and factory selection; availability/error mapping; a stub
+generator confirms both surfaces pass the choice through. No UI tests (owner). PCC itself is
+device-only.
+
+**Out of scope.** No backend/MCP change, no Siri, no streaming, no per-conversation model switch, no
+cost dashboard, no cloud fallback.
+
+**Estimate.** Small once access exists (2–3 focused sessions); entitlement and eligibility are the
+schedule risk.
+
 ### INT-5 — Backend LLM narrative and multi-tool integration
 
 **Scope.** `intelligence/model/` orchestration, `NarrativeProvider` with `NullProvider` and the
@@ -916,18 +971,19 @@ CLI/settings; keys never logged.
 **Exclusions.** No autonomous multi-step agent loop, no write, no new endpoint, no prompt stored in
 the repository with personal data.
 
-### INT-6 — Conversational Training Intelligence
+### INT-6 — Conversational Training Intelligence (server/web remainder)
 
-**Scope.** A multi-turn surface over the same five capabilities: follow-up questions within a
-review, "why is my bench flat?", "what changed this month?", with an explicit context budget, turn
-cap, and a hard rule that the model may only cite facts it retrieved in this conversation. Ship on
-iOS (AFM/PCC) first; a web chat panel later.
+**Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
+INT-4c. This phase now covers the server/web conversation only.
 
-**Dependencies.** INT-4 (and INT-5 for any server-side conversation). Requires a decision on
-transcript retention.
+**Scope.** A web chat panel over the same five capabilities, with an explicit context budget, turn
+cap, and a hard rule that the model may only cite facts it retrieved in this conversation.
 
-**Files/repos.** iOS `Features/Intelligence/ChatView.swift`, session management, tests; optional web
-panel.
+**Dependencies.** INT-5. The iOS surface is INT-4b/4c. A decision on server transcript retention is
+still required.
+
+**Files/repos.** Optional web panel; server conversation orchestration. The iOS `ChatView` is no
+longer part of this phase.
 
 **Acceptance.** Answers cite fact keys; asking for a prescription change produces a refusal and a
 pointer to the existing prescription flow; context stays under budget across 10 turns; no transcript
@@ -989,16 +1045,17 @@ review cannot answer. Read-only explanation is already covered by INT-3/INT-5.
 ## 12. Dependencies and sequencing
 
 ```
-INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 ──▶ INT-6
-                                      │
-                                      ├──▶ INT-5 ──▶ INT-6
+INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 ──▶ INT-4b ──▶ INT-4c ──▶ INT-6 (iOS)
+                                      │              (PCC entitlement)
+                                      ├──▶ INT-5 ──▶ INT-6 (server/web)
                                       └──▶ INT-7
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
-- INT-4b (on-device chat) is delivered and is independent of INT-5; INT-5 remains the server
-  narrative track. INT-6 needs at least one narrative path; INT-4b does not change that.
+- INT-4b (on-device chat) is delivered. INT-4c (model choice) is scoped but gated on Apple's PCC
+  entitlement; INT-5 remains the server narrative track. INT-6's iOS surface is delivered by
+  INT-4b/4c; only the server/web conversation remains.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.

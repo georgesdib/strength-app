@@ -411,6 +411,37 @@ coverage and direction only.
 **Open question.** Does the owner want a health-scoped token at all, or should raw readiness stay
 local-only permanently?
 
+## ADR-INT-015 — User-selectable Private Cloud Compute model (proposed)
+
+**Context.** INT-4 and INT-4b run entirely on the device. The owner asked for a user choice between
+on-device and Apple Private Cloud Compute (PCC). The Foundation Models framework exposes
+`PrivateCloudComputeLanguageModel` on iOS 27, but Apple requires the managed entitlement
+`com.apple.developer.private-cloud-compute` and eligibility approval; without it the model is
+unavailable. The plan previously required explicit consent and a context preview for PCC. The owner
+has asked us not to over-engineer the privacy layer.
+
+**Decision.** Add INT-4c: one app-wide model choice, **On-device (default)** or **Private Cloud**,
+used by the single-shot explanations and Chat. PCC is offered only when the entitlement is present,
+the model is available, and the required capabilities (tool calling for chat, guided generation for
+explanations) are supported. There is **no silent fallback**: a PCC failure stops with a short
+message and the deterministic review stays intact. Model choice is stored in UserDefaults.
+
+**Privacy.** A single Settings picker with one line: “Private Cloud sends your question and training
+facts to Apple's private cloud; On-device keeps them on this iPhone.” No per-request consent modal,
+no context preview, no audit log, no telemetry. Transcripts remain session-only.
+
+**Entitlement.** The phase is blocked until Apple grants access to
+[Private Cloud Compute](https://developer.apple.com/private-cloud-compute/) and the entitlement is
+added to the app profile. A device spike must verify availability, capabilities, context size and
+quota before UI work. If access is not granted, INT-4c does not ship and no dead picker is added.
+
+**Consequences.** One model-choice setting and a session factory across both generators; error
+mapping for network, quota and service failures; a device acceptance matrix on both models; no
+backend change. The privacy boundary becomes user-selectable, so the UI must always show which
+model is active. INT-4b's on-device path remains the default.
+
+**Status.** Proposed; blocked on Apple's PCC entitlement. Scope recorded in the plan as INT-4c.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
