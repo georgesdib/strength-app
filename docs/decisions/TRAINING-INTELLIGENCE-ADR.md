@@ -444,6 +444,31 @@ model is active. INT-4b's on-device path remains the default.
 entitlement, which are not available. The decision is parked, not rejected; the scope stays in the
 plan as the future definition and is revisited only if access is obtained.
 
+## ADR-INT-016 — External chat model via a user API key (DeepSeek, proposed)
+
+**Context.** PCC is parked because it needs a paid Apple Developer Program membership and the managed
+entitlement. The owner wants the option to use another model with their own API key, specifically
+DeepSeek, and has clarified that it applies to **Chat only** — the weekly and overview explanations
+stay on-device. DeepSeek exposes an OpenAI-compatible `/chat/completions` API with tool calls.
+
+**Decision.** Add INT-4d: a Settings **Chat model** choice, On-device (default) or DeepSeek. With
+DeepSeek selected, the iPhone calls `https://api.deepseek.com` directly using `deepseek-chat` and
+the user's key, stored in the Keychain. The adapter uses a tool loop over the same five read-only
+capabilities, non-streaming, with the existing sources line and soft number verification. No backend
+proxy; no explanations; no other task.
+
+**Privacy.** One-line disclosure that DeepSeek receives the question and training facts and that the
+key is stored on the iPhone. The key is not logged, not in UserDefaults, not in iCloud Keychain and
+not in the repository. **No silent fallback** to on-device, because that would change the data
+boundary. On-device remains the default and is unaffected.
+
+**Consequences.** An OpenAI-compatible client, a tool-call loop, Keychain storage, key validation,
+error mapping (401/429/5xx/transport/malformed) and a mocked-HTTP test suite. No server deployment.
+A model id that cannot call tools is refused for chat. The external model cannot be used for
+explanations, weekly review, MCP or server narration.
+
+**Status.** Proposed; scope recorded in the plan as INT-4d.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |

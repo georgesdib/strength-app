@@ -945,6 +945,51 @@ cost dashboard, no cloud fallback.
 **Estimate.** Small once access exists (2–3 focused sessions); entitlement and eligibility are the
 schedule risk.
 
+### INT-4d — Chat with an external model via API key (DeepSeek; scope proposed 2026-11-15)
+
+**Status.** Scoped, not started. Direct from the iPhone; no backend change.
+
+**Scope.** **Chat only.** The weekly and overview explanations remain on-device and never use the
+external model. A Settings **Chat model** choice offers On-device (default) or DeepSeek. When
+DeepSeek is selected, the app calls `https://api.deepseek.com` with model
+`deepseek-chat` using an API key stored in the Keychain. The conversation, facts and tool
+results are sent directly from the iPhone to DeepSeek. The adapter uses the OpenAI-compatible
+`/chat/completions` API with a tool loop over the same five read-only capabilities: at most four
+tool rounds, non-streaming, session-only transcript, sources line, and the existing soft number
+verification.
+
+**Privacy and key handling.** One-line disclosure: “DeepSeek receives your question and training
+facts; the key is stored in this iPhone's Keychain.” No server proxy, no key in UserDefaults, logs,
+the repository or iCloud Keychain; device-only accessibility. **No silent fallback** to on-device —
+that would change the data boundary. An external failure stops with a message and the user can
+switch back. On-device remains the default.
+
+**Settings.** Secure key field with Save/Test/Remove. A minimal validation request proves the key;
+401 shows “invalid key”, and the key is never echoed. Model defaults to `deepseek-chat`; a
+different model id is allowed only if it supports tool calls, otherwise chat refuses with a clear
+message.
+
+**Errors.** 401 invalid key, 429 rate limit, 5xx/transport unavailable, malformed response, tool
+execution failure. Short messages, no retry loop, no fallback.
+
+**Acceptance.**
+- On-device stays the default; the external model applies to Chat only; explanations are unchanged.
+- The key is stored in the Keychain, never logged or persisted elsewhere; Remove works.
+- Chat uses the five tools and returns grounded answers with sources; an ungrounded digit gets the
+  existing retry and “Unverified numbers” warning.
+- No request is made without a key; invalid keys fail clearly.
+- The transcript is session-only; prompts, answers and keys are not persisted.
+- Device test with the owner's key; simulator tests use a mocked HTTP transport.
+
+**Tests.** Mocked HTTP: request shape, bearer header, tool-call round trip, final answer, 401/429/500,
+malformed JSON, four-round cap and history budget. Keychain wrapper test with a test service. No UI
+tests (owner).
+
+**Out of scope.** Explanations and the weekly review, backend proxy, PCC, streaming, generic
+providers, cost dashboard, cloud fallback, any write.
+
+**Estimate.** Medium: HTTP client, tool loop and key UX; no server work.
+
 ### INT-5 — Backend LLM narrative and multi-tool integration
 
 **Scope.** `intelligence/model/` orchestration, `NarrativeProvider` with `NullProvider` and the
@@ -1051,14 +1096,16 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
                                       │
                                       ├──▶ INT-5 ──▶ INT-6 (server/web)
                                       └──▶ INT-7
+INT-4d (external chat model): optional after INT-4b; chat only
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
-- INT-4b (on-device chat) is delivered. INT-4c (model choice) is parked until paid developer
-  access and the PCC entitlement exist; INT-5 remains the server narrative track. INT-6's iOS
-  surface is delivered by INT-4b; only the server/web conversation remains.
+- INT-4b (on-device chat) is delivered. INT-4d (DeepSeek chat) is scoped as an optional chat-only
+  model. INT-4c (PCC model choice) is parked until paid developer access and the entitlement exist;
+  INT-5 remains the server narrative track. INT-6's iOS surface is delivered by INT-4b; only the
+  server/web conversation remains.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.
