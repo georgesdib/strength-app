@@ -1243,14 +1243,20 @@ conversational Siri, and any fee-bearing Apple-hosted path. The readiness in §7
 preview itself is not. Revisit only after it ships to customers, Apple publishes its terms, and a new
 ADR approves it.
 
-**Implementation status (2026-11-15): first slice delivered** on iOS branch `feat/int-7-intents`.
-Shipped: the shared `StrengthIntents` package product (provider protocol and registry, `ExerciseEntity`
-with `IndexedEntity`, four digests), four intents (`TrainingOverviewIntent`, `LastWorkoutIntent`,
-`ExerciseProgressionIntent`, `WeeklyReviewIntent`), `AppShortcutsProvider` phrases, the live provider
-over `IOSAPIClient`, six unit tests, and a device-acceptance section. Verified: the package's App
-Intents metadata merges into `StrengthApp.app`, so a shared module is sound; the phone build and the
-watch build are clean. **Remaining in INT-7:** snippet presentation (`SnippetIntent`/`CardSnippet`-ready
-views), shortcut-phrase validation tests, and the physical-device Siri checks.
+**Implementation status (2026-11-15): delivered except the device checks** on iOS branch
+`feat/int-7-intents`. Shipped in two commits: the shared `StrengthIntents` package product (provider
+protocol and registry, `ExerciseEntity` with `IndexedEntity`, four digests, formatters) and the four
+intents (`TrainingOverviewIntent`, `LastWorkoutIntent`, `ExerciseProgressionIntent`,
+`WeeklyReviewIntent`) declared in the app target as thin shells. Each intent returns a snippet card
+and a dialog; the cards are pure value-in SwiftUI views, so a `CardSnippet` can host them after the
+27.3 adoption pass. `scripts/check-shortcut-phrases.sh` runs from `scripts/ci.sh` and fails a phrase
+that lacks the app-name token. Eleven unit tests pass (digests, entity query, snippet rendering,
+metadata presence). Verified: App Intents declared in a package product still emit metadata
+(`StrengthIntents.appintents` merges into `StrengthApp.app`), phone and watch builds are clean, and
+the package stays SwiftUI-free for the watch in 7b-3. **Remaining in INT-7:** the physical-device Siri
+checks in `StrengthApp/DEVICE-ACCEPTANCE.md`, and the average-duration intent agreed on 2026-11-15
+(a dedicated read-only intent over the overview envelope's `attendance.duration` block, with a
+`weeks` parameter; days are not supported by the capability).
 
 ### INT-7b — Workout lifecycle surfaces: Action button, HomeKit scenes and Shortcuts (owner-requested 2026-11-15)
 
