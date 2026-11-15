@@ -774,7 +774,10 @@ heaviest tools (informational, not a gate).
 `get_weekly_review` tool, `GET /api/ios/v1/intelligence/weekly-review`, the `StrengthCore`
 envelope model and REST client, the SwiftUI review screen and the Week navigation are implemented
 and tested. The screen shows status, coverage and limitations, renders no values client-side, and
-works with no model. No narrative, model or write path was added.
+works with no model. No narrative, model or write path was added. The REST entrypoint opens SQLite
+read-only; raw readiness values are local-only over MCP (score only unless a deployment opts in),
+and the weekly review flags a partial current week explicitly. ADR-INT-014 proposes per-token
+scopes as the long-term model.
 
 **Scope.** `intelligence/reports/weekly_review.py` composing the sections in §8.2;
 `get_weekly_review` tool; a new read-only iOS route

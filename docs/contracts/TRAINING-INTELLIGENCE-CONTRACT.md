@@ -416,7 +416,7 @@ not applied unless the owning service says so; a changed load basis breaks the s
 |---|---|---|---|
 | `start` | string (date) | yes | inclusive start |
 | `end` | string (date) | yes | inclusive end; `start` ≤ `end`; span ≤ 366 days |
-| `fields` | array of enum | no | default `["score"]`; the enum is generated from `strength_coach.utils.readiness.READINESS_FIELDS` plus `score`; unknown names rejected |
+| `fields` | array of enum | no | default `["score"]`; over MCP the only accepted value is `score`; raw fields are local-only unless the deployment sets `allow_sensitive_readiness`; unknown names rejected |
 
 **Argument spelling.** MCP tools spell the bounds `start`/`end`; the capability API keeps the
 contract's `from`/`to` internally. A tool MUST reject the other spelling rather than accept both.
@@ -431,9 +431,12 @@ score. No fill, no interpolation, no imputation.
 
 **Deterministic.** Yes.
 
-**Privacy.** `health` class. Default `["score"]` only; raw HRV/RHR/bodyweight require an explicit
-request and the caller's disclosure. The tool MUST refuse `fields` containing a value the deployment
-has marked excluded.
+**Privacy.** `health` class. The score is the only readiness fact available over MCP; raw sleep,
+mood, stress, soreness, HRV, RHR, bodyweight and lift-readiness values are local-only and are
+rejected at the MCP dispatch with `invalid_argument` unless the owner enables
+`allow_sensitive_readiness` for a trusted host. The rejection happens before the capability runs,
+so no raw value enters a payload. A future scoped-token model is proposed in ADR-INT-012. The tool
+MUST also refuse any field the deployment has marked excluded.
 
 **iOS.** Yes, as `readinessStatus` (score and coverage only by default).
 

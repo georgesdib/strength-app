@@ -1,6 +1,8 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
-**Status:** proposed 2026-11-14. Each record is pending owner approval; none is implemented.
+**Status:** proposed 2026-11-14, except ADR-INT-010, which was accepted and closed on
+2026-11-14 and is implemented (the MCP transport is enabled with the nine-tool catalogue). The
+remaining records are pending owner approval and are not implemented.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -375,6 +377,39 @@ it cannot be started by momentum. The supersession is recorded in the backend Su
 
 **Status.** Proposed; takes effect on owner approval of this plan. **Open question:** confirm that the
 constrained proposer should be deferred/unscheduled rather than kept as a parallel workstream.
+
+## ADR-INT-014 — Scoped MCP tokens for sensitive readiness (proposed)
+
+**Status.** Proposed 2026-11-15; not implemented. Until it is, raw readiness values are local-only
+over MCP and the deployment switch `allow_sensitive_readiness` is the only escape hatch, for a
+host and owner who deliberately opt in.
+
+**Context.** Every MCP token currently carries the same access. The readiness tool can return raw
+subjective fields (sleep, energy, mood, stress, soreness) and measured fields (HRV, RHR, bodyweight,
+fat percentage) alongside the canonical score. Once a host has the token it can request them, and
+the server cannot see what the host does with the values. A per-call "consent" flag would not be
+consent, because the model client sets it.
+
+**Decision (proposed).** Give each MCP token a scope set when it is minted:
+
+- `intelligence.read` (default) — every training fact and the readiness score;
+- `intelligence.health` — adds raw readiness fields.
+
+The scope is stored beside the token hash, checked in `authenticate_bearer`, carried on the
+`Principal`, and enforced at the dispatch boundary before the capability runs. The CLI gains
+`--scope`; `allow_sensitive_readiness` is then removed or kept only as a local-development
+override. Existing tokens migrate to `intelligence.read`.
+
+**Alternatives.** Keep the deployment-wide switch (coarse: every client gets the same access);
+per-call flag (not enforceable as consent); field-tiering (the audit treats subjective fields as
+sensitive too, so it does not satisfy the requirement).
+
+**Consequences.** One token-store migration, a contract revision for the readiness `fields` rule,
+auth and dispatch tests, and no envelope change. The weekly review is unaffected because it exposes
+coverage and direction only.
+
+**Open question.** Does the owner want a health-scoped token at all, or should raw readiness stay
+local-only permanently?
 
 ## Rejected architectural alternatives (summary)
 
