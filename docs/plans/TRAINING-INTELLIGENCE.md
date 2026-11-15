@@ -812,12 +812,14 @@ Swift arithmetic.
 
 ### INT-4 — Apple Foundation Models narrative (on device)
 
-**Implementation status (2026-11-15): first slice delivered; not yet complete.** The on-device
+**Implementation status (2026-11-15): delivered, with the stub UI test open.** The on-device
 narrative works on the weekly review and the Progress overview: default-off consent, availability
-and detail settings, a compact facts projection, a `@Generable` output, a grounding validator,
-deterministic fallback and no persistence or network. The five Foundation Models `Tool` adapters
-from contract §10, token-budget estimation/trimming, the stub UI test and the real-device
-acceptance run remain open.
+and detail settings, a compact facts projection, a `@Generable` output, a grounding validator that
+uses a structured number allow-list, deterministic fallback and no persistence or network. The five
+Foundation Models `Tool` adapters from contract §10 are implemented over the REST provider; the
+budget trims before falling back. The owner confirmed the device acceptance manually on 2026-11-15.
+What remains is the stub UI test (the panel state is unit-tested) and a device re-run after the
+tool/budget changes.
 
 **Scope.** Feature flag (default off), availability UI, consent copy, five `Tool` implementations,
 `@Generable` narrative, token budgeting, overflow recovery, grounding validator, cache-free
