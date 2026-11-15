@@ -336,8 +336,9 @@ attendance, volume, VBT, ratios or gates in Swift, including "just for layout" t
   hiding through the inclusive expiry date.
 - **Verification.** 298 iOS unit tests pass and the report build succeeds; the backend evidence,
   observations, adherence, summary and iOS API tests pass; `docs` consistency and `ruff` pass.
-- **Outstanding.** Physical iPhone acceptance of the report (including its observation) and its
-  offline/retry behaviour is still owner-run and unchecked in `DEVICE-ACCEPTANCE.md`.
+- **Acceptance.** Physical iPhone acceptance of the report (including its observation) and its
+  offline/retry behaviour was owner-confirmed **2026-11-14** and is recorded in
+  `DEVICE-ACCEPTANCE.md`; the `afc_device_acceptance` reminder is closed.
 
 ### AFC-3 — longitudinal observations
 
@@ -466,8 +467,8 @@ beside or after them, but never before AFC-2.
   synthesise or reword it.
 - **Tracked follow-ups (review tasks, not code).** Two pending items are now reminders in the
   app's periodic-review panel, so they cannot be forgotten: `afc_device_acceptance` (physical
-  iPhone acceptance of the report and its observation; **closed 2026-11-14 — the reminder can be
-  closed in the review panel**) and `afc_5a_historical` (AFC-5a historical analysis; waits until
+  iPhone acceptance of the report and its observation; **closed 2026-11-14 in the review panel**)
+  and `afc_5a_historical` (AFC-5a historical analysis; waits until
   2027-01-23, the day after the Phase 5A gate). Neither starts
   work by itself; the first is a checklist and the second is a precondition.
 - **Interpretation caveat for the gate.** A declared break depresses `attendance.pct` and can

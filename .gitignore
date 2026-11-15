@@ -3,5 +3,17 @@ acceptance
 .tmp-build
 .worktrees
 
+# Generated documentation PDF (scripts/docs_pdf.py); build output, not source.
+dist/
+
+# Machine-local private notes and credentials. Never commit.
+/private/
+
+# Python tooling for the documentation PDF builder.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
 # Machine-local coding-agent instructions
 /AGENTS.machine.md
