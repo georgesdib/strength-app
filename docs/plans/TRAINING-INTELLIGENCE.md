@@ -888,11 +888,13 @@ by the owner.
 **Exclusions.** No Siri AI Developer Preview, no PCC/cloud fallback, no server narration, no write,
 no new analytical capability, and no INT-5 work.
 
-### INT-4c — User-selectable model: on-device or Private Cloud (scope proposed 2026-11-15)
+### INT-4c — User-selectable model: on-device or Private Cloud (parked 2026-11-15)
 
-**Status.** Scoped, not started. **Blocking prerequisite:** Apple's managed entitlement
-`com.apple.developer.private-cloud-compute` and PCC eligibility. Without it the model is
-unavailable and this phase does not ship; there is no dead picker.
+**Status.** **Parked 2026-11-15; not scheduled.** PCC requires a paid Apple Developer Program
+membership plus the managed entitlement `com.apple.developer.private-cloud-compute` and Apple's
+eligibility approval. Until that access exists the model is unavailable, so this phase does not
+ship and no picker is added. Revisit only if the owner obtains access; the scope below is retained
+as the future definition.
 
 **Goal.** One app-wide setting: **On-device (default)** or **Private Cloud Compute**, applied to the
 weekly/overview explanations and Chat. Each surface states which model produced the answer.
@@ -1045,17 +1047,18 @@ review cannot answer. Read-only explanation is already covered by INT-3/INT-5.
 ## 12. Dependencies and sequencing
 
 ```
-INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 ──▶ INT-4b ──▶ INT-4c ──▶ INT-6 (iOS)
-                                      │              (PCC entitlement)
+INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 ──▶ INT-4b ──▶ INT-6 (iOS)
+                                      │
                                       ├──▶ INT-5 ──▶ INT-6 (server/web)
                                       └──▶ INT-7
+INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
-- INT-4b (on-device chat) is delivered. INT-4c (model choice) is scoped but gated on Apple's PCC
-  entitlement; INT-5 remains the server narrative track. INT-6's iOS surface is delivered by
-  INT-4b/4c; only the server/web conversation remains.
+- INT-4b (on-device chat) is delivered. INT-4c (model choice) is parked until paid developer
+  access and the PCC entitlement exist; INT-5 remains the server narrative track. INT-6's iOS
+  surface is delivered by INT-4b; only the server/web conversation remains.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.

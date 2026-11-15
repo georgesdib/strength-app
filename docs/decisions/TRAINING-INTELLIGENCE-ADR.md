@@ -411,7 +411,7 @@ coverage and direction only.
 **Open question.** Does the owner want a health-scoped token at all, or should raw readiness stay
 local-only permanently?
 
-## ADR-INT-015 — User-selectable Private Cloud Compute model (proposed)
+## ADR-INT-015 — User-selectable Private Cloud Compute model (deferred 2026-11-15)
 
 **Context.** INT-4 and INT-4b run entirely on the device. The owner asked for a user choice between
 on-device and Apple Private Cloud Compute (PCC). The Foundation Models framework exposes
@@ -440,7 +440,9 @@ mapping for network, quota and service failures; a device acceptance matrix on b
 backend change. The privacy boundary becomes user-selectable, so the UI must always show which
 model is active. INT-4b's on-device path remains the default.
 
-**Status.** Proposed; blocked on Apple's PCC entitlement. Scope recorded in the plan as INT-4c.
+**Status.** Deferred 2026-11-15: PCC needs a paid Apple Developer Program membership and the managed
+entitlement, which are not available. The decision is parked, not rejected; the scope stays in the
+plan as the future definition and is revisited only if access is obtained.
 
 ## Rejected architectural alternatives (summary)
 
