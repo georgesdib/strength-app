@@ -723,11 +723,12 @@ headers. Error messages are reduced to their code. A logging failure MUST NOT ch
 
 - Base: `/api/ios/v1/intelligence/`, existing device bearer token, existing error envelope,
   existing idempotency rules do not apply (all reads).
-- Routes (INT-3 onward; INT-3 is closed with the weekly review implemented, the rest are not):
-  - `GET /api/ios/v1/intelligence/weekly-review?week_end=YYYY-MM-DD` — **implemented 2026-11-14**
+- Routes (INT-3 onward; all implemented 2026-11-15 as the INT-4 read surface):
+  - `GET /api/ios/v1/intelligence/weekly-review?week_end=YYYY-MM-DD`
   - `GET /api/ios/v1/intelligence/overview?as_of=&window_weeks=`
   - `GET /api/ios/v1/intelligence/exercises/{id}/progression?window_days=`
   - `GET /api/ios/v1/intelligence/readiness?from=&to=&fields=`
+  - `GET /api/ios/v1/intelligence/session-details?workout_id=&session_id=&include_ratios=`
 - Every route returns the envelope unchanged. No route returns a partial or re-shaped payload.
 - Capability advertisement: `bootstrap.capabilities` gains `intelligence_read: true` only when the
   routes exist, so an older server and a newer app negotiate explicitly.
