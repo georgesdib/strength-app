@@ -597,7 +597,8 @@ opts in to a fixed string, and never verified or retried.
 
 **Status.** **Accepted 2026-11-15** (decision 15), after the §1.2 exclusion was removed at the owner's
 request. The owner confirmed that `PauseWorkoutIntent`/`ResumeWorkoutIntent` stay excluded and that the
-device owning the session executes the scenes exactly once. Not implemented; scheduled after INT-7.
+device owning the session executes the scenes exactly once. Not implemented; delivered in three slices
+in this order after INT-7: 7b-1 executor and Shortcuts, 7b-2 HomeKit scenes, 7b-3 Action button.
 
 ## Rejected architectural alternatives (summary)
 

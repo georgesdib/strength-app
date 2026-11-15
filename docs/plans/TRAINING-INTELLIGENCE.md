@@ -1229,12 +1229,14 @@ ADR approves it.
 
 **Scope.** A *local* surface layer around the existing session lifecycle — Action button, HomeKit
 scenes and user Shortcuts — on iPhone and watch. It is not an intelligence capability and adds no
-training policy.
+training policy. Delivered as three slices, cheapest first.
 
 **Boundary.** These intents are entry points: they **call** the existing start and finish operations and
 never redefine them. Session semantics — what counts as started, when a session is finished, sRPE
 validation, offline journaling and replay, device ownership and abandonment — stay in the session
 engine and the server (`ADR-INT-018`).
+
+**Channels.**
 
 1. `StartWorkoutIntent` in the watch app, so an Apple Watch Ultra Action button
    (**Settings > Action button > Workout > StrengthApp**) starts the workout.
@@ -1275,18 +1277,43 @@ Apple forbids implementing them in an `AppIntentsExtension`.
   Apple: it "doesn't provide functionality in other contexts". Success from `open` means the URL was
   accepted, **not** that the shortcut ran: there is no completion signal and no error to report.
 
-**Acceptance.** One Action-button press starts the configured workout on the watch; a second press
-during the session ends it. The start scene runs once on the device that started the session, and the
-end scene once when that session finishes or is abandoned. A configured shortcut runs at most once per
-event, on the phone, **after** the scene, and only when the phone owns the session. A HomeKit or
-Shortcut failure never blocks, delays or rolls back the training record and is reported only in the
-app. The feature is off by default, with one scene and at most one shortcut per event chosen by the
-user. No scene, home, accessory identifier or shortcut name reaches the server, the intelligence
-envelopes, the MCP surface or any model prompt.
+**Slices.** Three reviewable slices, in this order. The shared facts above apply to all of them.
 
-**Tests.** Intent and donation-state unit tests; scene-selection and executor tests with a stub HomeKit
-adapter; a device matrix on phone-only, watch-only and both; failure injection for authorisation denied,
-home removed and scene missing.
+**Slice 7b-1 — Automation executor and user Shortcuts (phone).** One `WorkoutAutomation` service that
+observes the phone's session start and end transitions, holds the per-event choice (at most one
+Shortcut), fires the URL after the transition is committed, dedupes by session id plus event, and
+isolates failure. No HomeKit or watch work.
+
+*Acceptance.* A configured shortcut fires at most once per event; a missing or renamed shortcut, and a
+refused URL, are invisible to the session; no training data is passed by default; the service is
+unit-tested against a URL-open stub.
+
+*Why first.* It is the cheapest real channel and it proves the trigger, ordering, dedupe and failure
+isolation that 7b-2 and 7b-3 reuse.
+
+**Slice 7b-2 — HomeKit scenes (phone and watch).** The `com.apple.developer.homekit` entitlement and
+`NSHomeKitUsageDescription`, `HMHomeManager` authorisation, a picker limited to the user's homes, and
+execution through `executeActionSet` by whichever device owns the session.
+
+*Acceptance.* The start scene runs once on the owning device and the end scene once on finish or
+abandonment; a HomeKit failure (denied, home removed, scene missing) never blocks the record; scenes
+are off by default; only `HMActionSet` values from the user's homes are used; no scene, home or
+accessory identifier leaves the device.
+
+*Depends on.* 7b-1's executor interface.
+
+**Slice 7b-3 — Action button (watch).** `StartWorkoutIntent` compiled into the watch app with
+`suggestedWorkouts` and the 30-second start budget, plus the end intent donated as the button's next
+action and re-donated as the session state changes.
+
+*Acceptance.* A first press starts the configured workout, a second press during the session ends it,
+the donation reflects finish and abandonment, and the physical-watch check is recorded in
+`DEVICE-ACCEPTANCE.md`. The intents are compiled into the watch app, never an `AppIntentsExtension`.
+
+*Independence.* Does not need 7b-1 or 7b-2; it can run in parallel.
+
+**Tests.** Intent and donation-state unit tests; executor, dedupe and scene-selection tests with stubs;
+a device matrix on phone-only, watch-only and both.
 
 **Security.** Scenes can unlock doors, so: explicit opt-in, no execution without a confirmed session
 transition, no model- or Siri-supplied scene name, no scene execution from a stale donation, and the
@@ -1316,6 +1343,28 @@ write. It was gated on the INT-3/INT-5 evaluation and owner approval because it 
 **Exclusions retained.** Structured proposals, approval flows and any write remain outside this
 workstream; a future proposer belongs to `DEC-LLM-09` and its own gated plan.
 
+### INT-9 — Siri AI adoption pass (deferred; gated on iOS 27.3)
+
+**Status.** Not scheduled. Starts only once iOS 27.3 is installed on the owner's device (about
+December 2026), after INT-7, and only with a new ADR that supersedes the `ADR-INT-011` amendment.
+
+**Scope.** Turn the readiness INT-7 builds into the preview surface: `@AppIntent(.tool)` on the
+read-only intents (and optionally on the lifecycle intents), a `Skills.skillsbundle` of `SKILL.md`
+files, `CardSnippet` wrappers around the existing snippet views, and a `SiriEvaluations` suite beside
+the intent unit tests. Either raise the deployment target to 27.3 or wrap the additions in
+`@available(iOS 27.3, *)`.
+
+**Why deferred.** The API exists only in the 27.3 SDK, Apple states it may change, and it cannot ship
+to App Store builds before spring 2027. Building it earlier is the only real throwaway risk in this
+roadmap.
+
+**Acceptance.** The same questions are answered through free-form Siri as through the shortcut phrases;
+the skills bundle validates at build time; the evaluation suite passes on a device; the deterministic
+path is unchanged; the app still builds and runs where the preview symbols are unavailable.
+
+**Security.** No skill file may state a load, e1RM, readiness verdict, gate or prescription; no onscreen
+entity donation; no fee-bearing call without an explicit owner decision.
+
 ## 12. Dependencies and sequencing
 
 ```
@@ -1327,7 +1376,12 @@ INT-4d (external chat model): delivered; chat only
 INT-4e (plan-aware chat): delivered
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
-INT-7b (Action button + HomeKit scenes): independent; no model, MCP or server dependency
+
+INT-7 ──▶ INT-9 (Siri AI adoption pass; starts only after iOS 27.3 lands)
+INT-7b-1 (executor + Shortcuts) ──▶ INT-7b-2 (HomeKit scenes)
+INT-7b-3 (Action button, watch): independent of 7b-1 and 7b-2
+
+Order from 2026-11-15: INT-7 → 7b-1 → 7b-2 → 7b-3 → INT-9
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
@@ -1340,11 +1394,24 @@ INT-7b (Action button + HomeKit scenes): independent; no model, MCP or server de
 - INT-3 is the first user-visible feature and the first API change.
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
-- **Next: INT-7** (read-only intents), then **INT-7b** (lifecycle surfaces). Every other phase is
-  delivered, closed or parked.
+- **Execution order from 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-9. Every other
+  phase is delivered, closed or parked.
+- **Why this order.** INT-7 first: it is the smallest phase, it is what December's adoption annotates,
+  and built to §7.6 it leaves nothing behind. 7b-1 next: the cheapest real channel proves the trigger,
+  ordering, dedupe and failure isolation that the heavier channels reuse. 7b-2 then adds the HomeKit
+  entitlement and picker on top of that executor. 7b-3 last: it is the only slice that needs repeated
+  physical-watch acceptance. INT-9 is the single pass that requires iOS 27.3.
+- **Throwaway at the 27.3 upgrade: none, if the order holds.** The intents gain one annotation, the
+  entities already carry the metadata, the snippet views become `CardSnippet` hosts, and HomeKit,
+  Shortcuts and the Action button are stable APIs with no preview equivalent. The only real waste would
+  be writing preview code before 27.3 (impossible today) or over-engineering dialog strings and phrase
+  lists that Siri's own matching later replaces.
+- 7b-3 is independent of 7b-1/2 and may run in parallel if the watch is the priority; INT-9 may not start
+  before INT-7, and not before 27.3 is installed.
 - INT-7 is independent of the model work and could run in parallel with INT-4/5.
-- INT-7b (workout lifecycle surfaces) is independent of INT-7's read-only intents and of every model
-  phase; it can ship before or after them and is the only phase allowed a side effect (`ADR-INT-018`).
+- INT-7b is technically independent of INT-7 and of every model phase; the order above is a
+  recommendation for sequencing and risk, not a hard dependency, and 7b-3 can be deferred without
+  blocking 7b-1/7b-2 (`ADR-INT-018`).
 - INT-8 is closed; it does not block or extend the remaining phases.
 
 ### Deferred — web access (web UI and iOS)
