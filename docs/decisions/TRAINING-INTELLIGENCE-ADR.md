@@ -2,7 +2,9 @@
 
 **Status:** proposed 2026-11-14, except ADR-INT-010, which was accepted and closed on
 2026-11-14 and is implemented (the MCP transport is enabled with the ten-tool catalogue). The
-remaining records are pending owner approval and are not implemented.
+remaining records are pending owner approval and are not implemented. ADR-INT-011 was amended on
+2026-11-15 with refreshed Siri AI preview facts and the INT-7 readiness requirement; it remains
+proposed.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -320,10 +322,46 @@ review (INT-7). Do not adopt the Siri AI Developer Preview, app skills, onscreen
 conversational Siri. Do not make any shipped path depend on a point-release beta.
 
 **Consequences.** Siri works today through existing App Intents and Shortcuts. When Apple ships the
-preview generally, adopting it is additive: the intents already exist and need schema adoption, not a
-rewrite.
+preview generally, adoption is additive, but **not** by schema adoption: there is no health or fitness
+app-schema domain, so the intents stay custom and become tools with `@AppIntent(.tool)`, optionally
+guided by a `Skills.skillsbundle`. The metadata, indexing and snippet readiness in plan §7.6 is what
+keeps that cheap.
 
 **Status.** Proposed.
+
+**Amendment 2026-11-15 — access opened to all developers; readiness, not adoption.**
+
+*What changed.* Apple opened the Siri AI Developer Preview to every developer in the iOS/iPadOS/
+macOS/visionOS **27.3** betas (developer beta 2026-11-03; Apple news post). Two statements above are
+now imprecise and are corrected here:
+
+1. The preview is no longer limited to internal builds. Any developer can build an integration —
+   but it still cannot be distributed: not to external TestFlight testers, not to App Store builds,
+   with App Store submission opening in spring 2027.
+2. Adoption is not "schema adoption". Apple publishes no health or fitness app-schema domain, so a
+   strength-training app's actions are custom intents annotated `@AppIntent(.tool)`, with an optional
+   one-per-target `Skills.skillsbundle` whose skills are `SKILL.md` files (YAML `name` and
+   `description`, then a Markdown body of at most 10,000 characters).
+
+*What did not change.* The preview still "may change" during the beta; it remains unavailable in the
+EU on iOS/iPadOS/watchOS; server-side Apple Intelligence features carry daily usage limits and
+expanded access will be "for a fee" on unpublished terms; and **iOS 27.3 ships no Foundation Models
+API change**, so the model surface in plan §7.2–§7.4 is untouched.
+
+*Decision amended.* Keep the exclusion and add a readiness requirement to INT-7 (plan §7.6): complete
+intent, parameter and entity-property `title`/`description` metadata; `IndexedEntity` (and
+`IndexedEntityQuery` where needed) so Spotlight can find entities; snippet views that a `CardSnippet`
+can later host; side-effect-free `perform()`; and no `Skills` bundle, tool annotation or other preview
+symbol in a shipped build.
+
+*Invariant.* An app skill is guidance to a model, never a specification: Apple states that skills
+cannot enforce deterministic behaviour and that Siri does not perform the listed intents in order.
+No skill file may therefore state a load, percentage, e1RM, RIR, set count, readiness verdict, gate or
+prescription. Those stay server-computed, and any model text quotes the envelope.
+
+*Adoption gate.* A later adoption needs: the preview shipped to customers, the App Store submission
+open, Apple's published terms and a fee/quota position, a device spike (unlock behaviour of
+`authenticationPolicy` included), and a new ADR that supersedes this amendment.
 
 ## ADR-INT-012 — Retire the minimal LLM selector before INT-5 (implemented 2026-11-15)
 

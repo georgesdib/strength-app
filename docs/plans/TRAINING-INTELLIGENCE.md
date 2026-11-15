@@ -3,7 +3,9 @@
 **Canonical location:** this file, in the portfolio repository.
 **Status:** proposed 2026-11-14 (INT-0, planning only). INT-1, INT-1b, the INT-2 catalogue and
 INT-3 have since been delivered, and INT-3 is closed (§11); this plan document itself changes no
-runtime, API, schema, dependency, prompt or training rule.
+runtime, API, schema, dependency, prompt or training rule. Amended 2026-11-15: §7.2 gains the iOS 27.0
+framework facts, §7.5 refreshes the Siri AI preview status, §7.6 adds the Siri AI readiness design, and
+INT-7 and decision 14 carry it (`ADR-INT-011` amendment).
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
@@ -500,6 +502,9 @@ cloud**, because that would silently change the privacy boundary (`IOS-CLIENT-PL
 | Overflow | `LanguageModelSession.GenerationError.exceededContextWindowSize`; recover with a new session from a condensed transcript |
 | Offline | Works offline; no network permission needed; **no MCP** |
 | Privacy | On-device; no data leaves the phone; no entitlement |
+| Model abstraction | `LanguageModel` protocol (iOS 27.0) lets one `LanguageModelSession` host the on-device model, `PrivateCloudComputeLanguageModel` or a custom model behind the same API |
+| Multimodal input | `DynamicProfile` (iOS 27.0) plus the Vision tools `OCRTool` and `BarcodeReaderTool` allow one image in a prompt; not used by INT-4, which is text-only |
+| Model version | The on-device model changed in iOS 26.4 and again in iOS 27.0; Apple asks apps to re-test prompts per model version |
 
 Design consequences:
 
@@ -511,6 +516,10 @@ Design consequences:
   is `.allowed` only for the "ask a follow-up" case.
 - The output type is small: a headline, 2–4 observations each with fact references, and one
   limitation line. `GenerationOptions.maximumResponseTokens` is a guard, not the primary budget.
+
+None of the three framework rows above changes INT-4's shape: the weekly review is text-only, runs on
+`SystemLanguageModel`, and needs no image, no protocol abstraction and no per-model prompt matrix
+beyond re-running the evaluation on each OS release.
 
 ### 7.3 Apple Private Cloud Compute
 
@@ -549,10 +558,60 @@ waived the earlier context preview and per-request consent flow (2026-11-15). Qu
 | App Intents, App Entities, App Shortcuts | stable since iOS 16/17; `AppSchema` since iOS 18 | **adopt** (INT-7) |
 | Shortcuts actions, Spotlight/`IntentValueQuery` | stable | **adopt** for read-only review/progression |
 | App Intents in Apple Intelligence (schemas, donations) | shipped APIs (AppSchema iOS 18+) | **adopt selectively**; no onscreen entity donation in MVP |
-| Siri AI Developer Preview (conversational, skills, onscreen awareness) | **iOS 27.3 beta**, internal builds only, "API may change", App Store builds excluded, not available in the EU | **do not adopt**; revisit only if it ships and a new decision approves it |
+| Siri AI Developer Preview (custom tool intents, app skills, onscreen awareness, cross-app actions, Spotlight semantic index) | **iOS 27.3 beta, open to any developer since 2026-11-03**; "API may change"; no App Store or external-TestFlight distribution; App Store submission opens in spring 2027; unavailable in the EU; daily usage limits, expanded access "for a fee" | **do not adopt**; make adoption additive (§7.6) |
 
 Nothing in this plan depends on the Siri AI preview. The stable intents are useful without it: they
 run from Shortcuts and from Siri's existing App Intents support.
+
+The preview did not change the model surface: **iOS 27.3 ships no Foundation Models API change**, so
+§7.2 and §7.3 stand as written. What 27.3 changes is access and vocabulary — custom tool intents,
+app skills and the Spotlight semantic index are now documented for any developer. §7.6 records those
+facts and the readiness INT-7 must carry so that a post-launch adoption adds capability instead of
+forcing a rewrite.
+
+### 7.6 Siri AI readiness — stable intents now, preview later
+
+Facts recorded 2026-11-15 from Apple's news post, release notes, framework updates and Siri AI
+documentation (links under Related). They update §7.5; they do not reopen §7.2–§7.4.
+
+| Fact (2026-11-15) | Position |
+|---|---|
+| Access | Any developer may integrate through the iOS/iPadOS/macOS/visionOS **27.3** betas (developer beta 2026-11-03); needs an Apple Intelligence device and a supported language; unavailable in the EU on iOS/iPadOS/watchOS |
+| Distribution | Xcode development build or internal TestFlight only — not external testers, not App Store builds; Apple opens App Store submission for Siri AI experiences in spring 2027 |
+| Stability | Apple: "the App Intents API and Siri functionality may change" during the preview |
+| Integration | `@AppIntent(.tool)` turns a custom intent into a `ToolIntent` (`@AppIntent(.tool, schema:)` when a schema is Shortcuts-only); Siri reads the `title` and `description` of the intent, its parameters and its entity properties; entities must be available to Spotlight |
+| App skills | One `Skills.skillsbundle` per app target; each skill is `Skills/<skill-name>/SKILL.md` — YAML frontmatter with only `name` and `description`, then a Markdown body of at most 10,000 characters; a subset of the SKILL.md format with no scripts or reference files |
+| Skills are advisory | Apple: "you can't use app skills to enforce deterministic behavior… Siri AI doesn't sequentially perform the tool intents that your skill lists" |
+| Cost | Server-side Apple Intelligence features are subject to daily usage limits; expanded access will be "for a fee"; Apple has not published the terms |
+| Schemas | There is **no health or fitness app-schema domain**, so a strength app cannot adopt a primary domain; its actions are custom tool intents |
+
+Design consequences:
+
+- **Determinism stays in Python.** A `SKILL.md` is guidance to a model, not a specification. No
+  skill file may state a load, percentage, e1RM, RIR, set count, readiness verdict, gate or
+  prescription: those remain server-computed facts, and model text may only quote the envelope.
+- **One capability source, one more surface.** Siri AI intents would call the same read-only REST
+  envelopes as the app (`ADR-INT-007`). Siri AI is a fourth *surface* over the capability layer, never
+  a second capability layer and never a place where training decisions are made.
+- **No preview dependency.** Nothing in this plan imports a 27.3-only symbol. Readiness is metadata,
+  indexing and view reuse — all stable APIs. The only preview symbols are added at adoption time.
+- **Adoption is a decision, not a migration.** It needs a released OS, open App Store submission,
+  Apple's published terms, a fee/quota position and a new ADR. It is not an extension of INT-7.
+
+Readiness INT-7 ships now, so the later upgrade is additive:
+
+1. every intent carries a `title`, a `description` and a `description` on each parameter;
+2. every entity carries a `title` and a `description` on each `@Property`, and conforms to
+   `IndexedEntity` (`IndexedEntityQuery` where lookup by identifier is needed) so Spotlight can find
+   it without the app;
+3. snippet views are ordinary SwiftUI views that a `CardSnippet` can host later;
+4. `perform()` stays side-effect-free, so turning the intent into a tool changes no behaviour;
+5. a shipped build contains no `@AppIntent(.tool)`, no `Skills.skillsbundle` and no preview symbol.
+
+Deferred to adoption: the tool annotation, the skills bundle and its `SKILL.md` files,
+`CardSnippet` presentation, `authenticationPolicy` on sensitive entities (27.3 has a known issue
+where it may not force unlock before Siri displays an entity), a Siri Integration Advisor review and a
+`SiriEvaluations` suite beside the intent unit tests.
 
 ## 8. First user-facing feature — Weekly Training Review
 
@@ -1121,15 +1180,25 @@ review screen.
 
 **Acceptance.** Each intent works from Shortcuts and from Siri's existing App Intents support; no
 intent can write; unauthenticated/offline states produce a clear dialog; the intent does not start a
-workout.
+workout; the §7.6 readiness items 1–2 hold and are unit-tested (intent, parameter and entity-property
+metadata, plus Spotlight indexing).
 
 **Tests.** Intent unit tests with a stub adapter; shortcut phrase validation; a manual device check
 recorded in `DEVICE-ACCEPTANCE.md`.
 
-**Security.** No health data in dialogs by default; no onscreen entity donation in MVP.
+**Security.** No health data in dialogs by default; no onscreen entity donation in MVP; no preview
+API symbol in a shipped build.
+
+**Forward compatibility (2026-11-15).** INT-7 is the phase that decides how cheap a future Siri AI
+adoption is. Build it to §7.6: complete intent, parameter and entity-property metadata, `IndexedEntity`
+Spotlight indexing, snippet views that a `CardSnippet` can host, and `perform()` with no side effects.
+The preview requirements — `@AppIntent(.tool)`, a `Skills.skillsbundle` of `SKILL.md` files,
+`CardSnippet`, `SiriEvaluations` — are added at adoption time only, behind a new ADR.
 
 **Exclusions.** Siri AI Developer Preview, app skills, onscreen awareness, cross-app actions,
-conversational Siri. Revisit only after Apple ships it and a new decision approves it.
+conversational Siri, and any fee-bearing Apple-hosted path. The readiness in §7.6 is in scope; the
+preview itself is not. Revisit only after it ships to customers, Apple publishes its terms, and a new
+ADR approves it.
 
 ### INT-8 — Controlled plan review and recommendations (closed 2026-11-15)
 
@@ -1224,6 +1293,7 @@ MCP tool boundary facts-only.
 | 11 | Siri AI Developer Preview excluded; stable App Intents only | approve | `ADR-INT-011` |
 | 12 | Phase 1b (retire the minimal LLM selector) before INT-5 | approve; otherwise two model surfaces coexist | `ADR-INT-012` |
 | 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
+| 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, and no preview symbol in a shipped build | approve; a post-launch adoption becomes additive rather than a rewrite (§7.6) | `ADR-INT-011` (amended 2026-11-15) |
 
 Two further points need an owner answer rather than an architecture decision:
 
@@ -1350,4 +1420,8 @@ retained items in §16.3.
 - [MCP specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)
 - [MCP Python SDK](https://py.sdk.modelcontextprotocol.io/)
 - [Apple Foundation Models](https://developer.apple.com/documentation/foundationmodels)
+- [Siri AI Developer Preview](https://developer.apple.com/documentation/appintents/siri-ai-developer-preview)
+- [Orchestrating complex actions with app skills](https://developer.apple.com/documentation/appintents/orchestrating-complex-actions-with-app-skills)
+- [iOS & iPadOS 27.3 beta release notes](https://developer.apple.com/documentation/ios-ipados-release-notes/ios-ipados-27_3-release-notes)
+- [Siri AI is now open to all developers (2026-11-03)](https://developer.apple.com/news/?id=gdk2umrf)
 - [TN3193 — managing the context window](https://developer.apple.com/documentation/technotes/tn3193-managing-the-on-device-foundation-model-s-context-window)
