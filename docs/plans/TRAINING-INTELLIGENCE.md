@@ -852,7 +852,8 @@ screen reached from Progress, a separate default-off consent toggle, suggested p
 non-streaming answers, a sources line per reply and a session-only transcript (leaving the screen
 clears it). The five tools are registered for chat with a 5-to-3 fallback on a context overflow;
 the answer is grounded against the envelopes the tools actually returned, and an ungrounded number
-is rejected with the number named. A device run and tool-selection tuning remain.
+is rejected with the number named. Session details resolve the most recently completed session when
+the model has no id. A five-tool device matrix and tool-selection tuning remain.
 
 **Scope.** A multi-turn chat in the app over the on-device Foundation Models, using the read-only
 capability tools and the REST envelopes. The athlete can ask follow-ups about the current week,
@@ -868,7 +869,8 @@ the app loses it.
   answer falls back to a plain "I cannot answer that from your data", never to an unchecked reply.
 - Questions outside the facts (medical advice, plan changes, other athletes) are refused plainly.
 - Multi-turn context stays within the model window: tool results are trimmed, old turns are
-  summarised, and a context overflow is a clear message, never a raw token count.
+  trimmed to the most recent ones, and a context overflow is a clear message, never a raw token
+  count.
 - The five tools are registered only when the context budget allows; the single-shot explanation
   path is unchanged and still does not register them.
 - No writes, no prescription, no medical advice, no network from the model path, and no persisted
