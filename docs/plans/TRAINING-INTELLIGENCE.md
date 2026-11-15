@@ -1018,7 +1018,8 @@ unverified warning). No suggestion is applied; the deterministic engine remains 
 
 **On-device capacity.** The physical-device probe reported `contextSize=8,192`, tool calling and
 guided generation true. The base five, plus prescription, plus all three plan tools passed; eight
-tools with four history messages and 60 fact lines also passed.
+tools with four history messages and 60 fact lines also passed. Plan tools use compact projections
+so a multi-item prescription or a 12-week adherence payload is not truncated.
 
 **Acceptance.**
 - Flag off: chat behaves exactly as before.
@@ -1029,8 +1030,9 @@ tools with four history messages and 60 fact lines also passed.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
 
-**Tests.** 43 chat-related tests pass, including structured DeepSeek answers, plan-tool gating and
-today/yesterday resolution. The backend route tests pass (12).
+**Tests.** 44 chat-related tests pass, including structured DeepSeek answers, plan-tool gating,
+today/yesterday resolution and a projection that keeps every prescription item. The backend route
+tests pass (12).
 
 **Open.** Device acceptance on both models. A visible “plan data omitted” note on the context
 fallback is not implemented yet; the current fallback silently drops to the base three tools.
