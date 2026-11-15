@@ -1335,6 +1335,15 @@ no input at all.
 missing or renamed shortcut, and a refused URL, are invisible to the session; no training data is
 passed; the service is unit-tested against a URL-open stub.
 
+**Implementation status (2026-11-15): delivered, device checks pending.** `WorkoutAutomation` holds the
+per-event name in `UserDefaults`, dedupes by `sessionID + event` with a bounded fired log, builds
+`shortcuts://run-shortcut?name=…` with no input, and swallows every failure. It is called after the
+phone commits a start, a finish (online or queued offline) and an abandonment; a refused URL clears the
+dedupe entry so a later transition can retry. Settings gained a "Workout automation" section with one
+field per event and two test buttons. Six unit tests cover fire-once, separate channels, empty = off,
+per-session firing, refusal retry and the URL shape. The physical checks are listed in
+`StrengthApp/DEVICE-ACCEPTANCE.md`.
+
 *Why first.* It is the cheapest real channel and it proves the trigger, ordering, dedupe and failure
 isolation that 7b-2 and 7b-3 reuse.
 
