@@ -847,7 +847,12 @@ injection fixtures.
 
 ### INT-4b — On-device training chat (scope approved 2026-11-15; not started)
 
-**Status.** Scope and acceptance agreed by the owner; implementation not started.
+**Status.** **First slice implemented 2026-11-15; device run pending.** The app has a dedicated Chat
+screen reached from Progress, a separate default-off consent toggle, suggested prompts,
+non-streaming answers, a sources line per reply and a session-only transcript (leaving the screen
+clears it). The five tools are registered for chat with a 5-to-3 fallback on a context overflow;
+the answer is grounded against the envelopes the tools actually returned, and an ungrounded number
+is rejected with the number named. A device run and tool-selection tuning remain.
 
 **Scope.** A multi-turn chat in the app over the on-device Foundation Models, using the read-only
 capability tools and the REST envelopes. The athlete can ask follow-ups about the current week,
