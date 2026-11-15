@@ -1225,10 +1225,11 @@ conversational Siri, and any fee-bearing Apple-hosted path. The readiness in §7
 preview itself is not. Revisit only after it ships to customers, Apple publishes its terms, and a new
 ADR approves it.
 
-### INT-7b — Workout lifecycle surfaces: Action button and HomeKit scenes (owner-requested 2026-11-15)
+### INT-7b — Workout lifecycle surfaces: Action button, HomeKit scenes and Shortcuts (owner-requested 2026-11-15)
 
-**Scope.** Two *local* surfaces around the existing session lifecycle, on iPhone and watch. They are
-not intelligence capabilities and add no training policy.
+**Scope.** A *local* surface layer around the existing session lifecycle — Action button, HomeKit
+scenes and user Shortcuts — on iPhone and watch. It is not an intelligence capability and adds no
+training policy.
 
 **Boundary.** These intents are entry points: they **call** the existing start and finish operations and
 never redefine them. Session semantics — what counts as started, when a session is finished, sRPE
@@ -1243,6 +1244,10 @@ engine and the server (`ADR-INT-018`).
 3. Two user-selected **HomeKit scenes** — one on start, one on end — executed by whichever device owns
    the session (phone or watch) through `HMHomeManager` and
    `HMHome.executeActionSet(_:completionHandler:)`.
+4. Two user-selected **Shortcuts**, one on start and one on end, run by the phone through the
+   documented `shortcuts://run-shortcut` URL. **Phone-only:** `UIApplication` does not exist on
+   watchOS and Apple documents no watch-side equivalent, so a watch-owned session has no shortcut
+   channel.
 
 **Dependencies.** The Phase 6 watch session engine (start, finish, HealthKit authorization, exactly one
 HealthKit save) and the phone's session path. Independent of INT-3, INT-4 and INT-7's read-only intents.
@@ -1264,13 +1269,20 @@ Apple forbids implementing them in an `AppIntentsExtension`.
   values read from the user's homes; the app never invents one.
 - HomeKit's own automations trigger on accessory, time and people events, not on a third-party app
   event, which is why the app executes the scene itself.
+- `shortcuts://run-shortcut?name=<name>&input=text&text=<text>` is the only public way to run a
+  shortcut from another app; `UIApplication.open` hands it to the system and **foregrounds Shortcuts**.
+  No API executes a shortcut programmatically, and `RunSystemShortcutIntent` (iOS 27) is widget-only —
+  Apple: it "doesn't provide functionality in other contexts". Success from `open` means the URL was
+  accepted, **not** that the shortcut ran: there is no completion signal and no error to report.
 
 **Acceptance.** One Action-button press starts the configured workout on the watch; a second press
 during the session ends it. The start scene runs once on the device that started the session, and the
-end scene once when that session finishes or is abandoned. A HomeKit failure never blocks, delays or
-rolls back the training record and is reported only in the app. The feature is off by default, with one
-scene per event chosen from the user's HomeKit list. No scene, home or accessory identifier reaches the
-server, the intelligence envelopes, the MCP surface or any model prompt.
+end scene once when that session finishes or is abandoned. A configured shortcut runs at most once per
+event, on the phone, **after** the scene, and only when the phone owns the session. A HomeKit or
+Shortcut failure never blocks, delays or rolls back the training record and is reported only in the
+app. The feature is off by default, with one scene and at most one shortcut per event chosen by the
+user. No scene, home, accessory identifier or shortcut name reaches the server, the intelligence
+envelopes, the MCP surface or any model prompt.
 
 **Tests.** Intent and donation-state unit tests; scene-selection and executor tests with a stub HomeKit
 adapter; a device matrix on phone-only, watch-only and both; failure injection for authorisation denied,
@@ -1278,11 +1290,15 @@ home removed and scene missing.
 
 **Security.** Scenes can unlock doors, so: explicit opt-in, no execution without a confirmed session
 transition, no model- or Siri-supplied scene name, no scene execution from a stale donation, and the
-device token stays in the app. The scene mapping lives on the device, not in the repository.
+device token stays in the app. The scene mapping lives on the device, not in the repository. A Shortcut
+is arbitrary automation and can do anything the user could do by hand, so it is off by default, named
+by the user, receives **no training data** unless the owner opts in to a fixed string, and is never
+verified or retried.
 
 **Exclusions.** No redefinition of session semantics — the boundary above, not a §1.2 prohibition,
-is what bounds this phase. No pause/resume, no accessory-level control beyond a scene, no HomeKit data
-in the intelligence layer, no server or MCP involvement.
+is what bounds this phase. No pause/resume, no accessory-level control beyond a scene, no watch-side
+shortcut execution, no arbitrary URL execution, no HomeKit data in the intelligence layer, no server or
+MCP involvement.
 
 **Open question.** Whether `PauseWorkoutIntent`/`ResumeWorkoutIntent` should map to the app's rest
 timer (which is not a pause) or be refused outright. Default: refused until a decision.
@@ -1386,7 +1402,7 @@ MCP tool boundary facts-only.
 | 12 | Phase 1b (retire the minimal LLM selector) before INT-5 | approve; otherwise two model surfaces coexist | `ADR-INT-012` |
 | 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
 | 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, with no preview symbol before the adoption pass | **accepted 2026-11-15**; makes the December adoption additive rather than a rewrite (§7.6) | `ADR-INT-011` (accepted, amended) |
-| 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, and user-selected HomeKit scenes on start and end, on phone and watch | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session | `ADR-INT-018` (accepted) |
+| 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 
 Both former open questions are answered (2026-11-15):
 

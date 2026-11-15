@@ -538,11 +538,11 @@ source of prescriptions.
 
 **Status.** Accepted 2026-11-15; implemented, device test pending.
 
-## ADR-INT-018 — Workout lifecycle surfaces: Action button and HomeKit scenes (proposed 2026-11-15)
+## ADR-INT-018 — Workout lifecycle surfaces: Action button, HomeKit scenes and Shortcuts (accepted 2026-11-15)
 
-**Context.** The owner wants two local automations around the existing session lifecycle: a HomeKit
-scene when a workout starts and another when it ends, on either phone or watch; and Action-button
-support on Apple Watch Ultra for starting and ending a workout. The plan's §1.2 originally excluded
+**Context.** The owner wants local automations around the existing session lifecycle: a HomeKit scene
+and a user-defined Shortcut when a workout starts, and another pair when it ends, on either phone or
+watch; and Action-button support on Apple Watch Ultra for starting and ending a workout. The plan's §1.2 originally excluded
 "workout-execution changes", which would have made this feature look like a boundary violation. On
 2026-11-15 the owner **removed that exclusion** rather than accept a carve-out, and replaced it with an
 explicit entry-point boundary: lifecycle intents are in scope, but they call the existing operations
@@ -561,6 +561,10 @@ and do not redefine them.
 - Two user-selected HomeKit scenes executed by the device that owns the session through
   `HMHomeManager` and `HMHome.executeActionSet(_:completionHandler:)` (iOS 8+/watchOS 2+), gated by
   the `com.apple.developer.homekit` entitlement and `NSHomeKitUsageDescription`.
+- Two optional user-selected **Shortcuts**, one per event, run by the phone via
+  `shortcuts://run-shortcut?name=…&input=text&text=…`. Phone-only by construction (`UIApplication` does
+  not exist on watchOS), best-effort (the system gives no completion signal), fired **after** the scene
+  because it foregrounds the Shortcuts app, and never given training data unless the owner opts in.
 - **Boundary.** These intents call the existing start and finish operations. They do not change how a
   session is executed, validated or recorded, compute nothing, and add no server call, MCP tool, model
   call or envelope field.
@@ -570,18 +574,26 @@ people-based, not "a third-party app started a workout". (2) A server-side autom
 the phone and watch, the server cannot reach it, and it would put physical-home control behind a
 network token. (3) A user-built Shortcut: possible today, but the device token sits in an editable
 shortcut and there is no Action-button start. (4) Mapping `PauseWorkoutIntent`/`ResumeWorkoutIntent`
-onto the rest timer: a rest timer is not a pause; refused until a decision.
+onto the rest timer: a rest timer is not a pause; refused until a decision. (5) `RunSystemShortcutIntent`
+(iOS 27): widget-only, and Apple states it provides no functionality in other contexts. (6) Running a
+shortcut from app code through App Intents: no such API exists; the supported direction is the user's
+shortcut calling the app's intent, not the app pushing into Shortcuts.
 
-**Consequences.** A HomeKit entitlement and usage string; a scene picker and executor; a donation state
-machine; failure isolation so a HomeKit error never blocks, delays or rolls back the training record;
-acceptance on phone-only, watch-only and both, including the rule that exactly one device executes the
-scenes for a given session. The HomeKit mapping stays on the device and never enters the repository,
-the server, the envelopes or a prompt. A device check is needed for the watch case, where the home must
+**Consequences.** A HomeKit entitlement and usage string; a scene picker and executor; a shortcut-name
+field that cannot be validated (no API enumerates shortcuts) plus percent-encoding and a warning that
+the app cannot confirm the shortcut ran; a donation state machine; failure isolation so a HomeKit or
+Shortcut error never blocks, delays or rolls back the training record; acceptance on phone-only,
+watch-only and both, including the rule that exactly one device executes the scenes for a given
+session and that the Shortcut channel is unavailable when the watch owns the session. The HomeKit and
+Shortcut mappings stay on the device and never enter the repository, the server, the envelopes or a
+prompt. A device check is needed for the watch case, where the home must
 be reachable through the user's iCloud home sharing.
 
 **Security.** Scenes can unlock doors, so: explicit opt-in, one scene per event, selection only from the
 user's HomeKit list, no Siri- or model-supplied scene name, no execution from a stale donation, and no
-scene/home/accessory identifier in any log sent off the device.
+scene/home/accessory identifier in any log sent off the device. A Shortcut is arbitrary automation run
+with the user's own authority: it is opt-in, named by the user, given no training data unless the owner
+opts in to a fixed string, and never verified or retried.
 
 **Status.** **Accepted 2026-11-15** (decision 15), after the §1.2 exclusion was removed at the owner's
 request. The owner confirmed that `PauseWorkoutIntent`/`ResumeWorkoutIntent` stay excluded and that the
