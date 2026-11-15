@@ -416,11 +416,11 @@ it cannot be started by momentum. The supersession is recorded in the backend Su
 **Status.** Proposed; takes effect on owner approval of this plan. **Open question:** confirm that the
 constrained proposer should be deferred/unscheduled rather than kept as a parallel workstream.
 
-## ADR-INT-014 — Scoped MCP tokens for sensitive readiness (proposed)
+## ADR-INT-014 — Scoped MCP tokens for sensitive readiness (retained, not adopted 2026-11-15)
 
-**Status.** Proposed 2026-11-15; not implemented. Until it is, raw readiness values are local-only
-over MCP and the deployment switch `allow_sensitive_readiness` is the only escape hatch, for a
-host and owner who deliberately opt in.
+**Status.** Retained 2026-11-15; not adopted. Raw readiness values stay local-only over MCP and the
+deployment switch `allow_sensitive_readiness` remains the only deliberate escape hatch. No
+health-scoped token, auth change or contract revision is planned.
 
 **Context.** Every MCP token currently carries the same access. The readiness tool can return raw
 subjective fields (sleep, energy, mood, stress, soreness) and measured fields (HRV, RHR, bodyweight,
@@ -428,7 +428,7 @@ fat percentage) alongside the canonical score. Once a host has the token it can 
 the server cannot see what the host does with the values. A per-call "consent" flag would not be
 consent, because the model client sets it.
 
-**Decision (proposed).** Give each MCP token a scope set when it is minted:
+**Proposal (not adopted).** Give each MCP token a scope set when it is minted:
 
 - `intelligence.read` (default) — every training fact and the readiness score;
 - `intelligence.health` — adds raw readiness fields.
@@ -446,8 +446,8 @@ sensitive too, so it does not satisfy the requirement).
 auth and dispatch tests, and no envelope change. The weekly review is unaffected because it exposes
 coverage and direction only.
 
-**Open question.** Does the owner want a health-scoped token at all, or should raw readiness stay
-local-only permanently?
+**Owner decision (2026-11-15).** Keep as is: no health-scoped token; raw readiness stays local-only
+permanently unless a new decision reopens it.
 
 ## ADR-INT-015 — User-selectable Private Cloud Compute model (deferred 2026-11-15)
 

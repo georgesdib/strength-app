@@ -1144,7 +1144,7 @@ session-only turns to `POST /api/intelligence/chat`; the server supplies a fresh
 dossier, with advisory number warnings, source capabilities, daily budget and no write. The
 recent-ten-message window, 18k dossier cap, separate suggestions block and four-case multi-turn
 matrix are delivered. **Model tool calling is deferred/closed**: the provider stalled on it and the
-deterministic dossier covers the six core capabilities. Streaming is deferred. Chat tokens are
+deterministic dossier covers the six core capabilities plus latest duration. Streaming is not planned. Chat tokens are
 persisted in `run.llm_tokens` and count against the daily budget.
 
 **Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
