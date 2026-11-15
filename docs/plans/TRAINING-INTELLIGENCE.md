@@ -568,7 +568,7 @@ coaching prescription.
 | Completed sessions | `history.list_sessions()` | count, types, working sets, sRPE presence |
 | Progression | `strength_trend.observations/summarize`, `exercise_history.history()` | 28/84-day medians, direction, `n`, breaks |
 | Volume | `features/volume.py`, `prescribe/volume_budget.py` | per-pattern vs budget, exemptions, coverage |
-| Readiness | `queries.readiness_series()`, `features/readiness_score.py` | coverage and trend; observed only, no fill |
+| Readiness | `queries.readiness_series()`, `features/readiness_score.py` | coverage and trend (sign of the canonical composite change); observed only, no fill |
 | Block/programme observations | `features/deload.py`, `features/regime_change.py`, `features/breaks.py` | events, not a stored block |
 | Deviations | `features/observations.py` | at most two, with gate, `n`, evidence id |
 | Quality and limitations | `workout.summary()["quality"]`, coverage, live `LIMITATIONS-REGISTER` ids | explicit |

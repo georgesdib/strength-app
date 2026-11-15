@@ -550,7 +550,8 @@ the data cannot say.
 completed week), `include_observations` (default `true`).
 
 **Output facts.** `activity`, `adherence`, `sessions`, `progression` (tracked lifts),
-`volume`, `readiness` (coverage and trend unless the caller requests values), `programme`
+`volume`, `readiness` (coverage and trend unless the caller requests values; the trend is the sign
+of the canonical composite change across the week, never a category average), `programme`
 (deload, regime, breaks), `observations`, `quality`.
 
 **Source.** Composition only: `attendance`, `adherence_analytics`, `history.list_sessions`,
