@@ -1026,7 +1026,8 @@ so a multi-item prescription or a 12-week adherence payload is not truncated.
 - Flag on: chat explains the current or dated prescription, programme state and adherence.
 - Suggestions render separately, are clearly proposals, and are never applied.
 - Factual digits remain grounded; suggestion digits do not trigger the unverified warning.
-- On-device injects plan facts without tool calling; DeepSeek uses plan tools; a context overflow retries with empty history.
+- Both providers inject plan facts without tool calling; a context overflow retries with empty history.
+- Prescription answers use a larger output budget so every item can be listed.
 - Each answer offers a “Show raw data” disclosure with the exact facts used.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
