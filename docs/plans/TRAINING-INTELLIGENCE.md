@@ -1253,10 +1253,11 @@ and a dialog; the cards are pure value-in SwiftUI views, so a `CardSnippet` can 
 that lacks the app-name token. Eleven unit tests pass (digests, entity query, snippet rendering,
 metadata presence). Verified: App Intents declared in a package product still emit metadata
 (`StrengthIntents.appintents` merges into `StrengthApp.app`), phone and watch builds are clean, and
-the package stays SwiftUI-free for the watch in 7b-3. **Remaining in INT-7:** the physical-device Siri
-checks in `StrengthApp/DEVICE-ACCEPTANCE.md`, and the average-duration intent agreed on 2026-11-15
-(a dedicated read-only intent over the overview envelope's `attendance.duration` block, with a
-`weeks` parameter; days are not supported by the capability).
+the package stays SwiftUI-free for the watch in 7b-3. The average-duration intent agreed on
+2026-11-15 is delivered too: `AverageSessionDurationIntent` takes `weeks` (1–52, default 4), passes it
+to `overview(windowWeeks:)`, and speaks the `attendance.duration` aggregate with its sample size and
+the measured subset. Days are not supported: the capability's only window parameter is weeks.
+**Remaining in INT-7:** the physical-device Siri checks in `StrengthApp/DEVICE-ACCEPTANCE.md`.
 
 ### INT-7b — Workout lifecycle surfaces: Action button, HomeKit scenes and Shortcuts (owner-requested 2026-11-15)
 
