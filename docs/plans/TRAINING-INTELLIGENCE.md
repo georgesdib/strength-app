@@ -1380,8 +1380,13 @@ first, then the Shortcut — with a separate fired key per channel, so a refused
 the Shortcut's turn. Settings gained "Home scenes": one picker per event (`SceneSelection` as JSON in
 `UserDefaults`), a test button each, and a reload button. Ten unit tests cover ordering, once-per-event,
 retry and the selection codec.
-**Remaining in 7b-2:** the watch half — send `{homeID, startSceneID, endSceneID}` from the phone over
-WatchConnectivity, store it on the watch, and execute in `WatchExecutionController` at start and finish.
+**Watch half delivered 2026-11-15.** The mapping rides in `WatchCredentialContext`
+(`startScene`/`endScene` as encoded `SceneSelection`), so the existing credential channel carries it
+without a second message type; the phone re-sends the context when a scene changes. The watch stores it
+in `WatchSceneAutomation` and runs the scene from `WatchExecutionController` after a successful start,
+after a finish that recorded a finish intent, and after a discard — once per session and event, with the
+same last-known fallback and silent-skip rules. Phone and watch builds are green and 387 tests pass; the
+device checks are in `StrengthApp/DEVICE-ACCEPTANCE.md`.
 
 **Slice 7b-3 — Action button and watch Siri (watch).** `StartWorkoutIntent` compiled into the watch app
 with `suggestedWorkouts` and the 30-second start budget, the end intent donated as the button's next
