@@ -1427,9 +1427,9 @@ lands on the active workout; with nothing requested it says to request one and o
 never finishes anything — it opens the surface where sRPE is recorded (the phone's active workout, the
 watch's finish sheet), exactly like the Action button's second press. No new entitlement, no server
 change, and the same read-only-to-training-data boundary: these intents only call the existing start
-and finish paths.
+and finish paths. **Closed 2026-11-15**, owner-confirmed on the iPhone and the Watch.
 
-**Implementation status (2026-11-15): implemented, device checks pending.** The watch target links
+**Closed 2026-11-15**, owner-confirmed on the physical Watch. The watch target links
 `StrengthIntents` and registers a watch-side provider over its own device credential.
 `ActionButtonStartWorkoutIntent` (one `Strength` style, `suggestedWorkouts`, the 30-second start
 budget) starts the plan the phone already requested for the watch and answers "Request a workout on
