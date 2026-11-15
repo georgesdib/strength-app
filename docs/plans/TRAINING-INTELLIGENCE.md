@@ -1265,7 +1265,7 @@ Apple forbids implementing them in an `AppIntentsExtension`.
   `perform()`; `invalidateSuggestedWorkouts()` refreshes the list. The system allows **30 seconds** to
   start an `HKWorkoutSession` and return success.
 - `PauseWorkoutIntent`/`ResumeWorkoutIntent` are the Action + Side button pair; they need a pausable
-  session engine, which strength training does not have — **not adopted** (open question below).
+  session engine, which strength training does not have — **excluded** (decided 2026-11-15).
 - `HMHome.executeActionSet` is iOS 8+/watchOS 2+. HomeKit needs the `com.apple.developer.homekit`
   entitlement plus `NSHomeKitUsageDescription` and the user's authorisation. Scenes are `HMActionSet`
   values read from the user's homes; the app never invents one.
@@ -1327,8 +1327,9 @@ is what bounds this phase. No pause/resume, no accessory-level control beyond a 
 shortcut execution, no arbitrary URL execution, no HomeKit data in the intelligence layer, no server or
 MCP involvement.
 
-**Open question.** Whether `PauseWorkoutIntent`/`ResumeWorkoutIntent` should map to the app's rest
-timer (which is not a pause) or be refused outright. Default: refused until a decision.
+**Decided (2026-11-15).** `PauseWorkoutIntent`/`ResumeWorkoutIntent` are **excluded**, not mapped: a
+rest timer is not a pause, and the session engine has no paused state. The Action + Side pair therefore
+does nothing in this app. No open question remains in this phase.
 
 ### INT-8 — Controlled plan review and recommendations (closed 2026-11-15)
 

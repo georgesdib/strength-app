@@ -574,7 +574,8 @@ people-based, not "a third-party app started a workout". (2) A server-side autom
 the phone and watch, the server cannot reach it, and it would put physical-home control behind a
 network token. (3) A user-built Shortcut: possible today, but the device token sits in an editable
 shortcut and there is no Action-button start. (4) Mapping `PauseWorkoutIntent`/`ResumeWorkoutIntent`
-onto the rest timer: a rest timer is not a pause; refused until a decision. (5) `RunSystemShortcutIntent`
+onto the rest timer: a rest timer is not a pause; refused, and the owner confirmed the exclusion on
+2026-11-15. (5) `RunSystemShortcutIntent`
 (iOS 27): widget-only, and Apple states it provides no functionality in other contexts. (6) Running a
 shortcut from app code through App Intents: no such API exists; the supported direction is the user's
 shortcut calling the app's intent, not the app pushing into Shortcuts.
