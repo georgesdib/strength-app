@@ -996,9 +996,12 @@ providers, cost dashboard, cloud fallback, any write.
 simulator tests cover the HTTP shape, bearer header, tool round-trip, 401/429, malformed JSON, the
 retry/warning path and the missing-key state (6 DeepSeek tests; 38 chat-related tests in total).
 
-### INT-4e — Plan-aware chat and suggestions (implemented 2026-11-15; device test pending)
+### INT-4e — Plan-aware chat and suggestions (delivered 2026-11-15)
 
-**Status.** Implemented; device test pending. Backend routes are deployed.
+**Status.** **Complete (2026-11-15).** Backend routes are deployed; the owner confirmed both
+providers on the iPhone. Known limitation: the on-device model may abbreviate a long prescription
+answer even though the full facts are injected and available under “Show raw data”. DeepSeek can be
+slightly confusing about the date in prose while the injected facts are correct.
 
 **Scope.** A default-off **“Include plan and prescription data”** toggle in Chat adds three
 read-only tools: `prescription`, `programme_summary` and `adherence`, alongside the five existing
@@ -1036,8 +1039,8 @@ so a multi-item prescription or a 12-week adherence payload is not truncated.
 today/yesterday resolution, raw-output inspection and a projection that keeps every prescription
 item. The backend route tests pass (12).
 
-**Open.** Device acceptance on both models. A visible “plan data omitted” note on the context
-fallback is not implemented yet; the current fallback silently drops to the base three tools.
+**Open.** None blocking. Optional follow-ups: render a long prescription deterministically from the
+raw facts instead of asking the model to format it; improve DeepSeek date wording.
 
 ### INT-5 — Backend LLM narrative and multi-tool integration
 
@@ -1146,14 +1149,14 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
                                       ├──▶ INT-5 ──▶ INT-6 (server/web)
                                       └──▶ INT-7
 INT-4d (external chat model): delivered; chat only
-INT-4e (plan-aware chat): implemented; device test pending
+INT-4e (plan-aware chat): delivered
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
 - INT-4b (on-device chat) and INT-4d (DeepSeek chat) are delivered. INT-4e (plan-aware chat and
-  suggestions) is implemented and awaiting device acceptance. INT-4c (PCC model choice) is parked
+  suggestions) is delivered. INT-4c (PCC model choice) is parked
   until paid developer access and the entitlement exist; INT-5 remains the server narrative track.
   INT-6's iOS surface is delivered by INT-4b; only the server/web conversation remains.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
