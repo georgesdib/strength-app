@@ -1342,7 +1342,8 @@ phone commits a start, a finish (online or queued offline) and an abandonment; a
 dedupe entry so a later transition can retry. Settings gained a "Workout automation" section with one
 field per event and two test buttons. Six unit tests cover fire-once, separate channels, empty = off,
 per-session firing, refusal retry and the URL shape. The physical checks are listed in
-`StrengthApp/DEVICE-ACCEPTANCE.md`.
+`StrengthApp/DEVICE-ACCEPTANCE.md`; the owner confirmed all six physical checks on 2026-11-15, so
+the slice is closed.
 
 *Why first.* It is the cheapest real channel and it proves the trigger, ordering, dedupe and failure
 isolation that 7b-2 and 7b-3 reuse.
@@ -1350,6 +1351,18 @@ isolation that 7b-2 and 7b-3 reuse.
 **Slice 7b-2 — HomeKit scenes (phone and watch).** The `com.apple.developer.homekit` entitlement and
 `NSHomeKitUsageDescription`, `HMHomeManager` authorisation, a picker limited to the user's homes, and
 execution through `executeActionSet` by whichever device owns the session.
+
+*Owner decisions 2026-11-15.* The HomeKit capability is confirmed enableable on the App ID. The watch
+does **not** get its own scene picker: it takes the selection **from the phone over WatchConnectivity**
+(option b), keeping one place to choose scenes.
+
+*Implementation notes.* Both App IDs need the capability — the iOS app and the watch app — with the
+usage string in both Info.plists. The phone pushes `{homeID, startSceneID, endSceneID}` on change and
+on watch activation; the watch uses the last-known mapping, and if it has none it runs no scene rather
+than guessing. Scene identifiers are `HMHome.uniqueIdentifier` + `HMActionSet.uniqueIdentifier`, kept on
+the device and never sent to the server. Ordering is scene first, then the Shortcut (which foregrounds
+Shortcuts). A missing home, a deleted scene or denied authorisation skips silently and is logged; the
+workout is never blocked.
 
 *Acceptance.* The start scene runs once on the owning device and the end scene once on finish or
 abandonment; a HomeKit failure (denied, home removed, scene missing) never blocks the record; scenes
