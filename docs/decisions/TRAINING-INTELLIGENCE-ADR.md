@@ -325,7 +325,7 @@ rewrite.
 
 **Status.** Proposed.
 
-## ADR-INT-012 — Retire the minimal LLM selector before INT-5
+## ADR-INT-012 — Retire the minimal LLM selector before INT-5 (implemented 2026-11-15)
 
 **Context.** `DEC-LLM-14` already retires `agents/selection.py` as Phase 1b. INT-5 adds a
 second model surface. Leaving the old chooser alive means three model paths (chooser, proposal,
@@ -339,7 +339,7 @@ from the UI, CLI or API.
 untouched. If the owner prefers, INT-5 can be deferred until after Phase 1b without blocking the
 read-only workstream.
 
-**Status.** Proposed.
+**Status.** Accepted and implemented 2026-11-15 (Phase 1b).
 
 ## ADR-INT-013 — This plan supersedes the earlier LLM and Apple Intelligence forward plans
 

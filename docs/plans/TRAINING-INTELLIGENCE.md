@@ -1046,11 +1046,11 @@ shown.
 
 ### INT-5 — Backend LLM narrative and multi-tool integration
 
-**Implementation status (2026-11-15): first slice delivered; not complete.** The `narrate` CLI
-explains any registered capability through the existing Null/OpenAI-compatible provider, validates
-the JSON against the envelope facts and records a run trace. Still open: multi-tool orchestration,
-the evaluation harness, the daily token/cost budget, MCP-client parity and Phase 1b selector
-retirement. The server needs `config/llm.local.toml` with a provider key.
+**Implementation status (2026-11-15): delivered.** The narrate CLI and web view explain any
+registered capability through the existing Null/OpenAI-compatible provider, validate the JSON
+against the envelope facts with advisory number warnings, and record a run trace. Daily token
+budget, a ten-capability evaluation harness, MCP parity and Phase 1b selector retirement are done.
+Multi-tool orchestration is deferred to INT-6.
 
 **Scope.** `intelligence/model/` orchestration, `NarrativeProvider` with `NullProvider` and the
 existing OpenAI-compatible adapter, `IntelligenceClient` (`InProcessClient` / `MCPClient`), JSON
