@@ -469,6 +469,30 @@ explanations, weekly review, MCP or server narration.
 
 **Status.** Accepted 2026-11-15; implemented as INT-4d and confirmed on the iPhone with a real key.
 
+## ADR-INT-017 — Plan-aware chat and suggestions (accepted 2026-11-15)
+
+**Context.** Chat exposed only the five explanatory capabilities. The owner wants the current
+prescription, programme state and adherence available to chat, including on-device, and wants the
+model to suggest changes — including medical considerations — with no refusal guard. The backend
+capabilities were MCP-only, so three iOS REST routes were added.
+
+**Decision.** INT-4e adds a default-off plan-data toggle to chat and three read-only tools:
+@@prescription@@ (date/id/current), @@programme_summary@@ and @@adherence@@. The same tools are
+registered for on-device and DeepSeek. The model returns a structured answer plus a separate
+@@suggestions@@ list. Suggestions render in a labelled “Suggestion — not applied. Not medical
+advice.” block; they are proposals, are exempt from data grounding, and are never applied. The
+factual answer keeps soft number verification. No write path exists.
+
+**Capacity.** The device probe reported 8,192 tokens with tool calling and guided generation; eight
+tools plus four history messages and 60 fact lines passed. A context overflow still falls back to
+the base tools.
+
+**Consequences.** Three additive backend routes, three tools per chat provider, a structured answer
+type, suggestion UI, plan-tool tests and a device matrix. The deterministic engine remains the only
+source of prescriptions.
+
+**Status.** Accepted 2026-11-15; implemented, device test pending.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
