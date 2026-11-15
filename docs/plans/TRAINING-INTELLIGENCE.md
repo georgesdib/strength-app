@@ -779,7 +779,7 @@ with no model and no route beyond the existing REST call; `DEC-AFC-03` holds. Th
 status, coverage and limitations, renders no values client-side, and works with no model. No narrative, model or write path was added. The REST entrypoint opens SQLite
 read-only; raw readiness values are local-only over MCP (score only unless a deployment opts in),
 and the weekly review flags a partial current week explicitly. ADR-INT-014 proposes per-token
-scopes as the long-term model.
+scopes as the long-term model. The branch was merged into `development` on 2026-11-15.
 
 **Scope.** `intelligence/reports/weekly_review.py` composing the sections in §8.2;
 `get_weekly_review` tool; a new read-only iOS route
