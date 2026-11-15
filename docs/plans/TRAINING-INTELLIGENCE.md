@@ -945,9 +945,10 @@ cost dashboard, no cloud fallback.
 **Estimate.** Small once access exists (2–3 focused sessions); entitlement and eligibility are the
 schedule risk.
 
-### INT-4d — Chat with an external model via API key (DeepSeek; scope proposed 2026-11-15)
+### INT-4d — Chat with an external model via API key (DeepSeek; implemented 2026-11-15)
 
-**Status.** Scoped, not started. Direct from the iPhone; no backend change.
+**Status.** **Implemented 2026-11-15; device test pending.** Direct from the iPhone; no backend
+change.
 
 **Scope.** **Chat only.** The weekly and overview explanations remain on-device and never use the
 external model. A Settings **Chat model** choice offers On-device (default) or DeepSeek. When
@@ -989,6 +990,11 @@ tests (owner).
 providers, cost dashboard, cloud fallback, any write.
 
 **Estimate.** Medium: HTTP client, tool loop and key UX; no server work.
+
+**Implementation note.** The client and tool loop are in `DeepSeekAPI.swift` and
+`DeepSeekChatGenerator.swift`; the Keychain store and Chat model picker are iOS app code. The
+simulator tests cover the HTTP shape, bearer header, tool round-trip, 401/429, malformed JSON, the
+retry/warning path and the missing-key state (6 DeepSeek tests; 38 chat-related tests in total).
 
 ### INT-5 — Backend LLM narrative and multi-tool integration
 

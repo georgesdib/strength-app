@@ -444,7 +444,7 @@ model is active. INT-4b's on-device path remains the default.
 entitlement, which are not available. The decision is parked, not rejected; the scope stays in the
 plan as the future definition and is revisited only if access is obtained.
 
-## ADR-INT-016 — External chat model via a user API key (DeepSeek, proposed)
+## ADR-INT-016 — External chat model via a user API key (DeepSeek, accepted 2026-11-15)
 
 **Context.** PCC is parked because it needs a paid Apple Developer Program membership and the managed
 entitlement. The owner wants the option to use another model with their own API key, specifically
@@ -467,7 +467,7 @@ error mapping (401/429/5xx/transport/malformed) and a mocked-HTTP test suite. No
 A model id that cannot call tools is refused for chat. The external model cannot be used for
 explanations, weekly review, MCP or server narration.
 
-**Status.** Proposed; scope recorded in the plan as INT-4d.
+**Status.** Accepted 2026-11-15; implemented as INT-4d. Device test pending.
 
 ## Rejected architectural alternatives (summary)
 
