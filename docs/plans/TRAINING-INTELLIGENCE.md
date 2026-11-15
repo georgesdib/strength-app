@@ -1124,30 +1124,18 @@ recorded in `DEVICE-ACCEPTANCE.md`.
 **Exclusions.** Siri AI Developer Preview, app skills, onscreen awareness, cross-app actions,
 conversational Siri. Revisit only after Apple ships it and a new decision approves it.
 
-### INT-8 — Controlled plan review and recommendations (gated, likely deferred)
+### INT-8 — Controlled plan review and recommendations (closed 2026-11-15)
 
-**Owner decision (2026-11-15):** keep INT-8 gated until the INT-5 evaluation; it is **not closed**.
-No concrete question has been named yet. Revisit only when INT-5 is evaluated and the owner can
-state the question the read-only explanation cannot answer.
+**Owner decision (2026-11-15): closed.** No concrete question justified the phase, and read-only
+explanation is already covered by the weekly review, the overview and INT-5. No scope is scheduled,
+no code was written, and the phase does not reopen without a new owner request and a named question.
 
-**Scope.** Evaluate whether a *read-only* "programme review" (what the plan is doing and why, what the
-evidence suggests, what to discuss with the deterministic engine) is useful **without any proposal or
-write**. If it is, the output is text plus links into the existing prescription flow; the athlete acts
-there.
+**Historical scope (not pursued).** A read-only "programme review" — what the plan is doing and why,
+what the evidence suggests, what to discuss with the deterministic engine — without any proposal or
+write. It was gated on the INT-3/INT-5 evaluation and owner approval because it sits close to advice.
 
-**Dependencies.** INT-3 and INT-5 evaluation green; owner approval; explicit confirmation that
-recommendations are discussion, not instructions.
-
-**Acceptance (if pursued).** No tool, route or capability can alter a prescription; every
-recommendation is labelled as a discussion point; the deterministic engine remains the only
-prescriber.
-
-**Exclusions.** Structured proposals, approval flows and any write are **not** part of this
-workstream. If the owner wants a proposer later, it belongs to `DEC-LLM-09` and its own gated plan,
-consuming this capability layer as one input.
-
-**Recommendation:** close INT-8 at the INT-3 gate unless the owner identifies a concrete question the
-review cannot answer. Read-only explanation is already covered by INT-3/INT-5.
+**Exclusions retained.** Structured proposals, approval flows and any write remain outside this
+workstream; a future proposer belongs to `DEC-LLM-09` and its own gated plan.
 
 ## 12. Dependencies and sequencing
 
@@ -1159,7 +1147,7 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
 INT-4d (external chat model): delivered; chat only
 INT-4e (plan-aware chat): delivered
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
-INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
+INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
@@ -1173,7 +1161,7 @@ INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
 - INT-7 is independent of the model work and could run in parallel with INT-4/5.
-- INT-8 has no implementation dependency that justifies starting it early.
+- INT-8 is closed; it does not block or extend the remaining phases.
 
 ### Deferred — web access (web UI and iOS)
 

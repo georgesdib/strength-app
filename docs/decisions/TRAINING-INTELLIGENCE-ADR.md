@@ -521,7 +521,7 @@ source of prescriptions.
 5. Approve the additive `/api/ios/v1/intelligence/` routes at INT-3, or require a different facade?
 6. Is a server-side narration path (INT-5) wanted at all, given on-device narration (INT-4) may be
    sufficient for one athlete?
-7. Should INT-8 (controlled plan review) be closed now rather than left gated?
+7. INT-8 (controlled plan review) — **closed 2026-11-15**: no concrete question; read-only explanation is already covered by the weekly review, overview and INT-5.
 8. Confirm the deferral of the constrained proposer (`DEC-LLM-09`) that ADR-INT-013 records, or
    keep it as a parallel unscheduled workstream.
 
