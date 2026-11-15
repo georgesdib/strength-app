@@ -1257,7 +1257,15 @@ the package stays SwiftUI-free for the watch in 7b-3. The average-duration inten
 2026-11-15 is delivered too: `AverageSessionDurationIntent` takes `weeks` (1–52, default 4), passes it
 to `overview(windowWeeks:)`, and speaks the `attendance.duration` aggregate with its sample size and
 the measured subset. Days are not supported: the capability's only window parameter is weeks.
-**Remaining in INT-7:** the physical-device Siri checks in `StrengthApp/DEVICE-ACCEPTANCE.md`.
+Two literal phrases cover the fixed windows a phrase can match ("... over the last 12 weeks"), because
+an App Shortcut phrase cannot carry a free-form number.
+
+**Closed 2026-11-15**, owner-confirmed on the physical iPhone (Release build at `0697889`): every
+read-only phrase routes to the app and answers, and the snippets render. Two items are recorded as
+deferred rather than passed in `StrengthApp/DEVICE-ACCEPTANCE.md`: **Spotlight** does not surface the
+donated exercises on the owner's device (accepted deferral), and the offline/unpaired dialog was not
+exercised. An arbitrary "last N weeks" phrase still needs an enum plus
+`AppShortcutParameterPresentation`, and a Spotlight tap still needs `URLRepresentableEntity`.
 
 ### INT-7b — Workout lifecycle surfaces: Action button, HomeKit scenes and Shortcuts (owner-requested 2026-11-15)
 
@@ -1318,9 +1326,14 @@ observes the phone's session start and end transitions, holds the per-event choi
 Shortcut), fires the URL after the transition is committed, dedupes by session id plus event, and
 isolates failure. No HomeKit or watch work.
 
-*Acceptance.* A configured shortcut fires at most once per event; a missing or renamed shortcut, and a
-refused URL, are invisible to the session; no training data is passed by default; the service is
-unit-tested against a URL-open stub.
+*Owner decisions 2026-11-15.* Both events are wanted (start **and** end). There is **no separate
+on/off switch**: a filled-in shortcut name means the channel is on, an empty field means it is off.
+**Nothing is passed to the shortcut** — no session data, no duration, no text; the shortcut runs with
+no input at all.
+
+*Acceptance.* A configured shortcut fires at most once per event; an empty field does nothing; a
+missing or renamed shortcut, and a refused URL, are invisible to the session; no training data is
+passed; the service is unit-tested against a URL-open stub.
 
 *Why first.* It is the cheapest real channel and it proves the trigger, ordering, dedupe and failure
 isolation that 7b-2 and 7b-3 reuse.
