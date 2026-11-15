@@ -1,9 +1,9 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE AND IMPLEMENTATION PLAN
 
 **Canonical location:** this file, in the portfolio repository.
-**Status:** proposed 2026-11-14 (INT-0, planning only). INT-1, INT-1b and the INT-2 catalogue have
-since been delivered (§11); this plan document itself changes no runtime, API, schema, dependency,
-prompt or training rule.
+**Status:** proposed 2026-11-14 (INT-0, planning only). INT-1, INT-1b, the INT-2 catalogue and
+INT-3 have since been delivered, and INT-3 is closed (§11); this plan document itself changes no
+runtime, API, schema, dependency, prompt or training rule.
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
@@ -739,8 +739,8 @@ are registered and exposed over MCP: the INT-1 tools plus `get_exercise_progress
 `get_programme_block_summary` and `compare_training_periods`. Every value comes from its owning
 service; the only arithmetic added is the difference between two owner outputs in
 `compare_training_periods`. Evidence arrays remain empty where owners do not emit evidence.
-`get_weekly_review_data` is not a separate capability: the weekly review package is INT-3 and will
-compose these. MCP tool schemas spell date bounds `start`/`end` (`from` is a Python keyword); the
+`get_weekly_review_data` is not a separate capability: the weekly review package is INT-3, which
+composes these (closed 2026-11-15). MCP tool schemas spell date bounds `start`/`end` (`from` is a Python keyword); the
 capability API keeps `from`/`to`. Implementation detail, limits and the development-machine timings
 are in the backend
 [INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
@@ -770,11 +770,13 @@ heaviest tools (informational, not a gate).
 
 ### INT-3 — Weekly Training Review (deterministic) and the iOS read surface
 
-**Implementation status (2026-11-15): delivered.** `intelligence/reports/weekly_review.py`, the
+**Implementation status: closed 2026-11-15.** `intelligence/reports/weekly_review.py`, the
 `get_weekly_review` tool, `GET /api/ios/v1/intelligence/weekly-review`, the `StrengthCore`
 envelope model and REST client, the SwiftUI review screen and the Week navigation are implemented
-and tested. The screen shows status, coverage and limitations, renders no values client-side, and
-works with no model. No narrative, model or write path was added. The REST entrypoint opens SQLite
+and tested. Acceptance evidence: the completed week matches the golden fixture; an empty week is
+`no_data` with the expected inputs; an imported-only week keeps its quality flags; the screen works
+with no model and no route beyond the existing REST call; `DEC-AFC-03` holds. The screen shows
+status, coverage and limitations, renders no values client-side, and works with no model. No narrative, model or write path was added. The REST entrypoint opens SQLite
 read-only; raw readiness values are local-only over MCP (score only unless a deployment opts in),
 and the weekly review flags a partial current week explicitly. ADR-INT-014 proposes per-token
 scopes as the long-term model.
@@ -933,7 +935,8 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
-- INT-1 (delivered), INT-1b (delivered) and INT-2 (delivered) need no model and no new REST route.
+- INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 and INT-5 are the next
+  independent tracks; INT-3 needed no model.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.

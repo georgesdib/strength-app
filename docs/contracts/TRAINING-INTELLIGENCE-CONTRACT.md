@@ -570,8 +570,9 @@ measured week reports which sections are unavailable rather than zero.
 
 **iOS.** Yes, as `weeklyReview`.
 
-**Status.** Implemented 2026-11-15 (backend capability, REST route, iOS envelope/adapter and
-weekly-review screen). The five-capability native provider surface in §10 remains INT-4 work.
+**Status.** **Closed 2026-11-15.** Backend capability, REST route, iOS envelope/adapter and the
+weekly-review screen are delivered. The five-capability native provider surface in §10 remains
+INT-4 work.
 
 **Representative output** (synthetic, trimmed to the fact keys):
 
@@ -722,7 +723,7 @@ headers. Error messages are reduced to their code. A logging failure MUST NOT ch
 
 - Base: `/api/ios/v1/intelligence/`, existing device bearer token, existing error envelope,
   existing idempotency rules do not apply (all reads).
-- Routes (INT-3 onward; the weekly review is implemented, the rest are not):
+- Routes (INT-3 onward; INT-3 is closed with the weekly review implemented, the rest are not):
   - `GET /api/ios/v1/intelligence/weekly-review?week_end=YYYY-MM-DD` — **implemented 2026-11-14**
   - `GET /api/ios/v1/intelligence/overview?as_of=&window_weeks=`
   - `GET /api/ios/v1/intelligence/exercises/{id}/progression?window_days=`
