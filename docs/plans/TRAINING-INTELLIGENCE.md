@@ -845,6 +845,39 @@ injection fixtures.
 
 **Exclusions.** No PCC, no cloud fallback, no chat, no Siri, no write.
 
+### INT-4b — On-device training chat (scope approved 2026-11-15; not started)
+
+**Status.** Scope and acceptance agreed by the owner; implementation not started.
+
+**Scope.** A multi-turn chat in the app over the on-device Foundation Models, using the read-only
+capability tools and the REST envelopes. The athlete can ask follow-ups about the current week,
+the overview, a lift, a session or readiness. The model chooses which facts to fetch; the client
+never computes a metric. Suggested questions, a compact context budget and per-answer grounding are
+part of the work. The transcript is session-only by default: leaving the screen or force-quitting
+the app loses it.
+
+**Dependencies.** INT-4; a physical Apple Intelligence device; no backend change.
+
+**Acceptance.**
+- Every number in an answer exists in the fetched facts; an invented number is rejected and the
+  answer falls back to a plain "I cannot answer that from your data", never to an unchecked reply.
+- Questions outside the facts (medical advice, plan changes, other athletes) are refused plainly.
+- Multi-turn context stays within the model window: tool results are trimmed, old turns are
+  summarised, and a context overflow is a clear message, never a raw token count.
+- The five tools are registered only when the context budget allows; the single-shot explanation
+  path is unchanged and still does not register them.
+- No writes, no prescription, no medical advice, no network from the model path, and no persisted
+  transcript by default. Raw readiness may be used on-device only if the app already has it.
+- Injection fixtures: instruction-like text inside facts cannot change the answer or widen the
+  grounded-number set.
+
+**Tests.** Stub tool provider and generator; grounded and ungrounded answers; tool selection and
+result trimming; context-budget trimming; refusal cases; injection fixture. No UI test is required
+by the owner.
+
+**Exclusions.** No Siri AI Developer Preview, no PCC/cloud fallback, no server narration, no write,
+no new analytical capability, and no INT-5 work.
+
 ### INT-5 — Backend LLM narrative and multi-tool integration
 
 **Scope.** `intelligence/model/` orchestration, `NarrativeProvider` with `NullProvider` and the
@@ -920,6 +953,10 @@ conversational Siri. Revisit only after Apple ships it and a new decision approv
 
 ### INT-8 — Controlled plan review and recommendations (gated, likely deferred)
 
+**Owner decision (2026-11-15):** keep INT-8 gated until the INT-5 evaluation; it is **not closed**.
+No concrete question has been named yet. Revisit only when INT-5 is evaluated and the owner can
+state the question the read-only explanation cannot answer.
+
 **Scope.** Evaluate whether a *read-only* "programme review" (what the plan is doing and why, what the
 evidence suggests, what to discuss with the deterministic engine) is useful **without any proposal or
 write**. If it is, the output is text plus links into the existing prescription flow; the athlete acts
@@ -949,8 +986,9 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```
 
-- INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 and INT-5 are the next
-  independent tracks; INT-3 needed no model.
+- INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
+- INT-4b (on-device chat) follows INT-4 and is independent of INT-5; INT-5 remains the server
+  narrative track. INT-6 needs at least one narrative path; INT-4b does not change that.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.
