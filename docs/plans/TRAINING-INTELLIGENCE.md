@@ -1420,6 +1420,15 @@ MCP involvement.
 rest timer is not a pause, and the session engine has no paused state. The Action + Side pair therefore
 does nothing in this app. No open question remains in this phase.
 
+**INT-7c — Shortcuts can start and finish a workout (owner request 2026-11-15).** The Shortcuts app
+gets a `StartWorkoutShortcutIntent` and a `FinishWorkoutShortcutIntent` on the phone, and reuses the
+watch's two Action-button intents. Start behaves like the Action button: a ready plan starts and the app
+lands on the active workout; with nothing requested it says to request one and opens the app. Finish
+never finishes anything — it opens the surface where sRPE is recorded (the phone's active workout, the
+watch's finish sheet), exactly like the Action button's second press. No new entitlement, no server
+change, and the same read-only-to-training-data boundary: these intents only call the existing start
+and finish paths.
+
 **Implementation status (2026-11-15): implemented, device checks pending.** The watch target links
 `StrengthIntents` and registers a watch-side provider over its own device credential.
 `ActionButtonStartWorkoutIntent` (one `Strength` style, `suggestedWorkouts`, the 30-second start
