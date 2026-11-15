@@ -1,10 +1,11 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
-**Status:** proposed 2026-11-14, except ADR-INT-010, which was accepted and closed on
-2026-11-14 and is implemented (the MCP transport is enabled with the ten-tool catalogue). The
-remaining records are pending owner approval and are not implemented. ADR-INT-011 was amended on
-2026-11-15 with refreshed Siri AI preview facts and the INT-7 readiness requirement; ADR-INT-011 and
-ADR-INT-018 were accepted the same day.
+**Status:** every record is accepted, deferred or superseded as of 2026-11-15. ADR-INT-001 to
+ADR-INT-014 are implemented or retained, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
+ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
+and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
+by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. The one open item is
+INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -598,8 +599,16 @@ opts in to a fixed string, and never verified or retried.
 
 **Status.** **Accepted 2026-11-15** (decision 15), after the §1.2 exclusion was removed at the owner's
 request. The owner confirmed that `PauseWorkoutIntent`/`ResumeWorkoutIntent` stay excluded and that the
-device owning the session executes the scenes exactly once. Not implemented; delivered in three slices
-in this order after INT-7: 7b-1 executor and Shortcuts, 7b-2 HomeKit scenes, 7b-3 Action button.
+device owning the session executes the scenes exactly once. Delivered and closed in this order after
+INT-7: 7b-1 executor and Shortcuts, 7b-2 HomeKit scenes, 7b-3 Action button and watch Siri.
+
+**Extension 2026-11-15 — decision 16, Shortcuts start/finish.** The Shortcuts app gains a
+`StartWorkoutShortcutIntent` and a `FinishWorkoutShortcutIntent` on the phone, and reuses the watch's
+two Action-button intents. Start behaves exactly like the Action button: a ready plan starts and the app
+lands on the active workout; with nothing requested it says so and opens the app. Finish never finishes
+anything — it opens the surface where sRPE is recorded (the phone's active workout, the watch's finish
+sheet), matching the Action button's second press. No entitlement, server change or new training path;
+the §1.2 boundary is unchanged. Closed, owner-confirmed 2026-11-15.
 
 ## Rejected architectural alternatives (summary)
 
@@ -617,21 +626,24 @@ in this order after INT-7: 7b-1 executor and Shortcuts, 7b-2 HomeKit scenes, 7b-
 | Confidence scores | the system cannot justify them; gate, n, comparability and coverage are honest |
 | Multi-tenancy now | no user model exists; per-user auth is a separate, larger workstream |
 
-## Unresolved questions requiring owner input
+## Questions resolved by delivery (2026-11-15)
 
-1. Which MCP host is the first target? It decides whether static bearer auth (ADR-INT-004) is
-   sufficient for INT-1 acceptance.
-2. Accept the capability-layer path change from `agents/context.py` to
-   `strength_coach/intelligence/` (ADR-INT-002)?
-3. Approve `get_programme_block_summary` as a derived window, or prefer a different name
-   (ADR-INT-009)?
-4. Should the Weekly Review ever appear in the web UI, or stay iPhone + MCP (INT-3 scope)?
-5. Approve the additive `/api/ios/v1/intelligence/` routes at INT-3, or require a different facade?
-6. Is a server-side narration path (INT-5) wanted at all, given on-device narration (INT-4) may be
-   sufficient for one athlete?
-7. INT-8 (controlled plan review) — **closed 2026-11-15**: no concrete question; read-only explanation is already covered by the weekly review, overview and INT-5.
-8. Confirm the deferral of the constrained proposer (`DEC-LLM-09`) that ADR-INT-013 records, or
-   keep it as a parallel unscheduled workstream.
+All of these were answered by the shipped work; none is open.
+
+1. **MCP host:** the Python client only. The static bearer token is sufficient (ADR-INT-004); no OAuth
+   server, accounts or tenancy were built.
+2. **Capability-layer path:** accepted and delivered as `strength_coach/intelligence/` (ADR-INT-002).
+3. **`get_programme_block_summary`:** delivered as the derived reporting window (ADR-INT-009).
+4. **Weekly Review on the web UI:** delivered — the web UI has the review panel and the
+   `/api/ios/v1/intelligence/weekly-review` route.
+5. **Additive intelligence routes:** approved and delivered at INT-3.
+6. **Server-side narration:** delivered at INT-5, alongside on-device narration.
+7. **INT-8:** closed 2026-11-15 with no scope; read-only explanation is covered by the weekly review,
+   overview and INT-5.
+8. **Constrained proposer (`DEC-LLM-09`):** deferred/unscheduled, as ADR-INT-013 records; it needs its
+   own gated plan.
+9. **Siri AI adoption (INT-9):** the only remaining question — it needs a new ADR once iOS 27.3 lands.
+   The readiness work is already delivered under ADR-INT-011's amendment.
 
 ## Related
 

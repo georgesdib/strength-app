@@ -66,7 +66,7 @@ Form ratings and the post-session review use existing server review/form contrac
 
 ### Explicitly not a first-release prerequisite
 
-HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B), manual cardio, advanced Longevity analytics, background processing, Apple Intelligence, and PCC remain deferred — they are now specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-5), which supersedes the two Apple Intelligence/PCC bullets in §5. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
+HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B), manual cardio, advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
 
 ## 2. Architectural invariants
 

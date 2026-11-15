@@ -1,6 +1,7 @@
 # TRAINING INTELLIGENCE — MCP, ENVELOPE AND ADAPTER CONTRACT
 
-**Status:** proposed 2026-11-14 (v0.1). Not implemented. Normative for INT-1 onward once approved.
+**Status:** implemented 2026-11-15. Normative for the delivered INT-1 to INT-7 work: the MCP
+tools/resources, the REST envelopes and the iOS native adapter rules are live. Additive changes only.
 **Canonical location:** this file, in the portfolio repository. Server implementation stays in
 `georgesdib/strength-training-app`; client implementation stays in `georgesdib/StrengthApp`.
 **Companions:** [plan](../plans/TRAINING-INTELLIGENCE.md), [audit](../plans/TRAINING-INTELLIGENCE-AUDIT.md),

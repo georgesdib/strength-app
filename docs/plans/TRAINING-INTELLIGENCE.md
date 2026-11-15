@@ -1,22 +1,25 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE AND IMPLEMENTATION PLAN
 
 **Canonical location:** this file, in the portfolio repository.
-**Status:** proposed 2026-11-14 (INT-0, planning only). INT-1, INT-1b, the INT-2 catalogue and
-INT-3 have since been delivered, and INT-3 is closed (§11); this plan document itself changes no
-runtime, API, schema, dependency, prompt or training rule. Amended 2026-11-15: §7.2 gains the iOS 27.0
-framework facts and the measured context size, §7.5 refreshes the Siri AI preview status, §7.6 adds
-the Siri AI readiness design and records that MCP is not a Siri transport, INT-7 and decision 14 carry
-it (`ADR-INT-011` amendment), and INT-7b with decision 15 adds the workout lifecycle surfaces
-(Action button and HomeKit scenes, `ADR-INT-018`). Decisions 11, 14 and 15 were accepted the same day;
-INT-7 and INT-7b are the only open phases. Later the same day: the dialog-number restriction was
-removed, INT-7 was given a shared `StrengthIntents` module with the watch linked in 7b-3, and INT-7b
-was split into three slices with a deferred INT-9 adoption pass.
+**Status:** delivered 2026-11-15. Every phase is closed or parked: INT-1 to INT-8 delivered (INT-8
+closed with no scope), INT-4c parked on Apple's PCC entitlement, and **INT-9 (the Siri AI adoption
+pass) deferred until iOS 27.3**. This plan document itself changes no runtime, API, schema,
+dependency, prompt or training rule.
+
+Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
+refreshed the Siri AI preview status, and §7.6 added the readiness design and recorded that MCP is not
+a Siri transport. Decisions 11, 14 and 15 were accepted that day. INT-7 delivered the read-only
+intents plus the shared `StrengthIntents` module and is closed, owner-confirmed. INT-7b delivered the
+workout lifecycle surfaces in four closed slices — Shortcuts automation, HomeKit scenes, Action button
+and watch Siri, and the Shortcuts start/finish pair (decisions 15 and 16) — with the watch linked into
+the shared intents module in 7b-3.
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
 plan for training intelligence. See §16.
-**Owner:** the athlete. INT-1 may not start without explicit approval of the decisions in section 13.
-**Roadmap:** phases INT-1 to INT-8, section 12. Backend implementation status stays in
+**Owner:** the athlete. Every decision in section 13 is accepted; the plan is delivered and further
+work needs a new decision (INT-9's adoption ADR, or a new proposal under §16.5).
+**Roadmap:** phases INT-1 to INT-9, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
 this plan does not restate it.
 **Companions:** [implementation audit](TRAINING-INTELLIGENCE-AUDIT.md),
@@ -736,8 +739,8 @@ foundation, so the transport, the second tool and the resources are now INT-1b. 
 tested: the envelope, error taxonomy, capability registry, request validation, execution service,
 bearer authentication, configuration bounds, request-context identity and one reference capability
 (`get_training_overview`). INT-1b has since delivered the transport, the second tool and the resource
-(see below). Still not implemented: the baseline context package and any model path. Implementation
-detail is in the backend
+(see below). The baseline context package (INT-2) and the model paths (INT-4/INT-5) followed.
+Implementation detail is in the backend
 [INTELLIGENCE-IMPLEMENTATION.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md).
 
 **Scope (as originally written).** The envelope, error taxonomy, capability registry, context builder skeleton, MCP server
@@ -1335,7 +1338,7 @@ no input at all.
 missing or renamed shortcut, and a refused URL, are invisible to the session; no training data is
 passed; the service is unit-tested against a URL-open stub.
 
-**Implementation status (2026-11-15): delivered, device checks pending.** `WorkoutAutomation` holds the
+**Closed 2026-11-15**, owner-confirmed on the physical iPhone. `WorkoutAutomation` holds the
 per-event name in `UserDefaults`, dedupes by `sessionID + event` with a bounded fired log, builds
 `shortcuts://run-shortcut?name=…` with no input, and swallows every failure. It is called after the
 phone commits a start, a finish (online or queued offline) and an abandonment; a refused URL clears the
@@ -1485,25 +1488,27 @@ INT-4e (plan-aware chat): delivered
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
 
-INT-7 ──▶ INT-9 (Siri AI adoption pass; starts only after iOS 27.3 lands)
-INT-7b-1 (executor + Shortcuts) ──▶ INT-7b-2 (HomeKit scenes)
-INT-7b-3 (Action button, watch): independent of 7b-1 and 7b-2
-
-Order from 2026-11-15: INT-7 → 7b-1 → 7b-2 → 7b-3 → INT-9
+INT-7     closed (read-only intents, phone and watch)
+INT-7b-1  closed (automation executor + Shortcuts)
+INT-7b-2  closed (HomeKit scenes, phone and watch)
+INT-7b-3  closed (Action button + watch Siri)
+INT-7c    closed (Shortcuts start/finish, phone and watch)
+INT-9     deferred — starts only after iOS 27.3 lands
+INT-4c    parked — needs paid developer access + the PCC entitlement
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
 - INT-4b (on-device chat) and INT-4d (DeepSeek chat) are delivered. INT-4e (plan-aware chat and
   suggestions) is delivered. INT-4c (PCC model choice) is parked
-  until paid developer access and the entitlement exist; INT-5 remains the server narrative track.
+  until paid developer access and the entitlement exist; INT-5 delivered the server narrative track.
   INT-6 is closed (2026-11-15): its iOS surface is INT-4b and its server/web chat uses the deterministic dossier; tool calling and streaming are deferred.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
-- **Execution order from 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-9. Every other
-  phase is delivered, closed or parked.
+- **Delivery complete 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-7c all closed and
+  owner-confirmed. Only INT-9 remains (gated on iOS 27.3), plus the parked INT-4c.
 - **Why this order.** INT-7 first: it is the smallest phase, it is what December's adoption annotates,
   and built to §7.6 it leaves nothing behind. 7b-1 next: the cheapest real channel proves the trigger,
   ordering, dedupe and failure isolation that the heavier channels reuse. 7b-2 then adds the HomeKit
@@ -1560,7 +1565,7 @@ override a rule or measurement, never become a hard constraint, and never open a
 Retrieved text is data, not instructions. If adopted it extends the model layer (§7) and leaves the
 MCP tool boundary facts-only.
 
-## 13. Decisions requiring explicit approval
+## 13. Decisions (all accepted)
 
 | # | Decision | Recommendation | ADR |
 |---|---|---|---|
@@ -1579,6 +1584,7 @@ MCP tool boundary facts-only.
 | 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
 | 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, with no preview symbol before the adoption pass | **accepted 2026-11-15**; makes the December adoption additive rather than a rewrite (§7.6) | `ADR-INT-011` (accepted, amended) |
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
+| 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 
 Both former open questions are answered (2026-11-15):
 
@@ -1667,7 +1673,7 @@ retained items in §16.3.
 | `DEC-LLM-01` to `DEC-LLM-06` | output is an event; structural edits are rebuilt; menus are Python-computed; essential-lift rules | backend `docs/DECISIONS.md` |
 | `LLM-INTEGRATION-PLAN.md` §8.1 field-level outbound-data inventory | the privacy precondition for every model path; adopted by reference in §9 | backend, unchanged |
 | `LLM-INTEGRATION-PLAN.md` §9 evaluation and rollout gates | gate vocabulary for any narrated or write path; adopted by reference where an INT phase narrates | backend, unchanged |
-| Phase 1b selector retirement (`DEC-LLM-14`) | still required before INT-5 so only one model surface exists (`ADR-INT-012`) | backend work item |
+| Phase 1b selector retirement (`DEC-LLM-14`) | it made INT-5 the only model surface (`ADR-INT-012`); **retired 2026-11-15** and recorded here so it is not reintroduced | backend, done |
 | Constrained proposer (`DEC-LLM-09`, LLM plan §7, phases 4–5) | a **write** capability outside this read-only workstream; **reclassified as deferred/unscheduled**, requirements retained, any future work needs a new decision | backend, unscheduled |
 | AFC (`docs/plans/AFC.md`) | not an LLM plan; it is the deterministic producer of the evidence consumed here | portfolio |
 | iOS phase contracts (Phase 1/2/3A/4/R7/R8/watch) | they exclude AI surfaces and are unchanged | portfolio contracts |
