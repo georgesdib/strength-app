@@ -812,7 +812,7 @@ Swift arithmetic.
 
 ### INT-4 — Apple Foundation Models narrative (on device)
 
-**Implementation status (2026-11-15): delivered, with the stub UI test open.** The on-device
+**Implementation status (2026-11-15): delivered.** The on-device
 narrative works on the weekly review and the Progress overview: default-off consent, availability
 and detail settings, a compact facts projection, a `@Generable` output, a grounding validator that
 uses a structured number allow-list, deterministic fallback and no persistence or network. The five
@@ -821,8 +821,8 @@ surface, but not registered in the session: their schemas consumed most of the 8
 and overflowed on the device at the Detailed preset. The budget trims at 1,200 tokens and retries at
 600 on overflow before falling back. The owner confirmed the narrative on 2026-11-15 and found two
 issues (that overflow, and an over-strict grounding check that rejected percentages, thousands
-separators and the digit in `e1RM`); both are fixed. What remains is conditional tool registration,
-the stub UI test (the panel state is unit-tested) and a device re-run.
+separators and the digit in `e1RM`); both are fixed. The device run passed and no UI test is
+required by owner decision. Conditional tool registration remains a tuning item.
 **Scope.** Feature flag (default off), availability UI, consent copy, five `Tool` implementations,
 `@Generable` narrative, token budgeting, overflow recovery, grounding validator, cache-free
 regeneration, and the deterministic fallback.
