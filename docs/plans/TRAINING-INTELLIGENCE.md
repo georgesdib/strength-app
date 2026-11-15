@@ -1372,6 +1372,17 @@ accessory identifier leaves the device.
 
 *Depends on.* 7b-1's executor interface.
 
+**Implementation status (2026-11-15): phone half delivered.** The HomeKit entitlement and
+`NSHomeKitUsageDescription` are in the app and the watch targets; `HomeKitSceneRunner` in
+`StrengthCore` lists scenes from the user's homes and executes one through `executeActionSet`, waiting
+for the first homes update and failing silently. `WorkoutAutomation` now runs channels in order — scene
+first, then the Shortcut — with a separate fired key per channel, so a refused scene does not consume
+the Shortcut's turn. Settings gained "Home scenes": one picker per event (`SceneSelection` as JSON in
+`UserDefaults`), a test button each, and a reload button. Ten unit tests cover ordering, once-per-event,
+retry and the selection codec.
+**Remaining in 7b-2:** the watch half — send `{homeID, startSceneID, endSceneID}` from the phone over
+WatchConnectivity, store it on the watch, and execute in `WatchExecutionController` at start and finish.
+
 **Slice 7b-3 — Action button and watch Siri (watch).** `StartWorkoutIntent` compiled into the watch app
 with `suggestedWorkouts` and the 30-second start budget, the end intent donated as the button's next
 action and re-donated as the session state changes, and `StrengthIntents` linked into the watch target
