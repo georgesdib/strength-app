@@ -1083,8 +1083,9 @@ the repository with personal data.
 **Implementation status (2026-11-15): first slice delivered.** The Programme Intelligence Chat view
 posts up to 20 session-only turns to `POST /api/intelligence/chat`; the server supplies a fresh
 six-capability fact dossier, with advisory number warnings, source capabilities, daily budget and
-no write. Tool-calling orchestration, a full multi-turn evaluation matrix, streaming and a richer suggestion
-block remain.
+no write. Model-driven tool calling is deferred: the provider stalled on it and the deterministic dossier
+covers the six core capabilities. The recent-ten-message window, 18k dossier cap, separate
+suggestions block and four-case multi-turn matrix are delivered; streaming remains deferred.
 
 **Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
 INT-4c. This phase now covers the server/web conversation only.
