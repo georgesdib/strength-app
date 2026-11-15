@@ -1385,8 +1385,9 @@ retry and the selection codec.
 without a second message type; the phone re-sends the context when a scene changes. The watch stores it
 in `WatchSceneAutomation` and runs the scene from `WatchExecutionController` after a successful start,
 after a finish that recorded a finish intent, and after a discard — once per session and event, with the
-same last-known fallback and silent-skip rules. Phone and watch builds are green and 387 tests pass; the
-device checks are in `StrengthApp/DEVICE-ACCEPTANCE.md`.
+same last-known fallback and silent-skip rules. Phone and watch builds are green and 387 tests pass.
+**Closed 2026-11-15**, owner-confirmed on the physical iPhone and Watch; the checks are recorded in
+`StrengthApp/DEVICE-ACCEPTANCE.md`.
 
 **Slice 7b-3 — Action button and watch Siri (watch).** `StartWorkoutIntent` compiled into the watch app
 with `suggestedWorkouts` and the 30-second start budget, the end intent donated as the button's next
