@@ -257,7 +257,7 @@ runs (377 sessions, 6,786 sets, 6.5 MB), all `status: ok`. The development Mac m
 p50 at 200 sessions and 573 ms at 600, so this is host speed, not dataset size.
 
 **Profiling result (2026-11-14, same host; detail in the backend
-[`INTELLIGENCE-IMPLEMENTATION.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/INTELLIGENCE-IMPLEMENTATION.md) §18).**
+[`INTELLIGENCE-IMPLEMENTATION.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/INTELLIGENCE-IMPLEMENTATION.md) §18).**
 The cost is **not** dominated by the performance ratio. Of the 3,110 ms warm request:
 `deload.decision` 2,021 ms (65%) — `RuleContext.from_store` 1,349 ms building the whole-history
 frame, plus 689 ms evaluating all five rules to read one verdict — and
@@ -267,7 +267,7 @@ all-history set load 221 ms. The e1RM/ratio rebuild hypothesis is confirmed but 
 A broader response is proposed separately: a versioned, rebuildable derived-analytics layer
 (per-set, session/exercise and weekly materialisation owned by the existing modules, with
 on-demand fallback), documented in the backend
-[`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md).
+[`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md).
 It is not an in-process cache and does not change the decision recorded here. **Milestone A**
 (revision ledger, build state, coordinator and safe publication) is implemented and audited, and
 **Milestone B** (core per-set/session materialisation and progress/strength-trend migration) and

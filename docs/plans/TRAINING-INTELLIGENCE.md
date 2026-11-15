@@ -258,7 +258,7 @@ Rules:
 - **No cache in INT-1 or INT-2.** Measure first. The heaviest calls (VBT, 365-day e1RM) are on demand
   and bounded; an incorrect cache is worse than a slow read.
 - **Shared derived analytics is a separate, broader design**, not an in-process cache:
-  [`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/llm-integration/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md)
+  [`DERIVED-ANALYTICS-ARCHITECTURE.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md)
   (2026-11-14). It proposes versioned, rebuildable per-set, session/exercise and weekly tables owned
   by the existing analytical modules, with on-demand fallback. Phase 0 is approved; **Milestone A**
   (revision ledger, build state, coordinator and safe publication) is implemented and audited, and
