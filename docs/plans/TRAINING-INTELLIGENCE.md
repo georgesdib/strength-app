@@ -1029,15 +1029,17 @@ so a multi-item prescription or a 12-week adherence payload is not truncated.
 - Flag on: chat explains the current or dated prescription, programme state and adherence.
 - Suggestions render separately, are clearly proposals, and are never applied.
 - Factual digits remain grounded; suggestion digits do not trigger the unverified warning.
-- Both providers inject plan facts without tool calling; a context overflow retries with empty history.
+- Both providers inject plan facts only on success or partial success; total failure stops with a deterministic message.
+- Projections preserve no_data, missing reasons, limitations and truncation, and render absent numbers as n/a.
+- A context overflow retries with empty history.
 - Prescription answers use a larger output budget so every item can be listed.
 - Each answer offers a “Show raw data” disclosure with the exact facts used.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
 
-**Tests.** 50 chat-related tests pass, including structured DeepSeek answers, plan-fact injection,
-today/yesterday resolution, the plan card, raw-output inspection and a projection that keeps every
-prescription item. The backend route tests pass (12).
+**Tests.** 54 chat-related tests pass, including typed plan failures, no-data projections, natural-
+language plan intent, plan-fact injection, today/yesterday resolution, the plan card and raw-output
+inspection. The backend route tests pass (12).
 
 **Open.** None blocking. Optional follow-up: shorten the model prose when a prescription card is
 shown.
