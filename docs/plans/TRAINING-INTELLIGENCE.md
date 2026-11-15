@@ -1026,12 +1026,13 @@ so a multi-item prescription or a 12-week adherence payload is not truncated.
 - Flag on: chat explains the current or dated prescription, programme state and adherence.
 - Suggestions render separately, are clearly proposals, and are never applied.
 - Factual digits remain grounded; suggestion digits do not trigger the unverified warning.
-- On-device and DeepSeek both work; a context overflow falls back to base tools rather than failing.
+- On-device injects plan facts without tool calling; DeepSeek uses plan tools; a context overflow retries with empty history.
+- Each answer offers a “Show raw data” disclosure with the exact facts used.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
 
-**Tests.** 46 chat-related tests pass, including structured DeepSeek answers, plan-tool gating,
-today/yesterday resolution, plan-only tool selection and a projection that keeps every prescription
+**Tests.** 49 chat-related tests pass, including structured DeepSeek answers, plan-fact injection,
+today/yesterday resolution, raw-output inspection and a projection that keeps every prescription
 item. The backend route tests pass (12).
 
 **Open.** Device acceptance on both models. A visible “plan data omitted” note on the context
