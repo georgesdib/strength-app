@@ -1109,7 +1109,7 @@ shown.
 registered capability through the existing Null/OpenAI-compatible provider, validate the JSON
 against the envelope facts with advisory number warnings, and record a run trace. Daily token
 budget, a ten-capability evaluation harness, MCP parity and Phase 1b selector retirement are done.
-Multi-tool orchestration is deferred to INT-6.
+Multi-tool orchestration is deferred beyond INT-5 by owner decision.
 
 **Scope.** `intelligence/model/` orchestration, `NarrativeProvider` with `NullProvider` and the
 existing OpenAI-compatible adapter, `IntelligenceClient` (`InProcessClient` / `MCPClient`), JSON
@@ -1137,23 +1137,24 @@ CLI/settings; keys never logged.
 **Exclusions.** No autonomous multi-step agent loop, no write, no new endpoint, no prompt stored in
 the repository with personal data.
 
-### INT-6 — Conversational Training Intelligence (server/web first slice delivered)
+### INT-6 — Conversational Training Intelligence (closed 2026-11-15)
 
-**Implementation status (2026-11-15): first slice delivered.** The Programme Intelligence Chat view
-posts up to 20 session-only turns to `POST /api/intelligence/chat`; the server supplies a fresh
-six-capability fact dossier, with advisory number warnings, source capabilities, daily budget and
-no write. Model-driven tool calling is deferred: the provider stalled on it and the deterministic dossier
-covers the six core capabilities. The recent-ten-message window, 18k dossier cap, separate
-suggestions block and four-case multi-turn matrix are delivered; streaming remains deferred.
+**Implementation status (2026-11-15): closed.** The Programme Intelligence Chat view posts up to 20
+session-only turns to `POST /api/intelligence/chat`; the server supplies a fresh six-capability fact
+dossier, with advisory number warnings, source capabilities, daily budget and no write. The
+recent-ten-message window, 18k dossier cap, separate suggestions block and four-case multi-turn
+matrix are delivered. **Model tool calling is deferred/closed**: the provider stalled on it and the
+deterministic dossier covers the six core capabilities. Streaming is deferred. Chat tokens are
+persisted in `run.llm_tokens` and count against the daily budget.
 
 **Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
-INT-4c. This phase now covers the server/web conversation only.
+INT-4c. This phase covered the server/web conversation only.
 
-**Scope.** A web chat panel over the same five capabilities, with an explicit context budget, turn
-cap, and a hard rule that the model may only cite facts it retrieved in this conversation.
+**Scope (historical).** A web chat panel over the read-only capabilities, with an explicit context
+budget, turn cap, and a hard rule that answers use only facts in the supplied snapshot.
 
-**Dependencies.** INT-5. The iOS surface is INT-4b/4c. A decision on server transcript retention is
-still required.
+**Dependencies.** INT-5. The iOS surface is INT-4b/4c. Transcript retention is session-only; no
+server transcript is stored.
 
 **Files/repos.** Optional web panel; server conversation orchestration. The iOS `ChatView` is no
 longer part of this phase.
@@ -1230,7 +1231,7 @@ INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
 - INT-4b (on-device chat) and INT-4d (DeepSeek chat) are delivered. INT-4e (plan-aware chat and
   suggestions) is delivered. INT-4c (PCC model choice) is parked
   until paid developer access and the entitlement exist; INT-5 remains the server narrative track.
-  INT-6's iOS surface is delivered by INT-4b; only the server/web conversation remains.
+  INT-6 is closed (2026-11-15): its iOS surface is INT-4b and its server/web chat uses the deterministic dossier; tool calling and streaming are deferred.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
 - INT-3 is the first user-visible feature and the first API change.
