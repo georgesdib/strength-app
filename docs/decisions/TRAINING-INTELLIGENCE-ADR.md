@@ -3,8 +3,8 @@
 **Status:** proposed 2026-11-14, except ADR-INT-010, which was accepted and closed on
 2026-11-14 and is implemented (the MCP transport is enabled with the ten-tool catalogue). The
 remaining records are pending owner approval and are not implemented. ADR-INT-011 was amended on
-2026-11-15 with refreshed Siri AI preview facts and the INT-7 readiness requirement; it remains
-proposed.
+2026-11-15 with refreshed Siri AI preview facts and the INT-7 readiness requirement; ADR-INT-011 and
+ADR-INT-018 were accepted the same day.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -327,7 +327,7 @@ app-schema domain, so the intents stay custom and become tools with `@AppIntent(
 guided by a `Skills.skillsbundle`. The metadata, indexing and snippet readiness in plan §7.6 is what
 keeps that cheap.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decisions 11 and 14).
 
 **Amendment 2026-11-15 — access opened to all developers; readiness, not adoption.**
 
@@ -352,7 +352,7 @@ API change**, so the model surface in plan §7.2–§7.4 is untouched.
 intent, parameter and entity-property `title`/`description` metadata; `IndexedEntity` (and
 `IndexedEntityQuery` where needed) so Spotlight can find entities; snippet views that a `CardSnippet`
 can later host; side-effect-free `perform()`; and no `Skills` bundle, tool annotation or other preview
-symbol in a shipped build.
+symbol in any build before the adoption pass.
 
 *Invariant.* An app skill is guidance to a model, never a specification: Apple states that skills
 cannot enforce deterministic behaviour and that Siri does not perform the listed intents in order.
@@ -362,6 +362,13 @@ prescription. Those stay server-computed, and any model text quotes the envelope
 *Adoption gate.* A later adoption needs: the preview shipped to customers, the App Store submission
 open, Apple's published terms and a fee/quota position, a device spike (unlock behaviour of
 `authenticationPolicy` included), and a new ADR that supersedes this amendment.
+
+*Owner decision 2026-11-15 — distribution is not a constraint.* The owner does not ship on the App
+Store and upgrades to iOS 27.3 as soon as it ships (about a month from 2026-11-15). Adoption therefore
+happens on their own development-signed build at that point, not at App Store availability, and the
+spring 2027 submission date is informational. **No compile gate, feature flag or dual code path is
+built meanwhile**: INT-7 stays stable-only, and adoption is a single pass — raise the deployment
+target to 27.3, or keep 27.0 and wrap the additions in `@available(iOS 27.3, *)`.
 
 ## ADR-INT-012 — Retire the minimal LLM selector before INT-5 (implemented 2026-11-15)
 
@@ -535,9 +542,11 @@ source of prescriptions.
 
 **Context.** The owner wants two local automations around the existing session lifecycle: a HomeKit
 scene when a workout starts and another when it ends, on either phone or watch; and Action-button
-support on Apple Watch Ultra for starting and ending a workout. The plan's §1.2 excludes
-"workout-execution changes" and INT-7's acceptance forbids an intent that writes, so the feature needs
-an explicit, narrow carve-out or it cannot exist.
+support on Apple Watch Ultra for starting and ending a workout. The plan's §1.2 originally excluded
+"workout-execution changes", which would have made this feature look like a boundary violation. On
+2026-11-15 the owner **removed that exclusion** rather than accept a carve-out, and replaced it with an
+explicit entry-point boundary: lifecycle intents are in scope, but they call the existing operations
+and do not redefine them.
 
 **Decision.** Add INT-7b as a local surface layer, not an intelligence capability:
 
@@ -574,7 +583,9 @@ be reachable through the user's iCloud home sharing.
 user's HomeKit list, no Siri- or model-supplied scene name, no execution from a stale donation, and no
 scene/home/accessory identifier in any log sent off the device.
 
-**Status.** Proposed 2026-11-15 at the owner's request. Not implemented and not scheduled.
+**Status.** **Accepted 2026-11-15** (decision 15), after the §1.2 exclusion was removed at the owner's
+request. The owner confirmed that `PauseWorkoutIntent`/`ResumeWorkoutIntent` stay excluded and that the
+device owning the session executes the scenes exactly once. Not implemented; scheduled after INT-7.
 
 ## Rejected architectural alternatives (summary)
 

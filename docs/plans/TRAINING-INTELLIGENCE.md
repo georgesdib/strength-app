@@ -7,7 +7,8 @@ runtime, API, schema, dependency, prompt or training rule. Amended 2026-11-15: �
 framework facts and the measured context size, §7.5 refreshes the Siri AI preview status, §7.6 adds
 the Siri AI readiness design and records that MCP is not a Siri transport, INT-7 and decision 14 carry
 it (`ADR-INT-011` amendment), and INT-7b with decision 15 adds the workout lifecycle surfaces
-(Action button and HomeKit scenes, `ADR-INT-018`).
+(Action button and HomeKit scenes, `ADR-INT-018`). Decisions 11, 14 and 15 were accepted the same day;
+INT-7 and INT-7b are the only open phases.
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
@@ -57,15 +58,13 @@ of the system can change a prescription, a readiness score, a load or a training
 - Re-opening or changing prescription, readiness, fatigue, volume or selection algorithms.
 - A generic SQL, table, document or "query the database" tool.
 - Multi-tenancy, user accounts, OAuth provider hosting, or public exposure of the server.
-- Cardio tracking, workout-execution changes, watch-app intelligence, notification/Live-Activity
-  intelligence.
+- Cardio tracking, watch-app intelligence, notification/Live-Activity intelligence.
 - Depending on beta-only Apple APIs, including the iOS 27.3 Siri AI Developer Preview.
 - Storing model output as a training artifact or as a prescription.
 
-One carve-out, recorded in `ADR-INT-018`: the lifecycle surfaces in INT-7b may **call** the existing
-session start and finish operations from Siri, Shortcuts, the watch Action button and a HomeKit
-automation, and may run a user-configured HomeKit scene. They may not change how a session is
-executed, validated or recorded, and they add no training policy.
+Lifecycle entry points (INT-7b) are therefore in scope: an intent may start or finish a session and run
+a user-configured HomeKit scene, but it calls the existing operations and does not redefine them
+(`ADR-INT-018`).
 
 ## 2. Architectural invariants
 
@@ -588,7 +587,7 @@ documentation (links under Related). They update §7.5; they do not reopen §7.2
 | Fact (2026-11-15) | Position |
 |---|---|
 | Access | Any developer may integrate through the iOS/iPadOS/macOS/visionOS **27.3** betas (developer beta 2026-11-03); needs an Apple Intelligence device and a supported language; unavailable in the EU on iOS/iPadOS/watchOS |
-| Distribution | Xcode development build or internal TestFlight only — not external testers, not App Store builds; Apple opens App Store submission for Siri AI experiences in spring 2027 |
+| Distribution | Xcode development build or internal TestFlight only — not external testers, not App Store builds; Apple opens App Store submission in spring 2027. The owner does not ship on the App Store, so the binding constraint here is the 27.3 install, not the submission date |
 | Stability | Apple: "the App Intents API and Siri functionality may change" during the preview |
 | Integration | `@AppIntent(.tool)` turns a custom intent into a `ToolIntent` (`@AppIntent(.tool, schema:)` when a schema is Shortcuts-only); Siri reads the `title` and `description` of the intent, its parameters and its entity properties; entities must be available to Spotlight |
 | App skills | One `Skills.skillsbundle` per app target; each skill is `Skills/<skill-name>/SKILL.md` — YAML frontmatter with only `name` and `description`, then a Markdown body of at most 10,000 characters; a subset of the SKILL.md format with no scripts or reference files |
@@ -628,7 +627,7 @@ Readiness INT-7 ships now, so the later upgrade is additive:
 4. `perform()` stays side-effect-free for the read-only intents, so turning one into a tool changes
    no behaviour; the only intents allowed a side effect are the INT-7b lifecycle ones, and their
    effect is a user-configured HomeKit scene, never a training mutation;
-5. a shipped build contains no `@AppIntent(.tool)`, no `Skills.skillsbundle` and no preview symbol.
+5. no build contains `@AppIntent(.tool)`, a `Skills.skillsbundle` or any other preview symbol until the adoption pass — App Store distribution is not a constraint for this owner, so this is a timing rule, not a shipping rule.
 
 Deferred to adoption: the tool annotation, the skills bundle and its `SKILL.md` files,
 `CardSnippet` presentation, `authenticationPolicy` on sensitive entities (27.3 has a known issue
@@ -1202,21 +1201,24 @@ review screen.
 **Files/repos.** iOS: `StrengthApp/Intents/*`, `StrengthApp/AppShortcuts.swift`, tests.
 
 **Acceptance.** Each intent works from Shortcuts and from Siri's existing App Intents support; no
-intent can write; unauthenticated/offline states produce a clear dialog; the intent does not start a
-workout; the §7.6 readiness items 1–2 hold and are unit-tested (intent, parameter and entity-property
-metadata, plus Spotlight indexing).
+read-only intent can write; unauthenticated/offline states produce a clear dialog; a read-only intent
+does not start a workout (start and finish live in INT-7b); the §7.6 readiness items 1–2 hold and are
+unit-tested (intent, parameter and entity-property metadata, plus Spotlight indexing).
 
 **Tests.** Intent unit tests with a stub adapter; shortcut phrase validation; a manual device check
 recorded in `DEVICE-ACCEPTANCE.md`.
 
 **Security.** No health data in dialogs by default; no onscreen entity donation in MVP; no preview
-API symbol in a shipped build.
+API symbol before the adoption pass.
 
 **Forward compatibility (2026-11-15).** INT-7 is the phase that decides how cheap a future Siri AI
 adoption is. Build it to §7.6: complete intent, parameter and entity-property metadata, `IndexedEntity`
 Spotlight indexing, snippet views that a `CardSnippet` can host, and `perform()` with no side effects.
 The preview requirements — `@AppIntent(.tool)`, a `Skills.skillsbundle` of `SKILL.md` files,
-`CardSnippet`, `SiriEvaluations` — are added at adoption time only, behind a new ADR.
+`CardSnippet`, `SiriEvaluations` — are added in one pass once iOS 27.3 is installed on the owner's
+device: raise the deployment target to 27.3, or keep 27.0 and wrap the additions in
+`@available(iOS 27.3, *)`. No compile gate, feature flag or dual code path is built now. Adoption
+still re-runs the `ADR-INT-011` gate (terms, fee/quota, device spike).
 
 **Exclusions.** Siri AI Developer Preview, app skills, onscreen awareness, cross-app actions,
 conversational Siri, and any fee-bearing Apple-hosted path. The readiness in §7.6 is in scope; the
@@ -1227,6 +1229,11 @@ ADR approves it.
 
 **Scope.** Two *local* surfaces around the existing session lifecycle, on iPhone and watch. They are
 not intelligence capabilities and add no training policy.
+
+**Boundary.** These intents are entry points: they **call** the existing start and finish operations and
+never redefine them. Session semantics — what counts as started, when a session is finished, sRPE
+validation, offline journaling and replay, device ownership and abandonment — stay in the session
+engine and the server (`ADR-INT-018`).
 
 1. `StartWorkoutIntent` in the watch app, so an Apple Watch Ultra Action button
    (**Settings > Action button > Workout > StrengthApp**) starts the workout.
@@ -1273,9 +1280,9 @@ home removed and scene missing.
 transition, no model- or Siri-supplied scene name, no scene execution from a stale donation, and the
 device token stays in the app. The scene mapping lives on the device, not in the repository.
 
-**Exclusions.** No change to workout-execution semantics (§1.2): the intents call the existing start and
-finish operations. No pause/resume, no accessory-level control beyond a scene, no HomeKit data in the
-intelligence layer, no server or MCP involvement.
+**Exclusions.** No redefinition of session semantics — the boundary above, not a §1.2 prohibition,
+is what bounds this phase. No pause/resume, no accessory-level control beyond a scene, no HomeKit data
+in the intelligence layer, no server or MCP involvement.
 
 **Open question.** Whether `PauseWorkoutIntent`/`ResumeWorkoutIntent` should map to the app's rest
 timer (which is not a pause) or be refused outright. Default: refused until a decision.
@@ -1317,6 +1324,8 @@ INT-7b (Action button + HomeKit scenes): independent; no model, MCP or server de
 - INT-3 is the first user-visible feature and the first API change.
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
+- **Next: INT-7** (read-only intents), then **INT-7b** (lifecycle surfaces). Every other phase is
+  delivered, closed or parked.
 - INT-7 is independent of the model work and could run in parallel with INT-4/5.
 - INT-7b (workout lifecycle surfaces) is independent of INT-7's read-only intents and of every model
   phase; it can ship before or after them and is the only phase allowed a side effect (`ADR-INT-018`).
@@ -1373,18 +1382,20 @@ MCP tool boundary facts-only.
 | 8 | Backend LLM retrieval: in-process client by default, with MCP parity tests | approve; saves a hop and still exercises MCP | `ADR-INT-008` |
 | 9 | `get_programme_block_summary` as a derived reporting window (no stored block exists) | approve the rename and limitation wording | `ADR-INT-009` |
 | 10 | No caching in INT-1/INT-2; revisit only with measured latency | approve | `ADR-INT-010` |
-| 11 | Siri AI Developer Preview excluded; stable App Intents only | approve | `ADR-INT-011` |
+| 11 | Siri AI Developer Preview excluded; stable App Intents only | **accepted 2026-11-15**; adoption on the owner's own device once iOS 27.3 ships | `ADR-INT-011` (accepted) |
 | 12 | Phase 1b (retire the minimal LLM selector) before INT-5 | approve; otherwise two model surfaces coexist | `ADR-INT-012` |
 | 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
-| 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, and no preview symbol in a shipped build | approve; a post-launch adoption becomes additive rather than a rewrite (§7.6) | `ADR-INT-011` (amended 2026-11-15) |
-| 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, and user-selected HomeKit scenes on start and end, on phone and watch | approve; local automation around the existing session path, no training-policy change (§1.2 carve-out) | `ADR-INT-018` |
+| 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, with no preview symbol before the adoption pass | **accepted 2026-11-15**; makes the December adoption additive rather than a rewrite (§7.6) | `ADR-INT-011` (accepted, amended) |
+| 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, and user-selected HomeKit scenes on start and end, on phone and watch | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session | `ADR-INT-018` (accepted) |
 
-Two further points need an owner answer rather than an architecture decision:
+Both former open questions are answered (2026-11-15):
 
-- **Which MCP host will be used first** (Claude Desktop/Code, another client, or only the Python
-  client)? It determines whether static bearer auth is sufficient for INT-1 acceptance.
-- **Whether the weekly review should ever appear on the web UI** or stay iPhone/MCP-only. The plan
-  assumes iPhone + MCP for INT-3 and defers a web panel.
+- **MCP host: the Python client only.** The static per-client bearer token is sufficient for INT-1
+  acceptance; no OAuth 2.1 authorization server, no user accounts and no tenancy are built. Revisit
+  only if a hosted MCP host is added (`ADR-INT-004`).
+- **Weekly review on the web UI: already delivered.** The server exposes
+  `/api/ios/v1/intelligence/weekly-review` and the web UI has a Weekly review panel, so the review is
+  available on iPhone, the web UI and MCP. No web panel is deferred.
 
 ## 14. Documentation change proposal (deliverable F)
 
