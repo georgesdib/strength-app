@@ -564,7 +564,8 @@ measured week reports which sections are unavailable rather than zero.
 
 **iOS.** Yes, as `weeklyReview`.
 
-**Status.** Implemented 2026-11-14 (backend capability and REST route; the iOS screen is INT-3b).
+**Status.** Implemented 2026-11-15 (backend capability, REST route, iOS envelope/adapter and
+weekly-review screen). The five-capability native provider surface in §10 remains INT-4 work.
 
 **Representative output** (synthetic, trimmed to the fact keys):
 
