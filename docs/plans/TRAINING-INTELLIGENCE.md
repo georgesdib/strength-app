@@ -8,7 +8,9 @@ framework facts and the measured context size, §7.5 refreshes the Siri AI previ
 the Siri AI readiness design and records that MCP is not a Siri transport, INT-7 and decision 14 carry
 it (`ADR-INT-011` amendment), and INT-7b with decision 15 adds the workout lifecycle surfaces
 (Action button and HomeKit scenes, `ADR-INT-018`). Decisions 11, 14 and 15 were accepted the same day;
-INT-7 and INT-7b are the only open phases.
+INT-7 and INT-7b are the only open phases. Later the same day: the dialog-number restriction was
+removed, INT-7 was given a shared `StrengthIntents` module with the watch linked in 7b-3, and INT-7b
+was split into three slices with a deferred INT-9 adoption pass.
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
@@ -1196,9 +1198,17 @@ retention decision recorded.
 and week, and dialog + snippet presentation. Optionally a fourth intent that opens the existing
 review screen.
 
+**Intent set and defaults (2026-11-15).** `TrainingOverviewIntent` also answers the last-workout
+question ("how long was my previous workout"); a dedicated `LastWorkoutIntent` is added only if the
+overview facts turn out not to carry a per-session duration. Entities indexed for Spotlight are
+exercises only; completed sessions are not indexed, so history stays out of system search. Both are
+defaults pending an owner override.
+
 **Dependencies.** INT-3 (data), INT-4 optional. Independent of INT-5/6.
 
-**Files/repos.** iOS: `StrengthApp/Intents/*`, `StrengthApp/AppShortcuts.swift`, tests.
+**Files/repos.** A new shared package product **`StrengthIntents`** (intent types, entities and the
+envelope→entity adapter; no SwiftUI), linked by the **phone target** in INT-7. `AppShortcuts.swift`
+and the snippet views stay in the app; tests sit with the module.
 
 **Acceptance.** Each intent works from Shortcuts and from Siri's existing App Intents support; no
 read-only intent can write; unauthenticated/offline states produce a clear dialog; a read-only intent
@@ -1208,8 +1218,10 @@ unit-tested (intent, parameter and entity-property metadata, plus Spotlight inde
 **Tests.** Intent unit tests with a stub adapter; shortcut phrase validation; a manual device check
 recorded in `DEVICE-ACCEPTANCE.md`.
 
-**Security.** No health data in dialogs by default; no onscreen entity donation in MVP; no preview
-API symbol before the adoption pass.
+**Security.** Dialogs may speak and show any number the envelope carries — the owner removed the
+"no health data in dialogs" rule on 2026-11-15 — but a dialog adds no interpretation beyond those
+facts, and the snippet shows the same values. No onscreen entity donation in MVP; no preview API symbol
+before the adoption pass.
 
 **Forward compatibility (2026-11-15).** INT-7 is the phase that decides how cheap a future Siri AI
 adoption is. Build it to §7.6: complete intent, parameter and entity-property metadata, `IndexedEntity`
@@ -1219,6 +1231,12 @@ The preview requirements — `@AppIntent(.tool)`, a `Skills.skillsbundle` of `SK
 device: raise the deployment target to 27.3, or keep 27.0 and wrap the additions in
 `@available(iOS 27.3, *)`. No compile gate, feature flag or dual code path is built now. Adoption
 still re-runs the `ADR-INT-011` gate (terms, fee/quota, device spike).
+
+**Watch rollout (2026-11-15, option B).** The intent code is shared from day one, but the watch target
+is **not** linked in INT-7: `StrengthIntents` reaches `StrengthWatch` in 7b-3, together with the
+Action-button intents, so both get a single watch acceptance run. The server needs no change — the
+intelligence routes authenticate any device principal and carry no watch gate — and the watch surface
+is dialog-only (no screens; history and progress stay on the phone).
 
 **Exclusions.** Siri AI Developer Preview, app skills, onscreen awareness, cross-app actions,
 conversational Siri, and any fee-bearing Apple-hosted path. The readiness in §7.6 is in scope; the
@@ -1302,13 +1320,15 @@ accessory identifier leaves the device.
 
 *Depends on.* 7b-1's executor interface.
 
-**Slice 7b-3 — Action button (watch).** `StartWorkoutIntent` compiled into the watch app with
-`suggestedWorkouts` and the 30-second start budget, plus the end intent donated as the button's next
-action and re-donated as the session state changes.
+**Slice 7b-3 — Action button and watch Siri (watch).** `StartWorkoutIntent` compiled into the watch app
+with `suggestedWorkouts` and the 30-second start budget, the end intent donated as the button's next
+action and re-donated as the session state changes, and `StrengthIntents` linked into the watch target
+so watch Siri answers the three read-only questions from INT-7 (dialog-only, no screens).
 
 *Acceptance.* A first press starts the configured workout, a second press during the session ends it,
-the donation reflects finish and abandonment, and the physical-watch check is recorded in
-`DEVICE-ACCEPTANCE.md`. The intents are compiled into the watch app, never an `AppIntentsExtension`.
+the donation reflects finish and abandonment, watch Siri answers the three read-only questions, and the
+physical-watch checks are recorded in `DEVICE-ACCEPTANCE.md`. The intents are compiled into the watch
+app, never an `AppIntentsExtension`.
 
 *Independence.* Does not need 7b-1 or 7b-2; it can run in parallel.
 
@@ -1404,7 +1424,8 @@ Order from 2026-11-15: INT-7 → 7b-1 → 7b-2 → 7b-3 → INT-9
   physical-watch acceptance. INT-9 is the single pass that requires iOS 27.3.
 - **Throwaway at the 27.3 upgrade: none, if the order holds.** The intents gain one annotation, the
   entities already carry the metadata, the snippet views become `CardSnippet` hosts, and HomeKit,
-  Shortcuts and the Action button are stable APIs with no preview equivalent. The only real waste would
+  Shortcuts and the Action button are stable APIs with no preview equivalent. INT-7 puts the intents in
+  a shared module, so 7b-3 links it into the watch instead of moving code. The only real waste would
   be writing preview code before 27.3 (impossible today) or over-engineering dialog strings and phrase
   lists that Siri's own matching later replaces.
 - 7b-3 is independent of 7b-1/2 and may run in parallel if the watch is the priority; INT-9 may not start
