@@ -1030,8 +1030,8 @@ so a multi-item prescription or a 12-week adherence payload is not truncated.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
 
-**Tests.** 45 chat-related tests pass, including structured DeepSeek answers, plan-tool gating,
-today/yesterday resolution, plan-intent tool forcing and a projection that keeps every prescription
+**Tests.** 46 chat-related tests pass, including structured DeepSeek answers, plan-tool gating,
+today/yesterday resolution, plan-only tool selection and a projection that keeps every prescription
 item. The backend route tests pass (12).
 
 **Open.** Device acceptance on both models. A visible “plan data omitted” note on the context
