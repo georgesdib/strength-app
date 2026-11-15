@@ -945,10 +945,10 @@ cost dashboard, no cloud fallback.
 **Estimate.** Small once access exists (2–3 focused sessions); entitlement and eligibility are the
 schedule risk.
 
-### INT-4d — Chat with an external model via API key (DeepSeek; implemented 2026-11-15)
+### INT-4d — Chat with an external model via API key (DeepSeek; delivered 2026-11-15)
 
-**Status.** **Implemented 2026-11-15; device test pending.** Direct from the iPhone; no backend
-change.
+**Status.** **Complete (2026-11-15); manual device acceptance passed.** Direct from the iPhone; no
+backend change. Chat only.
 
 **Scope.** **Chat only.** The weekly and overview explanations remain on-device and never use the
 external model. A Settings **Chat model** choice offers On-device (default) or DeepSeek. When
@@ -1102,7 +1102,7 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
                                       │
                                       ├──▶ INT-5 ──▶ INT-6 (server/web)
                                       └──▶ INT-7
-INT-4d (external chat model): optional after INT-4b; chat only
+INT-4d (external chat model): delivered; chat only
 INT-4c (PCC model choice): parked — needs paid developer access + entitlement
 INT-8: gated after INT-3 + INT-5 evaluation; default disposition: deferred
 ```

@@ -467,7 +467,7 @@ error mapping (401/429/5xx/transport/malformed) and a mocked-HTTP test suite. No
 A model id that cannot call tools is refused for chat. The external model cannot be used for
 explanations, weekly review, MCP or server narration.
 
-**Status.** Accepted 2026-11-15; implemented as INT-4d. Device test pending.
+**Status.** Accepted 2026-11-15; implemented as INT-4d and confirmed on the iPhone with a real key.
 
 ## Rejected architectural alternatives (summary)
 
