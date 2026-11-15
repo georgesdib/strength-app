@@ -999,9 +999,9 @@ retry/warning path and the missing-key state (6 DeepSeek tests; 38 chat-related 
 ### INT-4e — Plan-aware chat and suggestions (delivered 2026-11-15)
 
 **Status.** **Complete (2026-11-15).** Backend routes are deployed; the owner confirmed both
-providers on the iPhone. Known limitation: the on-device model may abbreviate a long prescription
-answer even though the full facts are injected and available under “Show raw data”. DeepSeek can be
-slightly confusing about the date in prose while the injected facts are correct.
+providers on the iPhone. A deterministic prescription card, built from the fetched envelope, shows the exact date,
+session type and every item, so model prose abbreviation or a confused date no longer hides the
+prescription.
 
 **Scope.** A default-off **“Include plan and prescription data”** toggle in Chat adds three
 read-only tools: `prescription`, `programme_summary` and `adherence`, alongside the five existing
@@ -1035,12 +1035,12 @@ so a multi-item prescription or a 12-week adherence payload is not truncated.
 - Tests: plan-tool registration, tool execution, structured suggestion parsing and message carrying,
   grounding separation.
 
-**Tests.** 49 chat-related tests pass, including structured DeepSeek answers, plan-fact injection,
-today/yesterday resolution, raw-output inspection and a projection that keeps every prescription
-item. The backend route tests pass (12).
+**Tests.** 50 chat-related tests pass, including structured DeepSeek answers, plan-fact injection,
+today/yesterday resolution, the plan card, raw-output inspection and a projection that keeps every
+prescription item. The backend route tests pass (12).
 
-**Open.** None blocking. Optional follow-ups: render a long prescription deterministically from the
-raw facts instead of asking the model to format it; improve DeepSeek date wording.
+**Open.** None blocking. Optional follow-up: shorten the model prose when a prescription card is
+shown.
 
 ### INT-5 — Backend LLM narrative and multi-tool integration
 
