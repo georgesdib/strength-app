@@ -1081,10 +1081,10 @@ the repository with personal data.
 ### INT-6 — Conversational Training Intelligence (server/web first slice delivered)
 
 **Implementation status (2026-11-15): first slice delivered.** The Programme Intelligence Chat view
-posts up to 20 session-only turns to `POST /api/intelligence/chat`; the model uses one generic
-`training_data` tool over the read-only catalogue (max four rounds), with advisory number warnings,
-tool names, daily budget and no write. A full multi-turn evaluation matrix, streaming and a richer
-suggestion block remain.
+posts up to 20 session-only turns to `POST /api/intelligence/chat`; the server supplies a fresh
+six-capability fact dossier, with advisory number warnings, source capabilities, daily budget and
+no write. Tool-calling orchestration, a full multi-turn evaluation matrix, streaming and a richer suggestion
+block remain.
 
 **Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
 INT-4c. This phase now covers the server/web conversation only.
