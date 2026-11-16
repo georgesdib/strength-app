@@ -632,11 +632,16 @@ server feature:
   submission, workout end, configuration change and pairing change. A repeating trigger is rejected: it
   would freeze one body forever.
 - **On-device only.** The message is rendered by a dedicated two-field on-device shape that reuses the
-  narrative path's availability handling and its `NarrativeValidator` number-grounding check
-  (`allowedNumbers`) over facts the app already holds — `TodayResponse` plus the issued plan. No
-  capability is fetched for the reminder. The DeepSeek and PCC paths are unreachable from this code
-  path by construction: the scheduler is wired to the on-device generator and offers no provider
-  choice.
+  narrative path's availability handling over facts the app already holds — `TodayResponse` plus the
+  issued plan. No capability is fetched for the reminder. The DeepSeek and PCC paths are unreachable
+  from this code path by construction: the scheduler is wired to the on-device generator and offers no
+  provider choice.
+- **Numbers are allowed (owner decision, 2026-11-16).** The reminder enforces only length. An
+  encouragement is not an explanation, and a numeral in a nudge — "five minutes", "two sets" — is not
+  a training claim; the strict `NarrativeValidator` grounding check stays on the weekly review and
+  overview surfaces where a number *is* a claim. The first device run showed why the distinction
+  matters: readiness facts contain no numbers at all, so a model that wrote "5 minutes" failed
+  grounding and the template always shipped.
 - **Template is a first-class outcome.** When the model is unavailable, Apple Intelligence is off, the
   device is ineligible or validation fails, a deterministic fact-derived message ships instead. This is
   the opposite of a silent cloud fallback: there is nowhere to fall back to.
@@ -679,8 +684,8 @@ open.
 
 **Status.** Accepted 2026-11-16 at the owner's request for personal use. First index/CLI slice and
 retrieval/Explain endpoint implemented 2026-11-16 (allowlist, chunker, incremental FTS5 index,
-knowledge CLI, retrieval, citation check, `POST /api/intelligence/explain` and status). Web and iOS
-tabs remain unimplemented.
+knowledge CLI, retrieval, citation check, `POST /api/intelligence/explain`, status, background
+startup indexing, and web/iOS Explain tabs are implemented.
 
 **Context.** The shipped chat answers from a fixed training-data dossier. The owner wants questions
 about how the system works — readiness calculation, injury-deload evidence, code behaviour — answered
