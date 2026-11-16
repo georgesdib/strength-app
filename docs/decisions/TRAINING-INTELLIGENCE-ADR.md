@@ -683,7 +683,7 @@ open.
 about how the system works — readiness calculation, injury-deload evidence, code behaviour — answered
 from the project's docs and source. The corpus is local and versioned; internet access is explicitly
 out of scope. The owner accepts stale docs/code, imperfect retrieval and best-effort citations, and
-permits named private notes as long as secrets are excluded. The external DeepSeek model will see the
+permits private personal notes and data as long as secrets are excluded. The external DeepSeek model will see the
 retrieved snippets.
 
 **Decision.** Add a separate Explain surface, web and iOS, backed by:
@@ -692,7 +692,9 @@ retrieved snippets.
 - portfolio docs, plans, ADRs, contracts, rules and both source trees, including test source unless
   removed by a separate test exclusion list (tests are not individually allowlisted); fixtures,
   snapshots, generated output and test data are always excluded;
-- named private notes, with credential/key/token patterns and known secret files denied;
+- all non-secret private notes and personal data under private/, including reviews, baselines,
+  evidence and athlete-state files; private/eval/ test data is excluded; credential/key/token
+  patterns and known secret files are denied;
 - path normalisation, traversal and symlink-escape rejection;
 - incremental indexing on server start using path, size, mtime, SHA-256 and a commit stamp, with a
   background build and an index-readiness state;
@@ -710,8 +712,8 @@ retrieved snippets.
 
 **Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
 local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
-Private permitted text is sent to DeepSeek; secrets filtering is best-effort and reviewed by the
-allowlist. INT-11 is single-question; session-only follow-up context is deferred with INT-12. Retrieval
+Private permitted text, including personal details, is sent to DeepSeek; secrets filtering is
+best-effort and reviewed by the allowlist. INT-11 is single-question; session-only follow-up context is deferred with INT-12. Retrieval
 quality, substantive citation accuracy and staleness are accepted as personal-use risks, not release
 gates; only the structural citation sanity check above is enforced.
 
