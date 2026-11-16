@@ -1595,9 +1595,11 @@ it does not silently pass. Retrieval and substantive citation accuracy remain be
 decision. Code behaviour and documented intent are labelled separately.
 
 **Surfaces.** A separate Explain tab in the web UI and a separate Explain tab in iOS. The iOS tab
-calls the paired server and is unavailable offline. Citations open the existing docs/source viewer at
-the cited location where possible; otherwise they are copyable path:line text. Reuse the existing
-viewer rather than build a second one.
+calls the paired server and is unavailable offline. Citations open in the system browser: docs use the
+existing docs viewer, code uses the GitHub blob at the indexed commit with a line anchor. The web UI
+opens a new browser tab; iOS uses Link to Safari. If a URL cannot be opened or the page is
+unavailable, the citation is copyable path:line text and nothing is opened. No new source viewer is
+built.
 
 **Privacy.** Retrieved text is sent to the configured external model, DeepSeek. Permitted private
 notes therefore leave the server; secrets must still be filtered. The feature is opt-in and does not
@@ -1605,12 +1607,13 @@ query the training capabilities unless the question explicitly mixes system expl
 data.
 
 **Exclusions.** Web search, browsing, arbitrary URL fetch, vector embeddings/RAG, model-run shell
-commands, code execution, writes and filesystem tools are out of scope. Fixtures, snapshots, generated
-output and test data are excluded; test source is included unless matched by the test exclusion list.
+commands, code execution, writes and filesystem tools are out of scope. Session-only follow-up context
+is deferred to INT-12; INT-11 answers one question at a time. Fixtures, snapshots, generated output and
+test data are excluded; test source is included unless matched by the test exclusion list.
 
 **Acceptance.** Retrieval tests for readiness, injury-deload and code-path questions; citation
-presence, path/line existence and rough quoted-snippet overlap; test-source labelling and no-answer
-behaviour; allowlist, traversal, fixture/snapshot and secret-pattern rejection; incremental rebuild
+presence, path/line existence, rough quoted-snippet overlap, docs/GitHub link construction and the
+copyable fallback; test-source labelling and no-answer behaviour; allowlist, traversal, fixture/snapshot and secret-pattern rejection; incremental rebuild
 skipping unchanged files; web and iOS Explain tabs; index-readiness state; iOS offline state; web and
 iOS builds. Retrieval and substantive citation accuracy are accepted as best-effort, not a release
 gate.
@@ -1630,6 +1633,11 @@ and RAG candidates.
 
 **Dependencies.** INT-11 for the local corpus, allowlist, chunking, citation format and evaluation
 habits. It needs a new provider decision and ADR before code.
+
+**Follow-up context slice.** Deferred with web search. If added later, the client sends a capped
+session-only history (no transcript persistence), retrieval rewrites the query using the previous
+topic, and prior sources/citations are not automatically treated as current. INT-11 remains
+single-question until this is approved.
 
 **Web search slice.** Opt-in per question, never automatic. The server calls one fixed search
 provider (for example Brave or Google Programmable Search) and returns a bounded set of title/url/
@@ -1662,7 +1670,7 @@ set. RAG additionally needs the INT-11 baseline comparison and citation metrics.
 
 **Owner decisions needed.** Search provider and plan/quota; snippets only or allowlisted page fetch;
 whether health-adjacent queries are allowed; retention of queries/results; whether MCP exposure is
-wanted at all.
+wanted at all; and whether follow-up context lands with the web slice or separately.
 
 ## 12. Dependencies and sequencing
 
@@ -1761,7 +1769,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
-| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, private notes permitted but secrets excluded, index at server start, existing source viewer reused, minimal citation path/line/snippet sanity check; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
+| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, private notes permitted but secrets excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
 | 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
 
 Both former open questions are answered (2026-11-15):

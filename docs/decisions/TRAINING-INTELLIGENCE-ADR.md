@@ -699,8 +699,9 @@ retrieved snippets.
 - one read-only explanation endpoint, top chunks plus bounded query expansion, and a PROJECT SOURCES
   prompt block; test-derived claims are labelled as test expectations, distinct from implementation
   facts;
-- path:line or section citations, opening the existing source viewer where possible and falling back
-  to copyable text;
+- path:line or section citations opened in the system browser: docs through the existing docs viewer,
+  code through the GitHub blob at the indexed commit with a line anchor; if unavailable, copyable
+  path:line text and no navigation;
 - a minimal citation sanity check: path exists and is allowlisted, line range is inside the file, and
   a quoted snippet roughly overlaps the cited lines; failures are surfaced as unverified, not silently
   passed;
@@ -710,8 +711,9 @@ retrieved snippets.
 **Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
 local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
 Private permitted text is sent to DeepSeek; secrets filtering is best-effort and reviewed by the
-allowlist. Retrieval quality, substantive citation accuracy and staleness are accepted as personal-use
-risks, not release gates; only the structural citation sanity check above is enforced.
+allowlist. INT-11 is single-question; session-only follow-up context is deferred with INT-12. Retrieval
+quality, substantive citation accuracy and staleness are accepted as personal-use risks, not release
+gates; only the structural citation sanity check above is enforced.
 
 **Rejected alternatives.** Web search/browsing now (separate, higher-risk proposal); unrestricted
 filesystem access (secrets and traversal); vector RAG before keyword retrieval is measured; bundling
@@ -721,15 +723,18 @@ the docs in the iOS app (size, staleness, secret risk); strict citation validati
 ## ADR-INT-021 — Web search and RAG deferred (2026-11-16)
 
 **Status.** Deferred 2026-11-16. Not approved or scheduled; no implementation. INT-12 is the single
-record for the former separate web-access and RAG candidates.
+record for the former separate web-access and RAG candidates, plus deferred follow-up context.
 
-**Context.** INT-11 provides local docs/code explanation. The owner wants a later step for web search
-and, if measured necessary, retrieval-augmented generation. The existing MCP server provides
+**Context.** INT-11 provides single-question local docs/code explanation. The owner wants a later step
+for web search, session-only follow-up context and, if measured necessary, retrieval-augmented
+generation. The existing MCP server provides
 transport, authentication and a facts-only tool boundary but is not a search engine and has no web
 access. External content is untrusted; search queries leave the server; RAG can add an embedding
 store without improving exact structured facts.
 
-**Decision.** Keep both items deferred behind INT-11. The first web slice, if approved, uses one
+**Decision.** Keep these items deferred behind INT-11. Follow-up context, if approved, is capped
+session-only history with query rewriting and no transcript persistence. The first web slice, if
+approved, uses one
 fixed search provider, opt-in per question, bounded snippets and URL citations; page fetching is a
 separate step with an allowlist and SSRF controls. RAG is permitted only after the INT-11 FTS5
 baseline is measured insufficient. Web content and retrieved sources never compute or override a
