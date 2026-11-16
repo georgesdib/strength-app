@@ -5,8 +5,8 @@
 no scope), INT-4c is parked on Apple's PCC entitlement, **INT-9 (the Siri AI adoption pass) is deferred
 until iOS 27.3**, and **INT-10 (the local daily reminder nudge) was added on 2026-11-16 and is
 implemented on the iOS client**, with physical-device acceptance outstanding. **INT-11 (Explain the
-System, local knowledge retrieval) was accepted on 2026-11-16 and is plan-only; INT-12 (web search and
-RAG) is deferred.** This plan document itself changes no runtime, API, schema, dependency,
+System, local knowledge retrieval) was implemented and closed on 2026-11-16 with documented limitations;
+INT-12 (web search and RAG) is deferred.** This plan document itself changes no runtime, API, schema, dependency,
 prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
@@ -21,7 +21,7 @@ Amended 2026-11-16: §1.2 narrowed the notification exclusion, §11 gained INT-1
 `ADR-INT-019`), INT-11 (decision 18, `ADR-INT-020`) and INT-12 (decision 19, deferred), and §12
 records the phases. INT-10 is a local client-side surface — it adds no server call, endpoint, schema
 field, MCP tool or prompt contract, so the backend, the contract and the dependency graph are
-unchanged. INT-11 is accepted but plan-only: a local docs/code explainer, not web access or RAG.
+unchanged. INT-11 is implemented and closed: a local docs/code explainer, not web access or RAG.
 INT-12 consolidates the former web-search and RAG candidates into one deferred later step.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
@@ -1554,15 +1554,13 @@ change.
 
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
 
-**Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020). **First slice implemented 2026-11-16:**
-allowlist config, chunker, incremental FTS5 index and `intelligence knowledge build|list|status` CLI;
-retrieval, citation checking, `POST /api/intelligence/explain` and `GET /api/intelligence/knowledge/status`
-and the web/iOS Explain tabs are implemented. Background indexing starts with the web server. A
-15-question evaluation is complete; retrieval now finds the expected sources for readiness, tests,
-code, personal state, VBT, volume, sRPE, AGENTS.md and citation checks. The injury-deload answer
-separates the reactive two-flare trigger from the absence of direct evidence, and prescription rules
-include the programme config, resolver and engine. Archive/contract noise in the programme-block
-answer remains; iOS device acceptance and a release are outstanding.
+**Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020); **implemented and closed 2026-11-16** with
+the limitations below. Allowlist, chunker, incremental FTS5 index, knowledge CLI, retrieval, citation
+checking, explain/status endpoints, background startup indexing and web/iOS Explain tabs are in place.
+A 15-question evaluation is complete. Known limitations: programme-block answers include some
+archive/contract context; no direct outcome evidence is cited for the reactive trigger counts; iOS
+physical-device acceptance is outstanding; no release tag was created. No follow-up context, web
+search or RAG is included.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
@@ -1705,7 +1703,7 @@ INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
-INT-11    accepted 2026-11-16 — Explain the System, local docs/code retrieval (plan only)
+INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval
 INT-12    deferred — web search and RAG; after INT-11, new provider/ADR
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
@@ -1722,7 +1720,7 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
 - **Delivery complete 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-7c all closed and
-  owner-confirmed. INT-11 is accepted but not implemented; INT-9 remains gated on iOS 27.3, plus the
+  owner-confirmed. INT-11 is closed with documented limitations; INT-9 remains gated on iOS 27.3, plus the
   parked INT-4c.
 - **Why this order.** INT-7 first: it is the smallest phase, it is what December's adoption annotates,
   and built to §7.6 it leaves nothing behind. 7b-1 next: the cheapest real channel proves the trigger,
@@ -1784,7 +1782,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
-| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, all non-secret private personal data permitted while secrets are excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; first index/CLI slice implemented, remainder pending) |
+| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, all non-secret private personal data permitted while secrets are excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implemented and closed with limitations) |
 | 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
 
 Both former open questions are answered (2026-11-15):
