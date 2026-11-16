@@ -1559,8 +1559,10 @@ allowlist config, chunker, incremental FTS5 index and `intelligence knowledge bu
 retrieval, citation checking, `POST /api/intelligence/explain` and `GET /api/intelligence/knowledge/status`
 and the web/iOS Explain tabs are implemented. Background indexing starts with the web server. A
 15-question evaluation is complete; retrieval now finds the expected sources for readiness, tests,
-code, personal state, VBT, volume, sRPE, AGENTS.md and citation checks. Injury-deload and prescription
-answers remain partially covered; iOS device acceptance and a release are outstanding.
+code, personal state, VBT, volume, sRPE, AGENTS.md and citation checks. The injury-deload answer
+separates the reactive two-flare trigger from the absence of direct evidence, and prescription rules
+include the programme config, resolver and engine. Archive/contract noise in the programme-block
+answer remains; iOS device acceptance and a release are outstanding.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
