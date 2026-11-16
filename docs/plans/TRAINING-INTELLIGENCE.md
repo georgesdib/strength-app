@@ -2,12 +2,12 @@
 
 **Canonical location:** this file, in the portfolio repository.
 **Status:** delivered 2026-11-15, extended 2026-11-16. INT-1 to INT-8 are delivered (INT-8 closed with
-no scope), INT-4c is parked on Apple's PCC entitlement, **INT-9 (the Siri AI adoption pass) is deferred
-until iOS 27.3**, and **INT-10 (the local daily reminder nudge) was added on 2026-11-16 and is
-implemented on the iOS client**, with physical-device acceptance outstanding. **INT-11 (Explain the
-System, local knowledge retrieval) was implemented and closed on 2026-11-16 with documented limitations;
-INT-12 (web search and RAG) is deferred.** This plan document itself changes no runtime, API, schema, dependency,
-prompt or training rule.
+no scope), INT-4c is parked on Apple's PCC entitlement, and **INT-9 (the Siri AI adoption pass) is
+deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and INT-13 (the Today summary
+card) were added on 2026-11-16 and are implemented on the iOS client**, with physical-device
+acceptance outstanding. **INT-11 (Explain the System, local knowledge retrieval) was implemented and
+closed on 2026-11-16 with documented limitations; INT-12 (web search and RAG) is deferred.** This plan
+document itself changes no runtime, API, schema, dependency, prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
 refreshed the Siri AI preview status, and §7.6 added the readiness design and recorded that MCP is not
@@ -22,7 +22,9 @@ Amended 2026-11-16: §1.2 narrowed the notification exclusion, §11 gained INT-1
 records the phases. INT-10 is a local client-side surface — it adds no server call, endpoint, schema
 field, MCP tool or prompt contract, so the backend, the contract and the dependency graph are
 unchanged. INT-11 is implemented and closed: a local docs/code explainer, not web access or RAG.
-INT-12 consolidates the former web-search and RAG candidates into one deferred later step.
+INT-12 consolidates the former web-search and RAG candidates into one deferred later step. INT-13
+(decision 20, `ADR-INT-022`) adds the two-part summary at the top of Today from the configured chat
+model, extending INT-4d's chat-only boundary to that one surface; it is client-only like INT-10.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
@@ -1685,6 +1687,48 @@ set. RAG additionally needs the INT-11 baseline comparison and citation metrics.
 whether health-adjacent queries are allowed; retention of queries/results; whether MCP exposure is
 wanted at all; and whether follow-up context lands with the web slice or separately.
 
+### INT-13 — Today summary card (owner-requested 2026-11-16)
+
+**Scope.** Two prose passages at the top of Today: an informative summary of where the athlete stands,
+and a short encouragement. The wording comes from the model already configured for chat — Apple
+Intelligence on the device, or DeepSeek. The card computes nothing, changes no training decision,
+stores no output as a training artifact, and adds no endpoint or schema field.
+
+**Design.**
+
+1. **Facts.** The Today payload (readiness logged or not, score), the issued plan (session label,
+   exercise count, lead lift and load) and, when the server is reachable, the compact four-week
+   overview projection that the intelligence layer already serves. Offline, the card is written from
+   the local facts alone.
+2. **One generation, two fields.** `overview` and `encouragement` are produced together, so the card
+   costs one model call. Only length and emptiness are enforced; numbers are allowed, as INT-10
+   settled for the reminder, because this is encouragement over facts rather than a training
+   explanation.
+3. **Model choice is the chat choice.** No separate picker and no silent fallback: DeepSeek selected
+   without a key reports that; Apple Intelligence unavailable reports why. The footer under the card
+   always names the model that wrote it.
+4. **Consent.** The DeepSeek path sends readiness and the overview facts on load. Plan details are
+   included only while the existing chat "Include plan and prescription data" toggle is on, which is
+   where the athlete already consented to that disclosure.
+5. **Cost control.** The card is generated once per (day, readiness answer, issued plan, model) and
+   reused; a manual **Refresh** regenerates it, and a Settings toggle removes the block entirely.
+
+**Boundary change.** INT-4d limited DeepSeek to Chat. Decision 20 extends that boundary to this card
+and to nothing else: the weekly review and the overview explanations remain on-device.
+
+**Acceptance.** Automated: the fact package and its rendering, length validation, one generation per
+state, forced refresh, an unavailable model reporting without a generation attempt, and a DeepSeek
+reply rejected unless it carries both passages. Physical iPhone: the two models, the no-key state, the
+plan-consent state and the toggle.
+
+**Security.** The card adds no credential or endpoint. With DeepSeek selected it sends the same class of
+facts the chat already sends, gated by an explicit model selection and the existing plan toggle, and
+the footer states the model so the athlete can see when words came from off the device. The output is
+displayed, never stored as a prescription, session or measurement.
+
+**Status.** **Implemented 2026-11-16** (decision 20, `ADR-INT-022`) at the owner's request; iOS-only,
+with physical-device acceptance outstanding.
+
 ## 12. Dependencies and sequencing
 
 ```
@@ -1705,6 +1749,7 @@ INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
 INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval
 INT-12    deferred — web search and RAG; after INT-11, new provider/ADR
+INT-13    implemented 2026-11-16 — Today summary card (iOS only; device acceptance outstanding)
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
 ```
@@ -1784,6 +1829,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
 | 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, all non-secret private personal data permitted while secrets are excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implemented and closed with limitations) |
 | 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
+| 20 | Today summary card (INT-13): two prose passages at the top of Today from the configured chat model, DeepSeek included | **accepted 2026-11-16** at the owner's request; amends INT-4d's "chat only" boundary for this surface, and plan data follows the existing chat consent toggle | `ADR-INT-022` (accepted) |
 
 Both former open questions are answered (2026-11-15):
 
