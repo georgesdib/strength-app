@@ -45,7 +45,6 @@ When a change requires Xcode, simulator, iPhone, or Apple Watch testing:
 - Complete all available implementation and automated validation first.
 - Identify the exact branch and commit requiring acceptance.
 - Specify the relevant scheme, test, or acceptance scenario.
-- Hand off to the MacBook using `docs/agent/MACHINE-HANDOFF.md`.
 - Do not mark device acceptance complete until results are reported.
 
 ## Git safety

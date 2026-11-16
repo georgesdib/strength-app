@@ -118,7 +118,6 @@ Machine-specific instructions may define:
 
 - Local tooling and available hardware.
 - Machine-specific build and test commands.
-- Git handoff procedures.
 - Local acceptance responsibilities.
 
 They must not override:
