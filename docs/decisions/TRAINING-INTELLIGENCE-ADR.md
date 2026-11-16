@@ -5,8 +5,9 @@ ADR-INT-014 are implemented or retained, ADR-INT-015 and ADR-INT-016 are deferre
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
 by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
-(INT-10, the local daily reminder nudge) is accepted 2026-11-16. The one open item is INT-9's adoption
-pass, which needs a new ADR once iOS 27.3 lands.
+(INT-10, the local daily reminder nudge) is accepted 2026-11-16, as are ADR-INT-020 (INT-11, Explain the
+System) and ADR-INT-022 (INT-13, the Today summary card); ADR-INT-021 (INT-12, web search and RAG) is
+deferred. The one open item is INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -757,6 +758,52 @@ open decisions for the later phase.
 
 **Rejected now.** Automatic search on every message; arbitrary model-run URLs or shell commands;
 scraping Google HTML; vector RAG before the keyword baseline; MCP as a search transport.
+
+## ADR-INT-022 — Today summary card (accepted 2026-11-16)
+
+**Context.** The owner asked for a short block at the top of Today: one informative passage summarising
+where they stand and one motivational passage, written by the configured agent — on the device or
+DeepSeek. INT-4d had limited DeepSeek to Chat and the reasoning surfaces had stayed on-device, so this
+needed a decision rather than a quiet extension. The first device run of INT-10 had also shown how much
+the wording depends on the fact package, which argued for one explicit card with a visible source
+instead of another silent surface.
+
+**Decision.** Add INT-13 as a client-side presentation surface:
+
+- **Facts:** the Today payload (readiness), the issued plan, and the server's compact four-week
+  overview projection when reachable. No new endpoint, capability or schema field; offline the card is
+  written from local facts.
+- **One generation, two passages,** validated for length and emptiness only. Numbers are allowed,
+  consistent with decision 17: this is encouragement over facts, not an explanation, and the strict
+  number-grounding check stays on the weekly review and overview surfaces.
+- **The model is the chat model choice.** No separate picker, no silent fallback: a DeepSeek selection
+  without a key reports that, and an unavailable on-device model reports why. The footer names the
+  model, so the athlete can see when the wording came from off the device.
+- **Consent:** the DeepSeek path sends readiness and the overview facts on load; plan details are
+  included only while the chat "Include plan and prescription data" toggle is on.
+- **Cost:** one generation per (day, readiness answer, issued plan, model). A manual **Refresh**
+  regenerates, and a Settings toggle removes the block entirely.
+
+**Alternatives rejected.** (1) A second model picker for the card: two choices to keep in sync and two
+consent stories. (2) Silent fallback to the on-device model when DeepSeek fails: it would hide that the
+words came from a different model than the one chosen. (3) Generating on every Today appearance: a model
+call per tab switch on a screen that is opened all day. (4) Folding the summary into the reminder: the
+reminder is precomputed and silent-tested, the card is on demand and visible. (5) Sending the plan with
+the plan toggle off: that toggle is where plan disclosure was consented.
+
+**Consequences.** One card, one view model, two generators and a Settings toggle. No server, contract or
+schema change. The text is displayed and never stored as a prescription, session or measurement. The
+cost is one model call per state change; the worst failure is a card that says why it could not be
+written.
+
+**Security.** DeepSeek receives readiness and four-week facts only after the athlete selects it for
+chat; plan detail additionally requires the plan toggle. The footer is the disclosure. The API key still
+comes from the Keychain, and nothing is logged off the device beyond what the provider request itself
+carries.
+
+**Status.** **Accepted 2026-11-16** (decision 20) at the owner's request, amending INT-4d's chat-only
+boundary for this surface only. Implemented 2026-11-16 on the iOS client; physical-device acceptance
+outstanding.
 
 ## Rejected architectural alternatives (summary)
 
