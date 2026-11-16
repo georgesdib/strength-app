@@ -1506,10 +1506,11 @@ at scheduling time, so the app precomputes and schedules instead of waking at th
    (readiness known or not, score, active workout) plus the issued plan — session label, exercise
    count, and the lead lift's sets, reps and load, named from the cached exercise catalogue. Nothing is
    recomputed; the client owns no metric and fetches nothing extra for the reminder.
-2. **Message.** On-device generation through the existing `NarrativeGenerating` path, reusing
-   `NarrativeValidator`'s number-grounding check (`allowedNumbers`) unchanged: the body may only
-   repeat numbers present in the facts. Output is a short title plus one body line, not the review
-   shape.
+2. **Message.** On-device generation through a dedicated two-field `@Generable` shape that reuses
+   the narrative path's availability handling, as a short title plus one body line rather than the
+   review shape. Numbers are allowed: a reminder is encouragement, not an explanation, so only the
+   length is enforced here and `NarrativeValidator`'s number-grounding check stays on the narrative
+   surfaces (owner decision 2026-11-16).
 3. **Template.** A deterministic, fact-derived message is a first-class outcome rather than a silent
    fallback: it ships when the model is unavailable, Apple Intelligence is off, validation fails or the
    device is ineligible. No cloud model is reachable from this path by construction.
@@ -1532,8 +1533,8 @@ snooze/repeat reminders, more than one reminder per day, and any use of the Deep
 this surface.
 
 **Acceptance.** Unit tests: horizon dates across a DST transition, suppression after a recorded
-session, cancel-then-rebuild leaving exactly the intended requests, template determinism, an ungrounded
-number rejected by the validator, and permission-denied handling. The nudge path has no provider
+session, cancel-then-rebuild leaving exactly the intended requests, template determinism, an overlong
+message rejected, numbers accepted in the body, and permission-denied handling. The nudge path has no provider
 choice wired into it at all, so the external-model clients are unreachable by construction rather
 than by test. Physical iPhone: delivery at the configured time, tap routing
 to Today and to the readiness form, the action button logging readiness, silence after a completed
@@ -1556,7 +1557,7 @@ change.
 **Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020). **First slice implemented 2026-11-16:**
 allowlist config, chunker, incremental FTS5 index and `intelligence knowledge build|list|status` CLI;
 retrieval, citation checking, `POST /api/intelligence/explain` and `GET /api/intelligence/knowledge/status`
-are also implemented. No web tab, iOS tab or server-start hook exists yet.
+and the web/iOS Explain tabs are implemented. Background indexing starts with the web server.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
