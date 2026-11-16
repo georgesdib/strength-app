@@ -675,6 +675,43 @@ client (`StrengthApp`, development branch) with automated tests passing; the phy
 remain outstanding. iOS-only, no backend or contract change. No question from this decision remains
 open.
 
+## ADR-INT-020 — Explain the System: local knowledge retrieval (accepted 2026-11-16)
+
+**Status.** Accepted 2026-11-16 at the owner's request for personal use. Plan only; not implemented.
+
+**Context.** The shipped chat answers from a fixed training-data dossier. The owner wants questions
+about how the system works — readiness calculation, injury-deload evidence, code behaviour — answered
+from the project's docs and source. The corpus is local and versioned; internet access is explicitly
+out of scope. The owner accepts stale docs/code, imperfect retrieval and best-effort citations, and
+permits named private notes as long as secrets are excluded. The external DeepSeek model will see the
+retrieved snippets.
+
+**Decision.** Add a separate Explain surface, web and iOS, backed by:
+
+- a local SQLite FTS5 index over an explicit named allowlist with regex rules;
+- portfolio docs, plans, ADRs, contracts, rules and both source trees, excluding tests;
+- named private notes, with credential/key/token patterns and known secret files denied;
+- path normalisation, traversal and symlink-escape rejection;
+- incremental indexing on server start using path, size, mtime, SHA-256 and a commit stamp, with a
+  background build and an index-readiness state;
+- one read-only explanation endpoint, top chunks plus bounded query expansion, and a PROJECT SOURCES
+  prompt block;
+- path:line or section citations, opening the existing source viewer where possible and falling back
+  to copyable text;
+- no web search, arbitrary URL fetch, vector embeddings, model-run shell commands, code execution or
+  writes.
+
+**Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
+local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
+Private permitted text is sent to DeepSeek; secrets filtering is best-effort and reviewed by the
+allowlist. Retrieval quality, citations and staleness are accepted as personal-use risks, not release
+gates.
+
+**Rejected alternatives.** Web search/browsing now (separate, higher-risk proposal); unrestricted
+filesystem access (secrets and traversal); vector RAG before keyword retrieval is measured; bundling
+the docs in the iOS app (size, staleness, secret risk); strict citation validation as a release gate
+(owner accepts best-effort).
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
@@ -692,6 +729,7 @@ open.
 | Multi-tenancy now | no user model exists; per-user auth is a separate, larger workstream |
 | APNs push for a daily reminder | a push key, token registry, scheduler and a live home server at delivery time — infrastructure for a reminder (ADR-INT-019) |
 | Background refresh to render the reminder on time | opportunistic by contract; would silently fail and fall back to the same precomputed text |
+| Unrestricted filesystem/RAG-for-everything explainer | secrets, traversal and a much larger index; ADR-INT-020 uses a named local allowlist |
 
 ## Questions resolved by delivery (2026-11-15)
 

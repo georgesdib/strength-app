@@ -4,7 +4,8 @@
 **Status:** delivered 2026-11-15, extended 2026-11-16. INT-1 to INT-8 are delivered (INT-8 closed with
 no scope), INT-4c is parked on Apple's PCC entitlement, **INT-9 (the Siri AI adoption pass) is deferred
 until iOS 27.3**, and **INT-10 (the local daily reminder nudge) was added on 2026-11-16 and is
-implemented on the iOS client**, with physical-device acceptance outstanding. This plan document itself changes no runtime, API, schema, dependency,
+implemented on the iOS client**, with physical-device acceptance outstanding. **INT-11 (Explain the
+System, local knowledge retrieval) was accepted on 2026-11-16 and is plan-only.** This plan document itself changes no runtime, API, schema, dependency,
 prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
@@ -16,9 +17,10 @@ and watch Siri, and the Shortcuts start/finish pair (decisions 15 and 16) — wi
 the shared intents module in 7b-3.
 
 Amended 2026-11-16: §1.2 narrowed the notification exclusion, §11 gained INT-10 (decision 17,
-`ADR-INT-019`), and §12 records the phase. INT-10 is a local client-side surface — it adds no server
-call, endpoint, schema field, MCP tool or prompt contract, so the backend, the contract and the
-dependency graph are unchanged.
+`ADR-INT-019`) and INT-11 (decision 18, `ADR-INT-020`), and §12 records both phases. INT-10 is a local
+client-side surface — it adds no server call, endpoint, schema field, MCP tool or prompt contract, so
+the backend, the contract and the dependency graph are unchanged. INT-11 is accepted but plan-only:
+a local docs/code explainer, not web access or RAG.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
@@ -26,7 +28,7 @@ Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan i
 plan for training intelligence. See §16.
 **Owner:** the athlete. Every decision in section 13 is accepted; the plan is delivered and further
 work needs a new decision (INT-9's adoption ADR, or a new proposal under §16.5).
-**Roadmap:** phases INT-1 to INT-10, section 12. Backend implementation status stays in
+**Roadmap:** phases INT-1 to INT-11, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
 this plan does not restate it.
 **Companions:** [implementation audit](TRAINING-INTELLIGENCE-AUDIT.md),
@@ -1546,6 +1548,61 @@ tests passing and the iOS scheme building. **Physical-device acceptance is outst
 timing, tap routing and Focus behaviour are not proven by the simulator. iOS-only, with no backend
 change.
 
+### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
+
+**Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020). Plan only; no code is written yet.
+
+**Goal.** Answer questions about how the system works — for example how readiness is calculated or
+what evidence supports the injury-deload rule — from the project's own documentation, source code and
+named private notes. Answers cite the files they used. This is a personal-use surface; there is no
+internet search and no web browsing.
+
+**Corpus and allowlist.** A named allowlist with path and regex rules covers:
+
+- canonical portfolio docs, plans, ADRs, contracts and rules YAML;
+- backend Python and iOS Swift source;
+- explicitly named private notes that the owner permits.
+
+Tests, generated files, build output, `.git`, `data/`, credentials, tokens, keys, `.env` and
+LLM configuration files are excluded. Paths are normalised; symlink escapes and traversal are
+rejected. The allowlist and denial patterns are reviewable in configuration, and the index is stored
+locally with owner-only permissions, never committed.
+
+**Index.** SQLite FTS5 over chunks split by markdown heading, Python function/class and Swift
+type/function. Each chunk stores path, line range and the repository commit. The index is built
+incrementally on server start: a manifest of path, size, mtime and SHA-256 plus the commit stamp
+means unchanged files are skipped, changed files are replaced and removed files are dropped. The
+build runs in the background; the Explain surface reports when the index is not ready yet instead of
+blocking startup.
+
+**Retrieval and answer.** A read-only endpoint searches the index for the question, applies bounded
+deterministic query expansion for concepts (for example readiness/score/composite), and gives the
+model the top chunks in a PROJECT SOURCES block. The model must answer only from that block and cite
+path and line or document section. If nothing relevant is found it says so. There is no strict
+citation or number validator in this phase; citations and retrieval are best-effort by owner
+decision. Code behaviour and documented intent are labelled separately.
+
+**Surfaces.** A separate Explain tab in the web UI and a separate Explain tab in iOS. The iOS tab
+calls the paired server and is unavailable offline. Citations open the existing docs/source viewer at
+the cited location where possible; otherwise they are copyable path:line text. Reuse the existing
+viewer rather than build a second one.
+
+**Privacy.** Retrieved text is sent to the configured external model, DeepSeek. Permitted private
+notes therefore leave the server; secrets must still be filtered. The feature is opt-in and does not
+query the training capabilities unless the question explicitly mixes system explanation with training
+data.
+
+**Exclusions.** Web search, browsing, arbitrary URL fetch, vector embeddings/RAG, model-run shell
+commands, code execution, writes and filesystem tools are out of scope. The corpus excludes tests.
+
+**Acceptance.** Retrieval tests for readiness, injury-deload and code-path questions; citation
+presence and no-answer behaviour; allowlist, traversal and secret-pattern rejection; incremental
+rebuild skipping unchanged files; web and iOS Explain tabs; index-readiness state; iOS offline state;
+web and iOS builds. Retrieval/citation accuracy is accepted as best-effort, not a release gate.
+
+**Dependencies.** INT-5/INT-6 provide the server model client and web chat shell; INT-4b/INT-4d
+provide the iOS chat shell. No new entitlement, backend schema or training rule is required.
+
 ## 12. Dependencies and sequencing
 
 ```
@@ -1564,6 +1621,7 @@ INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
+INT-11    accepted 2026-11-16 — Explain the System, local docs/code retrieval (plan only)
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
 ```
@@ -1579,7 +1637,8 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
 - **Delivery complete 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-7c all closed and
-  owner-confirmed. Only INT-9 remains (gated on iOS 27.3), plus the parked INT-4c.
+  owner-confirmed. INT-11 is accepted but not implemented; INT-9 remains gated on iOS 27.3, plus the
+  parked INT-4c.
 - **Why this order.** INT-7 first: it is the smallest phase, it is what December's adoption annotates,
   and built to §7.6 it leaves nothing behind. 7b-1 next: the cheapest real channel proves the trigger,
   ordering, dedupe and failure isolation that the heavier channels reuse. 7b-2 then adds the HomeKit
@@ -1602,6 +1661,9 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
   code or contract, and reuses INT-4's on-device narrative plumbing and the INT-2 capability text the
   client already fetches. It is the only phase whose output is consumed while the app is not in the
   foreground, which is why its text is precomputed rather than produced on demand.
+- **INT-11 is independent of training decisions.** It reuses the INT-5/INT-6 model client and chat
+  shells, adds only a local read-only index and explanation surfaces, and changes no training rule,
+  envelope or MCP contract. Web search is a separate later proposal.
 
 ### Deferred — web access (web UI and iOS)
 
@@ -1661,6 +1723,7 @@ MCP tool boundary facts-only.
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
+| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, tests excluded, private notes permitted but secrets excluded, index at server start, existing source viewer reused; citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
 
 Both former open questions are answered (2026-11-15):
 
