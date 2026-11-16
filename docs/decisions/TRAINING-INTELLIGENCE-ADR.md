@@ -677,7 +677,9 @@ open.
 
 ## ADR-INT-020 — Explain the System: local knowledge retrieval (accepted 2026-11-16)
 
-**Status.** Accepted 2026-11-16 at the owner's request for personal use. Plan only; not implemented.
+**Status.** Accepted 2026-11-16 at the owner's request for personal use. First index/CLI slice
+implemented 2026-11-16 (allowlist, chunker, incremental FTS5 index, `intelligence knowledge
+build|list|status`). Retrieval, explain endpoint, web and iOS tabs remain unimplemented.
 
 **Context.** The shipped chat answers from a fixed training-data dossier. The owner wants questions
 about how the system works — readiness calculation, injury-deload evidence, code behaviour — answered

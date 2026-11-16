@@ -1553,7 +1553,9 @@ change.
 
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
 
-**Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020). Plan only; no code is written yet.
+**Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020). **First slice implemented 2026-11-16:**
+allowlist config, chunker, incremental FTS5 index and `intelligence knowledge build|list|status` CLI.
+No explain endpoint, retrieval prompt, web tab, iOS tab or server-start hook exists yet.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
@@ -1775,7 +1777,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
-| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, all non-secret private personal data permitted while secrets are excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
+| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, all non-secret private personal data permitted while secrets are excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; first index/CLI slice implemented, remainder pending) |
 | 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
 
 Both former open questions are answered (2026-11-15):
