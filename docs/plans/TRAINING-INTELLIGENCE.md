@@ -1557,7 +1557,9 @@ change.
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
 
 **Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020); **implemented and closed 2026-11-16** with
-the limitations below. Allowlist, chunker, incremental FTS5 index, knowledge CLI, retrieval, citation
+the limitations below. Hardening followed the audit: raw explain questions are no longer stored,
+rejected index files are purged, citations use repository namespaces, source blocks are marked
+untrusted, and index status reports every source including missing roots. Allowlist, chunker, incremental FTS5 index, knowledge CLI, retrieval, citation
 checking, explain/status endpoints, background startup indexing and web/iOS Explain tabs are in place.
 A 15-question evaluation is complete. Known limitations: programme-block answers include some
 archive/contract context; no direct outcome evidence is cited for the reactive trigger counts; iOS
