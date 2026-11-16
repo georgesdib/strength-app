@@ -1606,6 +1606,10 @@ web and iOS builds. Retrieval/citation accuracy is accepted as best-effort, not 
 **Dependencies.** INT-5/INT-6 provide the server model client and web chat shell; INT-4b/INT-4d
 provide the iOS chat shell. No new entitlement, backend schema or training rule is required.
 
+**MCP.** The existing MCP server stays facts-only and is not used by INT-11: it provides transport,
+authentication and a tool boundary, but no local knowledge index or search. Exposing Explain through
+MCP would be a later contract change, covered with INT-12's approval rather than this phase.
+
 ### INT-12 — Web search and RAG (deferred; later step)
 
 **Status.** Deferred 2026-11-16. Not approved, not implemented, not scheduled. It starts only after
