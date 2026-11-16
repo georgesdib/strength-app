@@ -22,7 +22,6 @@ The portfolio repository is the canonical home for shared project documentation 
 - [Documentation architecture and ownership](DOCUMENTATION.md) — canonical ownership, change rules, and link conventions.
 - [Agent documentation index](agent/README.md) — task routing, execution prompts and machine-specific workflows.
 - [Task routing](agent/TASK-ROUTING.md) — classify server-only, iOS-only, cross-repository and documentation-only tasks.
-- [Machine handoff](agent/MACHINE-HANDOFF.md) — branch, commit and acceptance handoff rules.
 
 ## Component implementation documentation
 
@@ -33,6 +32,11 @@ The portfolio repository is the canonical home for shared project documentation 
 
 - [Combined documentation PDF](DOCUMENTATION-PDF.md) — build one repository-labelled PDF from the portfolio, backend and iOS documentation.
 - [`scripts/docs_pdf.py`](../scripts/docs_pdf.py) — canonical cross-repository PDF builder; supports `--list`, repository filters, private-note inclusion and a configurable output path.
+
+## Project tooling
+
+- [Whole-repository backup](BACKUP.md) — one archive of the portfolio, backend and iOS repositories, with consistent database snapshots and secret exclusion.
+- [`scripts/backup_app.py`](../scripts/backup_app.py) — canonical whole-project backup; `--source-only` produces a code, documentation and configuration archive.
 
 ## Status labels and history
 

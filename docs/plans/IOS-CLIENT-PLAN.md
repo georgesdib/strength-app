@@ -660,9 +660,9 @@ Before applying any iOS migration to a live database, and before any rollback th
    committed transactions that still live only in the WAL.
 2. Take a consistent backup through SQLite's backup API, never a raw file copy:
    `python tools/db_transfer.py export --db data/coach.db` (archive under `data/exports/`, which is
-   git-ignored) or `python tools/backup_app.py`. `db_transfer` snapshots with
-   `sqlite3.Connection.backup`, so WAL contents are included, and it refuses to import over a target
-   whose `-wal`/`-shm` sidecars still exist.
+   git-ignored) or `python3 ../scripts/backup_app.py` from `strength-training-app/`. `db_transfer`
+   snapshots with `sqlite3.Connection.backup`, so WAL contents are included, and it refuses to
+   import over a target whose `-wal`/`-shm` sidecars still exist.
 3. Run `PRAGMA quick_check` against the snapshot and record the archive path and the
    `schema_migration` version in the phase's completion record.
 
@@ -740,21 +740,21 @@ backing up.
 ```bash
 lsof -nP -iTCP:$PORT -sTCP:LISTEN || true
 mkdir -p "$BACKUPS"
-.venv/bin/python tools/backup_app.py "$BACKUPS"
+python3 ../scripts/backup_app.py "$BACKUPS"
 ```
 
 Record the archive path and checksum. Verify it immediately:
 
 ```bash
-LATEST=$(ls -t "$BACKUPS"/strength-training-app-*.tar.gz | head -1)
+LATEST=$(ls -t "$BACKUPS"/strength-app-*.tar.gz | head -1)
 echo "$LATEST"
 (cd "$BACKUPS" && shasum -a 256 -c "$(basename "$LATEST").sha256")
 sqlite3 "$DB" "SELECT version FROM schema_migration ORDER BY version DESC LIMIT 1;"
 ```
 
-The full archive includes a consistent SQLite snapshot plus source/docs/config and is mode 600,
-but it is not encrypted. Keep it off the phone and out of git. Do not continue if the checksum or
-snapshot verification fails.
+The full archive covers all three repositories and includes a consistent SQLite snapshot plus
+source/docs/config; it is mode 600 but not encrypted. Keep it off the phone and out of git. Do not
+continue if the checksum or snapshot verification fails.
 
 #### 2. Apply migrations 0054/0055 and start the server
 

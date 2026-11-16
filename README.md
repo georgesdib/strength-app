@@ -1,9 +1,9 @@
 # Strength App portfolio
 
 This workspace is the portfolio repository for the Strength App project. It contains
-portfolio-wide agent and handoff instructions plus two Git submodules; it does not contain
+portfolio-wide agent plus two Git submodules; it does not contain
 application code of its own, but it does host project-wide tooling such as the combined
-documentation PDF builder.
+documentation PDF builder and the whole-repository backup tool.
 
 | Path | Repository | Role |
 |---|---|---|
@@ -14,7 +14,7 @@ documentation PDF builder.
 
 | Repository | Owns |
 |---|---|
-| This repository | Portfolio overview, agent routing, machine prompts, handoff protocol, documentation-placement policy |
+| This repository | Portfolio overview, agent routing, machine prompts, documentation-placement policy |
 | `strength-training-app/` | Training methodology, readiness, prescriptions, data model, server API, server web UI, migrations and server design contracts (including the iOS API contracts) |
 | `StrengthApp/` | iOS client plan, client architecture/UI notes, iPhone user guide, device acceptance and iOS agent guidance |
 
@@ -33,10 +33,17 @@ server and iOS documentation, grouped and labelled by repository. See
 [docs/DOCUMENTATION-PDF.md](docs/DOCUMENTATION-PDF.md) for installation, usage
 and privacy notes.
 
+## Whole-repository backup
+
+[`scripts/backup_app.py`](scripts/backup_app.py) archives the portfolio and both application
+repositories with their Git history, consistent SQLite snapshots, local exports and
+`private/` data. Secrets and build output are excluded in every mode; the archive is mode 600
+but not encrypted. See [docs/BACKUP.md](docs/BACKUP.md).
+
 ## Start here
 
 - [AGENTS.md](AGENTS.md) — workspace-level instructions for coding agents.
-- [docs/agent/README.md](docs/agent/README.md) — routing, execution prompts and machine handoff.
+- [docs/agent/README.md](docs/agent/README.md) — routing, execution prompts.
 - [docs/agent/TASK-ROUTING.md](docs/agent/TASK-ROUTING.md) — classify a task before choosing a prompt.
 - [docs/README.md](docs/README.md) — index of the portfolio-level documentation.
 - `AGENTS.machine.md` — optional local, git-ignored machine instructions (not committed).
