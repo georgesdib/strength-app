@@ -1554,8 +1554,9 @@ change.
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
 
 **Status.** Accepted 2026-11-16 (decision 18, ADR-INT-020). **First slice implemented 2026-11-16:**
-allowlist config, chunker, incremental FTS5 index and `intelligence knowledge build|list|status` CLI.
-No explain endpoint, retrieval prompt, web tab, iOS tab or server-start hook exists yet.
+allowlist config, chunker, incremental FTS5 index and `intelligence knowledge build|list|status` CLI;
+retrieval, citation checking, `POST /api/intelligence/explain` and `GET /api/intelligence/knowledge/status`
+are also implemented. No web tab, iOS tab or server-start hook exists yet.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
