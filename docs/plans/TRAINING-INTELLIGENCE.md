@@ -33,7 +33,7 @@ plan for training intelligence. See §16.
 **Owner:** the athlete. Decisions 1–18 are accepted; decision 19 (INT-12) is deferred. The plan is
 delivered and further work needs a new decision (INT-9's adoption ADR, INT-12's provider/privacy ADR,
 or a new proposal under §16.5).
-**Roadmap:** phases INT-1 to INT-12, section 12. Backend implementation status stays in
+**Roadmap:** phases INT-1 to INT-13, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
 this plan does not restate it.
 **Companions:** [implementation audit](TRAINING-INTELLIGENCE-AUDIT.md),

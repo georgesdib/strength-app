@@ -1,7 +1,7 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
 **Status:** every record is accepted, deferred or superseded as of 2026-11-16. ADR-INT-001 to
-ADR-INT-014 are implemented or retained, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
+ADR-INT-021 are implemented, retained or deferred as recorded, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
 by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
@@ -683,10 +683,12 @@ open.
 
 ## ADR-INT-020 — Explain the System: local knowledge retrieval (accepted 2026-11-16)
 
-**Status.** Accepted 2026-11-16 at the owner's request for personal use. First index/CLI slice and
-retrieval/Explain endpoint implemented 2026-11-16 (allowlist, chunker, incremental FTS5 index,
-knowledge CLI, retrieval, citation check, `POST /api/intelligence/explain`, status, background
-startup indexing, and web/iOS Explain tabs are implemented.
+**Status.** Accepted 2026-11-16 at the owner's request for personal use; implemented and closed
+2026-11-16 with documented limitations. The allowlist, chunker, incremental FTS5 index, knowledge CLI,
+retrieval, citation check, explain/status endpoints, background startup indexing and web/iOS tabs are
+in place. Hardening followed the audit: raw questions are not stored, rejected files are purged,
+citations are repository-qualified, sources are marked untrusted, and every source is reported by
+status.
 
 **Context.** The shipped chat answers from a fixed training-data dossier. The owner wants questions
 about how the system works — readiness calculation, injury-deload evidence, code behaviour — answered
