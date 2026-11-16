@@ -5,7 +5,8 @@
 no scope), INT-4c is parked on Apple's PCC entitlement, **INT-9 (the Siri AI adoption pass) is deferred
 until iOS 27.3**, and **INT-10 (the local daily reminder nudge) was added on 2026-11-16 and is
 implemented on the iOS client**, with physical-device acceptance outstanding. **INT-11 (Explain the
-System, local knowledge retrieval) was accepted on 2026-11-16 and is plan-only.** This plan document itself changes no runtime, API, schema, dependency,
+System, local knowledge retrieval) was accepted on 2026-11-16 and is plan-only; INT-12 (web search and
+RAG) is deferred.** This plan document itself changes no runtime, API, schema, dependency,
 prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
@@ -17,18 +18,20 @@ and watch Siri, and the Shortcuts start/finish pair (decisions 15 and 16) — wi
 the shared intents module in 7b-3.
 
 Amended 2026-11-16: §1.2 narrowed the notification exclusion, §11 gained INT-10 (decision 17,
-`ADR-INT-019`) and INT-11 (decision 18, `ADR-INT-020`), and §12 records both phases. INT-10 is a local
-client-side surface — it adds no server call, endpoint, schema field, MCP tool or prompt contract, so
-the backend, the contract and the dependency graph are unchanged. INT-11 is accepted but plan-only:
-a local docs/code explainer, not web access or RAG.
+`ADR-INT-019`), INT-11 (decision 18, `ADR-INT-020`) and INT-12 (decision 19, deferred), and §12
+records the phases. INT-10 is a local client-side surface — it adds no server call, endpoint, schema
+field, MCP tool or prompt contract, so the backend, the contract and the dependency graph are
+unchanged. INT-11 is accepted but plan-only: a local docs/code explainer, not web access or RAG.
+INT-12 consolidates the former web-search and RAG candidates into one deferred later step.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
 plan for training intelligence. See §16.
-**Owner:** the athlete. Every decision in section 13 is accepted; the plan is delivered and further
-work needs a new decision (INT-9's adoption ADR, or a new proposal under §16.5).
-**Roadmap:** phases INT-1 to INT-11, section 12. Backend implementation status stays in
+**Owner:** the athlete. Decisions 1–18 are accepted; decision 19 (INT-12) is deferred. The plan is
+delivered and further work needs a new decision (INT-9's adoption ADR, INT-12's provider/privacy ADR,
+or a new proposal under §16.5).
+**Roadmap:** phases INT-1 to INT-12, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
 this plan does not restate it.
 **Companions:** [implementation audit](TRAINING-INTELLIGENCE-AUDIT.md),
@@ -1603,6 +1606,48 @@ web and iOS builds. Retrieval/citation accuracy is accepted as best-effort, not 
 **Dependencies.** INT-5/INT-6 provide the server model client and web chat shell; INT-4b/INT-4d
 provide the iOS chat shell. No new entitlement, backend schema or training rule is required.
 
+### INT-12 — Web search and RAG (deferred; later step)
+
+**Status.** Deferred 2026-11-16. Not approved, not implemented, not scheduled. It starts only after
+INT-11 is delivered and evaluated. This is the consolidated home for the former separate web-access
+and RAG candidates.
+
+**Dependencies.** INT-11 for the local corpus, allowlist, chunking, citation format and evaluation
+habits. It needs a new provider decision and ADR before code.
+
+**Web search slice.** Opt-in per question, never automatic. The server calls one fixed search
+provider (for example Brave or Google Programmable Search) and returns a bounded set of title/url/
+snippet results. The first slice does not fetch arbitrary pages. If page fetch is added later it
+needs an explicit allowlist, SSRF protection (no loopback/private/metadata endpoints), redirect and
+size limits, content-type checks, timeouts and prompt-injection isolation. Web content is untrusted
+data, always cited by URL and access date, and visibly separate from training facts and project
+sources. Queries must not carry health details, names or tokens. iOS reaches the same server tool
+through the paired server; the on-device model has no network path.
+
+**RAG slice.** Only after the INT-11 FTS5 baseline is measured and found insufficient. Retrieval
+would add embeddings/vector search over the same reviewed allowlist, with citation precision/recall,
+staleness and unsupported-claim evaluation. It may add sources, never compute or override a training
+value, never become a rule or hard constraint, and never open a write path. A deterministic
+keyword/BM25 baseline stays the fallback and the stop rule prefers it.
+
+**MCP.** The existing MCP server is useful transport, authentication and tool-boundary reuse, but it
+is not a search engine and does not provide web access. Its current contract is facts-only
+(ADR-INT-006). Exposing local knowledge search or web research through MCP would need a new ADR and
+contract revision; it is not part of this phase. The first web slice remains an internal server tool
+used by the web and iOS surfaces.
+
+**Exclusions.** Automatic search on every message, arbitrary model-run URLs or shell commands,
+unreviewed page content, scraping Google HTML, vector RAG before the FTS baseline is measured, and
+mixing external claims into training rules.
+
+**Acceptance.** Provider failure/no-results handling; URL citations; injection fixtures; blocked
+localhost/private endpoints; privacy review; rate/budget caps; iOS opt-in; a pre-registered evaluation
+set. RAG additionally needs the INT-11 baseline comparison and citation metrics.
+
+**Owner decisions needed.** Search provider and plan/quota; snippets only or allowlisted page fetch;
+whether health-adjacent queries are allowed; retention of queries/results; whether MCP exposure is
+wanted at all.
+
 ## 12. Dependencies and sequencing
 
 ```
@@ -1622,6 +1667,7 @@ INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
 INT-11    accepted 2026-11-16 — Explain the System, local docs/code retrieval (plan only)
+INT-12    deferred — web search and RAG; after INT-11, new provider/ADR
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
 ```
@@ -1663,46 +1709,22 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
   foreground, which is why its text is precomputed rather than produced on demand.
 - **INT-11 is independent of training decisions.** It reuses the INT-5/INT-6 model client and chat
   shells, adds only a local read-only index and explanation surfaces, and changes no training rule,
-  envelope or MCP contract. Web search is a separate later proposal.
+  envelope or MCP contract. INT-12 is the separate, deferred web-search/RAG step; MCP stays
+  facts-only until a new ADR.
 
 ### Deferred — web access (web UI and iOS)
 
-Web access is **not approved and not scheduled** for either the web UI or the iOS app. No browsing,
-web search, arbitrary URL fetch, page-content tool or web citation is added by INT-1 to INT-8. The
-existing narration surfaces use structured capability facts only.
-
-A future phase would need its own ADR covering: an allow-listed search/fetch tool or server-side
-fetch path; outbound-network and privacy policy; untrusted-content and prompt-injection handling;
-a citation contract; and an evaluation set. Web content would be kept visibly separate from
-training facts and could never compute or override a training value.
+Consolidated into **INT-12**. No browsing, web search, URL fetch or web citation is approved; the
+detailed policy lives there.
 
 ### Later-stage candidate — retrieval-augmented generation (not a phase, not scheduled)
 
-RAG is a possible **later** addition. It is not part of INT-1 to INT-8, is not a prerequisite for
-any of them, and is not approved. Today's tools return structured facts from the authoritative
-services; retrieval would add a reviewed text corpus — methodology notes, decision records,
-published evidence summaries — so a model can ground an explanation in sources the tools cannot
-express.
-
-It stays a candidate until all of the following hold:
-
-1. a recurring question that the fact tools demonstrably cannot answer is written down;
-2. the corpus is defined, reviewed and versioned, with an explicit sensitivity class per document;
-3. a deterministic keyword/BM25-style baseline is built and measured first; embeddings and a vector
-   store are permitted only if that baseline is insufficient;
-4. a pre-registered evaluation set measures citation precision and recall, staleness and
-   unsupported claims, with a stop rule that prefers the simpler option;
-5. privacy review covers both the corpus and the queries (health-adjacent text is excluded by
-   default, per the field-level inventory in `LLM-INTEGRATION-PLAN.md` §8.1);
-6. the owner approves it and a new ADR records the corpus, retrieval method, citation contract and
-   limits.
-
-Boundaries that do not change: retrieval may add **sources**, never compute a training value, never
-override a rule or measurement, never become a hard constraint, and never open a write path.
-Retrieved text is data, not instructions. If adopted it extends the model layer (§7) and leaves the
-MCP tool boundary facts-only.
+Consolidated into **INT-12**. Retrieval remains a later, separately approved step; the detailed
+prerequisites live there.
 
 ## 13. Decisions (all accepted)
+
+Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 
 | # | Decision | Recommendation | ADR |
 |---|---|---|---|
@@ -1724,6 +1746,7 @@ MCP tool boundary facts-only.
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
 | 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, tests excluded, private notes permitted but secrets excluded, index at server start, existing source viewer reused; citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
+| 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
 
 Both former open questions are answered (2026-11-15):
 

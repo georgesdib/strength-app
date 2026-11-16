@@ -712,6 +712,31 @@ filesystem access (secrets and traversal); vector RAG before keyword retrieval i
 the docs in the iOS app (size, staleness, secret risk); strict citation validation as a release gate
 (owner accepts best-effort).
 
+## ADR-INT-021 — Web search and RAG deferred (2026-11-16)
+
+**Status.** Deferred 2026-11-16. Not approved or scheduled; no implementation. INT-12 is the single
+record for the former separate web-access and RAG candidates.
+
+**Context.** INT-11 provides local docs/code explanation. The owner wants a later step for web search
+and, if measured necessary, retrieval-augmented generation. The existing MCP server provides
+transport, authentication and a facts-only tool boundary but is not a search engine and has no web
+access. External content is untrusted; search queries leave the server; RAG can add an embedding
+store without improving exact structured facts.
+
+**Decision.** Keep both items deferred behind INT-11. The first web slice, if approved, uses one
+fixed search provider, opt-in per question, bounded snippets and URL citations; page fetching is a
+separate step with an allowlist and SSRF controls. RAG is permitted only after the INT-11 FTS5
+baseline is measured insufficient. Web content and retrieved sources never compute or override a
+training value and never become a rule. MCP remains facts-only; exposing knowledge search or web
+research over MCP requires a new ADR and contract revision.
+
+**Consequences.** No code, provider key, endpoint, network policy, MCP tool or contract change now.
+Provider, quota, privacy, SSRF, query retention, page-fetch policy and citation evaluation remain
+open decisions for the later phase.
+
+**Rejected now.** Automatic search on every message; arbitrary model-run URLs or shell commands;
+scraping Google HTML; vector RAG before the keyword baseline; MCP as a search transport.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
@@ -730,6 +755,7 @@ the docs in the iOS app (size, staleness, secret risk); strict citation validati
 | APNs push for a daily reminder | a push key, token registry, scheduler and a live home server at delivery time — infrastructure for a reminder (ADR-INT-019) |
 | Background refresh to render the reminder on time | opportunistic by contract; would silently fail and fall back to the same precomputed text |
 | Unrestricted filesystem/RAG-for-everything explainer | secrets, traversal and a much larger index; ADR-INT-020 uses a named local allowlist |
+| Web search or RAG in the same slice as INT-11 | different provider, privacy, SSRF and evaluation risks; ADR-INT-021 defers them |
 
 ## Questions resolved by delivery (2026-11-15)
 
