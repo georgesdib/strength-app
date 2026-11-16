@@ -1,10 +1,11 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE AND IMPLEMENTATION PLAN
 
 **Canonical location:** this file, in the portfolio repository.
-**Status:** delivered 2026-11-15. Every phase is closed or parked: INT-1 to INT-8 delivered (INT-8
-closed with no scope), INT-4c parked on Apple's PCC entitlement, and **INT-9 (the Siri AI adoption
-pass) deferred until iOS 27.3**. This plan document itself changes no runtime, API, schema,
-dependency, prompt or training rule.
+**Status:** delivered 2026-11-15, extended 2026-11-16. INT-1 to INT-8 are delivered (INT-8 closed with
+no scope), INT-4c is parked on Apple's PCC entitlement, **INT-9 (the Siri AI adoption pass) is deferred
+until iOS 27.3**, and **INT-10 (the local daily reminder nudge) was added on 2026-11-16 and is
+implemented on the iOS client**, with physical-device acceptance outstanding. This plan document itself changes no runtime, API, schema, dependency,
+prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
 refreshed the Siri AI preview status, and §7.6 added the readiness design and recorded that MCP is not
@@ -13,13 +14,19 @@ intents plus the shared `StrengthIntents` module and is closed, owner-confirmed.
 workout lifecycle surfaces in four closed slices — Shortcuts automation, HomeKit scenes, Action button
 and watch Siri, and the Shortcuts start/finish pair (decisions 15 and 16) — with the watch linked into
 the shared intents module in 7b-3.
+
+Amended 2026-11-16: §1.2 narrowed the notification exclusion, §11 gained INT-10 (decision 17,
+`ADR-INT-019`), and §12 records the phase. INT-10 is a local client-side surface — it adds no server
+call, endpoint, schema field, MCP tool or prompt contract, so the backend, the contract and the
+dependency graph are unchanged.
+
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
 plan for training intelligence. See §16.
 **Owner:** the athlete. Every decision in section 13 is accepted; the plan is delivered and further
 work needs a new decision (INT-9's adoption ADR, or a new proposal under §16.5).
-**Roadmap:** phases INT-1 to INT-9, section 12. Backend implementation status stays in
+**Roadmap:** phases INT-1 to INT-10, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
 this plan does not restate it.
 **Companions:** [implementation audit](TRAINING-INTELLIGENCE-AUDIT.md),
@@ -63,7 +70,10 @@ of the system can change a prescription, a readiness score, a load or a training
 - Re-opening or changing prescription, readiness, fatigue, volume or selection algorithms.
 - A generic SQL, table, document or "query the database" tool.
 - Multi-tenancy, user accounts, OAuth provider hosting, or public exposure of the server.
-- Cardio tracking, watch-app intelligence, notification/Live-Activity intelligence.
+- Cardio tracking and watch-app intelligence.
+- Live-Activity intelligence. (Daily reminder notifications are **in scope** as INT-10: local, on-device
+  and precomputed, with no server call, no external model and no write. The exclusion applies only to
+  the Lock Screen / Dynamic Island surface.)
 - Depending on beta-only Apple APIs, including the iOS 27.3 Siri AI Developer Preview.
 - Storing model output as a training artifact or as a prescription.
 
@@ -1476,6 +1486,66 @@ path is unchanged; the app still builds and runs where the preview symbols are u
 **Security.** No skill file may state a load, e1RM, readiness verdict, gate or prescription; no onscreen
 entity donation; no fee-bearing call without an explicit owner decision.
 
+### INT-10 — Local daily reminder nudge (owner-requested 2026-11-16)
+
+**Scope.** One user-configured time of day at which the app reminds the athlete about the day's
+training, in a short encouraging message that names one concrete fact from the read-only packages and
+prompts readiness entry. A tap opens the app — Today, or the readiness form when readiness is missing.
+The whole feature is client-side: no server call, endpoint, schema field, MCP tool, contract change,
+new dependency or training rule. When a model runs at all it is the on-device Foundation Models model.
+
+**Design.** The unit of work is *when the text is computed*: iOS freezes a local notification's content
+at scheduling time, so the app precomputes and schedules instead of waking at the configured time.
+
+1. **Fact package.** Assembled in `StrengthCore` from data the app already holds: `TodayResponse`
+   (readiness known or not, score, active workout) plus the issued plan — session label, exercise
+   count, and the lead lift's sets, reps and load, named from the cached exercise catalogue. Nothing is
+   recomputed; the client owns no metric and fetches nothing extra for the reminder.
+2. **Message.** On-device generation through the existing `NarrativeGenerating` path, reusing
+   `NarrativeValidator`'s number-grounding check (`allowedNumbers`) unchanged: the body may only
+   repeat numbers present in the facts. Output is a short title plus one body line, not the review
+   shape.
+3. **Template.** A deterministic, fact-derived message is a first-class outcome rather than a silent
+   fallback: it ships when the model is unavailable, Apple Intelligence is off, validation fails or the
+   device is ineligible. No cloud model is reachable from this path by construction.
+4. **Scheduling.** One-shot `UNCalendarNotificationTrigger`s at the configured local hour and minute,
+   over a bounded horizon, all with their text precomputed, re-armed (cancel-all then rebuild) on app
+   activation, readiness submission, workout end, configuration change and pairing change. A repeating
+   trigger is not used because it would freeze one body forever.
+5. **Silence.** The nudge is suppressed for a day whose session is already recorded, and dropped at
+   workout end. Known residual gap: a session executed only on the watch and never observed by the
+   phone cannot suppress the same day; closing it would need remote push, which this phase excludes.
+6. **Time base.** `DateComponents` hour/minute, so a time-zone change or DST transition moves with the
+   device instead of firing at a stale absolute instant.
+7. **Privacy.** The body is written for a Lock Screen: it may name a movement, a load or a readiness
+   fact the athlete already sees in the app, and never a symptom, a note, a clinical detail or a
+   verdict. The notification payload carries no training data beyond the rendered sentence.
+
+**Exclusions.** Remote push (APNs), a server-side scheduler, `BGAppRefreshTask` or any other
+background-refresh mode, a Notification Service Extension, Live Activities, watch-app nudges,
+snooze/repeat reminders, more than one reminder per day, and any use of the DeepSeek or PCC paths for
+this surface.
+
+**Acceptance.** Unit tests: horizon dates across a DST transition, suppression after a recorded
+session, cancel-then-rebuild leaving exactly the intended requests, template determinism, an ungrounded
+number rejected by the validator, and permission-denied handling. The nudge path has no provider
+choice wired into it at all, so the external-model clients are unreachable by construction rather
+than by test. Physical iPhone: delivery at the configured time, tap routing
+to Today and to the readiness form, the action button logging readiness, silence after a completed
+session, and no duplicate after re-arming. Simulator success is not device proof.
+
+**Security.** No new credential, endpoint or data egress. The message is generated on device from data
+the app already displays, so nothing crosses the network that did not already. The reminder time and
+the message are local settings; they never enter the repository, the server, an envelope or a prompt
+contract.
+
+**Status.** **Accepted 2026-11-16** (decision 17, `ADR-INT-019`) at the owner's request.
+**Implemented 2026-11-16** on the iOS client: the scheduler, the on-device composer and template, the
+settings section, the shared authorisation helper and the tap routing are in place, with 18 automated
+tests passing and the iOS scheme building. **Physical-device acceptance is outstanding** — delivery
+timing, tap routing and Focus behaviour are not proven by the simulator. iOS-only, with no backend
+change.
+
 ## 12. Dependencies and sequencing
 
 ```
@@ -1493,6 +1563,7 @@ INT-7b-1  closed (automation executor + Shortcuts)
 INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
+INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
 ```
@@ -1527,6 +1598,10 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
   recommendation for sequencing and risk, not a hard dependency, and 7b-3 can be deferred without
   blocking 7b-1/7b-2 (`ADR-INT-018`).
 - INT-8 is closed; it does not block or extend the remaining phases.
+- **INT-10 is independent of every other phase.** It needs nothing to land first, changes no server
+  code or contract, and reuses INT-4's on-device narrative plumbing and the INT-2 capability text the
+  client already fetches. It is the only phase whose output is consumed while the app is not in the
+  foreground, which is why its text is precomputed rather than produced on demand.
 
 ### Deferred — web access (web UI and iOS)
 
@@ -1585,6 +1660,7 @@ MCP tool boundary facts-only.
 | 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, with no preview symbol before the adoption pass | **accepted 2026-11-15**; makes the December adoption additive rather than a rewrite (§7.6) | `ADR-INT-011` (accepted, amended) |
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
+| 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
 
 Both former open questions are answered (2026-11-15):
 

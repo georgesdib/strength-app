@@ -1,11 +1,12 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
-**Status:** every record is accepted, deferred or superseded as of 2026-11-15. ADR-INT-001 to
+**Status:** every record is accepted, deferred or superseded as of 2026-11-16. ADR-INT-001 to
 ADR-INT-014 are implemented or retained, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
-by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. The one open item is
-INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
+by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
+(INT-10, the local daily reminder nudge) is accepted 2026-11-16. The one open item is INT-9's adoption
+pass, which needs a new ADR once iOS 27.3 lands.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -610,6 +611,70 @@ anything — it opens the surface where sRPE is recorded (the phone's active wor
 sheet), matching the Action button's second press. No entitlement, server change or new training path;
 the §1.2 boundary is unchanged. Closed, owner-confirmed 2026-11-15.
 
+## ADR-INT-019 — Local daily reminder nudge (accepted 2026-11-16)
+
+**Context.** The app only exists when the athlete opens it. The one step that actually gates progress is
+readiness entry — without it the server refuses to issue a prescription — so the natural prompt is a
+message at a chosen time of day that names something concrete from the training record and asks for
+readiness. On 2026-11-16 the owner asked for exactly that and answered the four decisions that shape
+it: (a) content computed when the app was last active is acceptable, so no remote push is needed;
+(b) on-device only, no external model; (c) silent when the day is already trained; (d) one time of day.
+The plan's §1.2 excluded "notification intelligence" wholesale, which would have made this look like a
+boundary violation, so the exclusion is narrowed instead of carved around.
+
+**Decision.** Add INT-10 as a local client-side surface, not an intelligence capability and not a
+server feature:
+
+- **Precompute, then schedule.** iOS freezes a local notification's content at scheduling time. The app
+  therefore renders the message while it is in the foreground and schedules one-shot
+  `UNCalendarNotificationTrigger`s (local hour and minute, so DST and time-zone changes follow the
+  device) over a bounded horizon, re-arming by cancel-all-then-rebuild on activation, readiness
+  submission, workout end, configuration change and pairing change. A repeating trigger is rejected: it
+  would freeze one body forever.
+- **On-device only.** The message is rendered by a dedicated two-field on-device shape that reuses the
+  narrative path's availability handling and its `NarrativeValidator` number-grounding check
+  (`allowedNumbers`) over facts the app already holds — `TodayResponse` plus the issued plan. No
+  capability is fetched for the reminder. The DeepSeek and PCC paths are unreachable from this code
+  path by construction: the scheduler is wired to the on-device generator and offers no provider
+  choice.
+- **Template is a first-class outcome.** When the model is unavailable, Apple Intelligence is off, the
+  device is ineligible or validation fails, a deterministic fact-derived message ships instead. This is
+  the opposite of a silent cloud fallback: there is nowhere to fall back to.
+- **Silence.** A day whose session is already recorded gets no nudge, and the pending request is dropped
+  at workout end. Known residual gap: a watch-only session the phone never observes cannot suppress the
+  same day, because suppressing at delivery time requires remote push.
+- **Tap routing.** The notification opens the app on Today, or presents the readiness form when readiness
+  is missing, and offers one action that logs readiness directly.
+
+**Alternatives rejected.** (1) APNs push from the home server at the configured time: fresher content
+and correct suppression, but it needs an Apple push key, a device-token registry, a scheduler and a
+running home server at delivery time — a new service and new personal data for a reminder. (2)
+`BGAppRefreshTask` to render shortly before the time: opportunistic by contract, so it can silently
+fail, and the fallback would be the same precomputed text anyway. (3) A Notification Service Extension:
+only runs for a push, so it presupposes (1). (4) A server-side scheduler without push: cannot deliver
+anything. (5) A repeating daily trigger with a fixed body: one string forever, which defeats the point
+of naming a fact. (6) A second model surface with provider choice: the reminder is unattended, so
+sending training data to a third party while the owner is not looking is a different consent posture
+from the interactive chat; refused.
+
+**Consequences.** A scheduler, a settings section, a shared notification-authorization helper with the
+existing rest-end notifications, a small nudge context in `StrengthCore`, one new `@Generable` output
+shape and a deterministic template, plus tab-selection and pending-route plumbing for the tap. No
+server change, no contract field, no schema change, no entitlement. Staleness is bounded by "since the
+app was last opened", which is acceptable because that is when the facts were true; if the app is never
+opened again, the horizon's final message is intentionally generic rather than a stale specific claim.
+
+**Security.** No credential, endpoint or egress path is added. The rendered body may name a movement, a
+load or a readiness fact the athlete already sees in the app, and never a symptom, a note, a clinical
+detail or a verdict, because it is written for a Lock Screen. The configured time and the message stay
+on the device and never enter the repository, the server, an envelope or a prompt contract.
+
+**Status.** **Accepted 2026-11-16** (decision 17), at the owner's request, after §1.2 was narrowed from
+"notification/Live-Activity intelligence" to Live Activities only. Implemented 2026-11-16 on the iOS
+client (`StrengthApp`, development branch) with automated tests passing; the physical-device checks
+remain outstanding. iOS-only, no backend or contract change. No question from this decision remains
+open.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
@@ -625,6 +690,8 @@ the §1.2 boundary is unchanged. Closed, owner-confirmed 2026-11-15.
 | New tables for intelligence output | the trace tables suffice; output is an event, not an artifact |
 | Confidence scores | the system cannot justify them; gate, n, comparability and coverage are honest |
 | Multi-tenancy now | no user model exists; per-user auth is a separate, larger workstream |
+| APNs push for a daily reminder | a push key, token registry, scheduler and a live home server at delivery time — infrastructure for a reminder (ADR-INT-019) |
+| Background refresh to render the reminder on time | opportunistic by contract; would silently fail and fall back to the same precomputed text |
 
 ## Questions resolved by delivery (2026-11-15)
 
