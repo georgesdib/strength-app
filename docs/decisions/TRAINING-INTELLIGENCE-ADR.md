@@ -689,8 +689,9 @@ retrieved snippets.
 **Decision.** Add a separate Explain surface, web and iOS, backed by:
 
 - a local SQLite FTS5 index over an explicit named allowlist with regex rules;
-- portfolio docs, plans, ADRs, contracts, rules and both source trees, plus selected test source
-  files named in the allowlist; fixtures, snapshots, generated output and test data are excluded;
+- portfolio docs, plans, ADRs, contracts, rules and both source trees, including test source unless
+  removed by a separate test exclusion list (tests are not individually allowlisted); fixtures,
+  snapshots, generated output and test data are always excluded;
 - named private notes, with credential/key/token patterns and known secret files denied;
 - path normalisation, traversal and symlink-escape rejection;
 - incremental indexing on server start using path, size, mtime, SHA-256 and a commit stamp, with a
