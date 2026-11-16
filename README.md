@@ -38,8 +38,6 @@ and privacy notes.
 - [AGENTS.md](AGENTS.md) — workspace-level instructions for coding agents.
 - [docs/agent/README.md](docs/agent/README.md) — routing, execution prompts and machine handoff.
 - [docs/agent/TASK-ROUTING.md](docs/agent/TASK-ROUTING.md) — classify a task before choosing a prompt.
-- [docs/agent/MACHINE-HANDOFF.md](docs/agent/MACHINE-HANDOFF.md) — how work moves between the
-  iMac coding host and the MacBook.
 - [docs/README.md](docs/README.md) — index of the portfolio-level documentation.
 - `AGENTS.machine.md` — optional local, git-ignored machine instructions (not committed).
 

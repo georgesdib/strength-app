@@ -141,18 +141,6 @@ submodules.
   consolidation task.
 - Never discard submodule changes or reset a submodule without approval.
 
-## Development handoff
-
-Use GitHub as the source of truth for handoff between development machines.
-
-- Push task branches and commits before handing work to another machine.
-- Identify the repository, branch, and commit SHA in every handoff.
-- Never hand off uncommitted work as if it were available remotely.
-- Before modifying a task branch, fetch and inspect its latest remote state.
-- Do not force-push or overwrite commits from another machine.
-- Report tests performed and tests still outstanding.
-- Follow `docs/agent/MACHINE-HANDOFF.md` for machine transitions.
-
 
 ## Shared documentation change management
 
