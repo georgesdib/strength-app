@@ -689,23 +689,28 @@ retrieved snippets.
 **Decision.** Add a separate Explain surface, web and iOS, backed by:
 
 - a local SQLite FTS5 index over an explicit named allowlist with regex rules;
-- portfolio docs, plans, ADRs, contracts, rules and both source trees, excluding tests;
+- portfolio docs, plans, ADRs, contracts, rules and both source trees, plus selected test source
+  files named in the allowlist; fixtures, snapshots, generated output and test data are excluded;
 - named private notes, with credential/key/token patterns and known secret files denied;
 - path normalisation, traversal and symlink-escape rejection;
 - incremental indexing on server start using path, size, mtime, SHA-256 and a commit stamp, with a
   background build and an index-readiness state;
 - one read-only explanation endpoint, top chunks plus bounded query expansion, and a PROJECT SOURCES
-  prompt block;
+  prompt block; test-derived claims are labelled as test expectations, distinct from implementation
+  facts;
 - path:line or section citations, opening the existing source viewer where possible and falling back
   to copyable text;
+- a minimal citation sanity check: path exists and is allowlisted, line range is inside the file, and
+  a quoted snippet roughly overlaps the cited lines; failures are surfaced as unverified, not silently
+  passed;
 - no web search, arbitrary URL fetch, vector embeddings, model-run shell commands, code execution or
   writes.
 
 **Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
 local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
 Private permitted text is sent to DeepSeek; secrets filtering is best-effort and reviewed by the
-allowlist. Retrieval quality, citations and staleness are accepted as personal-use risks, not release
-gates.
+allowlist. Retrieval quality, substantive citation accuracy and staleness are accepted as personal-use
+risks, not release gates; only the structural citation sanity check above is enforced.
 
 **Rejected alternatives.** Web search/browsing now (separate, higher-risk proposal); unrestricted
 filesystem access (secrets and traversal); vector RAG before keyword retrieval is measured; bundling

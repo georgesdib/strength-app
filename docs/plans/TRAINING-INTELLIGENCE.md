@@ -1564,10 +1564,11 @@ internet search and no web browsing.
 
 - canonical portfolio docs, plans, ADRs, contracts and rules YAML;
 - backend Python and iOS Swift source;
+- selected test source files, named explicitly in the allowlist;
 - explicitly named private notes that the owner permits.
 
-Tests, generated files, build output, `.git`, `data/`, credentials, tokens, keys, `.env` and
-LLM configuration files are excluded. Paths are normalised; symlink escapes and traversal are
+Fixtures, snapshots, generated output and test data are excluded, as are build output, `.git`,
+`data/`, credentials, tokens, keys, `.env` and LLM configuration files. Paths are normalised; symlink escapes and traversal are
 rejected. The allowlist and denial patterns are reviewable in configuration, and the index is stored
 locally with owner-only permissions, never committed.
 
@@ -1581,8 +1582,14 @@ blocking startup.
 **Retrieval and answer.** A read-only endpoint searches the index for the question, applies bounded
 deterministic query expansion for concepts (for example readiness/score/composite), and gives the
 model the top chunks in a PROJECT SOURCES block. The model must answer only from that block and cite
-path and line or document section. If nothing relevant is found it says so. There is no strict
-citation or number validator in this phase; citations and retrieval are best-effort by owner
+path and line or document section. If nothing relevant is found it says so. Test-derived claims are
+labelled as test expectations and kept distinct from implementation facts; a test assertion is not
+presented as runtime behaviour.
+
+A minimal citation sanity check, not a semantic validator: the cited path must exist and be
+allowlisted, the line range must be inside the file, and any quoted snippet must overlap roughly with
+the cited lines. A failed check is surfaced as a citation warning and the claim is marked unverified;
+it does not silently pass. Retrieval and substantive citation accuracy remain best-effort by owner
 decision. Code behaviour and documented intent are labelled separately.
 
 **Surfaces.** A separate Explain tab in the web UI and a separate Explain tab in iOS. The iOS tab
@@ -1596,12 +1603,15 @@ query the training capabilities unless the question explicitly mixes system expl
 data.
 
 **Exclusions.** Web search, browsing, arbitrary URL fetch, vector embeddings/RAG, model-run shell
-commands, code execution, writes and filesystem tools are out of scope. The corpus excludes tests.
+commands, code execution, writes and filesystem tools are out of scope. Fixtures, snapshots, generated
+output and test data are excluded; only selected test source files are indexed.
 
 **Acceptance.** Retrieval tests for readiness, injury-deload and code-path questions; citation
-presence and no-answer behaviour; allowlist, traversal and secret-pattern rejection; incremental
-rebuild skipping unchanged files; web and iOS Explain tabs; index-readiness state; iOS offline state;
-web and iOS builds. Retrieval/citation accuracy is accepted as best-effort, not a release gate.
+presence, path/line existence and rough quoted-snippet overlap; test-source labelling and no-answer
+behaviour; allowlist, traversal, fixture/snapshot and secret-pattern rejection; incremental rebuild
+skipping unchanged files; web and iOS Explain tabs; index-readiness state; iOS offline state; web and
+iOS builds. Retrieval and substantive citation accuracy are accepted as best-effort, not a release
+gate.
 
 **Dependencies.** INT-5/INT-6 provide the server model client and web chat shell; INT-4b/INT-4d
 provide the iOS chat shell. No new entitlement, backend schema or training rule is required.
@@ -1749,7 +1759,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
-| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, tests excluded, private notes permitted but secrets excluded, index at server start, existing source viewer reused; citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
+| 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, selected test source included while fixtures/snapshots/test data are excluded, private notes permitted but secrets excluded, index at server start, existing source viewer reused, minimal citation path/line/snippet sanity check; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implementation pending) |
 | 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
 
 Both former open questions are answered (2026-11-15):
