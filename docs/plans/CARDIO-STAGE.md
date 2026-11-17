@@ -445,8 +445,17 @@ representable and never rendered as zero activity.
 
 ### C3 — Canonical model and promotion
 
-**Status:** in progress 2026-11-17 — migration `0064_cardio_corpus` landed on `development`, applied and
-verified against a copy; promotion scaffolding outstanding. Not applied to the production database.
+**Status:** in progress 2026-11-17 — migration `0064_cardio_corpus`, the store module and the offline
+promotion CLI are on `development`. Promotion of the real export into a scratch database produced
+1,430 workouts (1,431 seen — one export duplicate collapsed on identical key), 599,927 samples
+(560,167 in-workout, 39,760 tail), 399 VO₂max rows with the Apple/Athlytic split preserved, and
+`history_cutoff = 2026-11-17T17:49:23Z`; a second run created nothing. Not applied to the production
+database.
+
+**Measured deviation from the estimate:** the canonical store is 263 MB, not the ≈65 MB estimated in
+C0 — the 64-character identity keys and their indexes dominate. That crosses the policy's own
+"revisit above 250 MB" trigger, so the retention values need a `cardio-policy/v4` decision before
+this is deployed.
 
 Extend the Phase 3A ingestion idiom. Promote from staging under the C1 rule. Times in UTC with source
 offset retained; canonical units; original activity type retained; provenance on every row; raw
