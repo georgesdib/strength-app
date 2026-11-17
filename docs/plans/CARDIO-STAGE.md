@@ -396,9 +396,9 @@ to `main`.
 
 | Repository | Change | Commits |
 |---|---|---|
-| Portfolio | This plan, the plan-index entry and the documentation registration | `5e473cf` |
+| Portfolio | This plan, the plan-index entry and the documentation registration | `5e473cf`, `efc3e0c`, `6909d1b` |
 | Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here, A2/A3 stay v1.6, v1.6 stays open | `9ac0a67`, `9a9a39e` |
-| iOS | `docs/README.md` index pointer, plus `docs/HEALTHKIT.md` describing the current read/write scope and privacy limits | `a2e84e6`, `359baf4`, `2c644d6` |
+| iOS | `docs/README.md` index pointer, `docs/HEALTHKIT.md` (current read/write scope and privacy limits), and the widened `NSHealthShareUsageDescription` | `a2e84e6`, `359baf4`, `2c644d6`, `ded27d4` |
 
 Links to this plan point at the portfolio `development` branch: `main` carries release pins and lags
 `development`, so a `main` link would 404 until the next release merge.
