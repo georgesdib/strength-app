@@ -549,6 +549,17 @@ and per modality so a change in Apple's model cannot masquerade as a change in b
 
 ### C6 — Dashboards
 
+**Status:** API slice live 2026-11-17. `GET /api/cardio/summary?weeks=12` serves weekly activity,
+rolling 7/28-day windows, per-year coverage and the resistance share from a classification cache
+(migration `0065`); measured 0.11 s on the ODROID against a 0.66 s `/api/settings` baseline. The
+web page and the iOS overview are still to come.
+
+**Why a cache appeared.** The first endpoint version recomputed classification per request and took
+~4 s, because classifying a workout falls back to the mean of its heart-rate series. `0065` stores
+one classification row per workout and is rebuilt from source whenever the corpus grows, so the only
+slow request is the first after an import. The cache is disposable by design and carries no
+append-only triggers — a cache that cannot be rewritten is a second source of truth.
+
 Web: weekly overview, guideline progress, modality distribution, history — including Health-only
 workouts labelled per `DEC-CARDIO-15` — workout detail with HR series, fitness trends, source labels per
 `DEC-CARDIO-14`, coverage and synchronisation status. iOS: this week's aerobic minutes, session
