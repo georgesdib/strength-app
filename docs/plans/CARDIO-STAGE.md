@@ -430,6 +430,20 @@ additive only.
 
 ### C2 — iOS HealthKit connector (new data only)
 
+**Status:** implemented and accepted on the iPhone 2026-11-17. Settings → Recorded activity → *Sync
+workouts and heart rate*; consent prompts for Workouts and Heart Rate separately; the first sync
+uploaded one post-cutoff session (36 min, 437 samples) that the linker queued at 0.76 interval
+overlap and which was then linked manually.
+
+Three defects were found by the device pass and fixed the same day: the endpoint rejected the
+phone's 16-byte UUID keys (guard written for the export's 32-byte digests); the client applied the
+seven-day lookback to workouts, duplicating three pre-cutoff sessions and forcing a corpus rebuild
+(`0066`); and the sync cursor advanced to "now", hiding a workout that ended before the sync ran.
+
+**Not wired yet:** deletion events (the endpoint exists, the client does not send them), and METs for
+phone-uploaded workouts, so new ones classify by heart rate.
+
+
 Extend read authorisation to workouts, workout routes, HR, HRV, resting HR, VO₂max, body mass, active
 energy, distance, power and exercise minutes. The phone usage description already covers that full
 scope (owner decision 2026-11-17); the authorisation request and the re-consent path land here, and a
