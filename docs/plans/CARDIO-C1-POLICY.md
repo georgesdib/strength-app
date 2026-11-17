@@ -20,7 +20,7 @@ The rule this document exists to enforce: **nothing is decided in code that is n
 | Heart-rate series inside workout windows | Imported for analytics modalities only (§4) |
 | Heart rate outside workout windows | **Not imported**, except a 10-minute tail after each workout end (§4) |
 | Routes (`HKWorkoutRoute`) | Deferred (810 files, 211 MB); no v1 metric needs them |
-| Standalone metrics (resting HR, HRV, VO₂max, body mass, exercise minutes) | Imported as observations (§5) |
+| Standalone metrics | Resting HR, HRV and body weight into `healthkit_readiness`; VO₂max into `measurement` (§5) |
 
 Measured basis: 1,431 workouts, 546,283 HR samples inside workout windows, ≈65 MB canonical at
 ~120 B/row.
@@ -89,13 +89,16 @@ Promotion from import-only to analytics is a policy version bump, never a runtim
 
 ## 5. Standalone metrics
 
-| Metric | Source rule | Minimum for display |
-|---|---|---|
-| Resting HR | Apple Watch only | ≥ 3 samples in the window |
-| HRV (SDNN) | Apple Watch only | ≥ 3 samples in the window |
-| VO₂max | Apple Watch only in the primary trend; other sources stored and labelled | ≥ 2 samples in 28 days |
-| Body mass | Any source, labelled | ≥ 1 sample |
-| Apple exercise minutes | Apple only; post-2021 series | ≥ 1 day of data in the window |
+| Metric | Store | Source rule | Minimum for display |
+|---|---|---|---|
+| Resting HR | `healthkit_readiness` | Apple Watch only | ≥ 3 samples in the window |
+| HRV (SDNN) | `healthkit_readiness` | Apple Watch only | ≥ 3 samples in the window |
+| Body weight | `healthkit_readiness` | Any source, labelled | ≥ 1 sample |
+| VO₂max | `measurement`, `metric_key = 'vo2max'` | Apple in the primary trend; other sources stored with their own `method` label | ≥ 2 samples in 28 days |
+| Apple exercise minutes | cardio corpus, daily series (C5) | Apple only; post-2021 series | ≥ 1 day of data in the window |
+
+No new metric table is introduced: the backend already separates state (`healthkit_readiness`) from
+outcome (`measurement`), and VO₂max is an outcome. A re-import is idempotent on `measurement.external_id`.
 
 Third-party estimates are never merged into an Apple trend line; Athlytic's 25 VO₂max samples appear as
 a separate, labelled series (`DEC-CARDIO-14`).

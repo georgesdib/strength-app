@@ -181,16 +181,25 @@ Apple exercise minutes. `unclassified` stays a first-class value and never zero.
 later is a `method_version` bump (`DEC-CARDIO-12`), not a migration. No VO₂max estimator is introduced
 (`DEC-CARDIO-10`).
 
-### DEC-CARDIO-06 — Standalone physiological metrics reuse the Phase 3A convention
+### DEC-CARDIO-06 — Standalone metrics go where the backend already keeps them; no new metric table
 
-**Decision.** VO₂max, resting HR, HRV, body mass and Apple exercise minutes are stored as timestamped
-observations using the existing sample-identity, provenance and conflict semantics. VO₂max is stored
-with its source class and is labelled in every surface as *Apple's estimate*, never a measurement.
+**Decision.** No `health_metric` table. Each standalone metric uses the store the backend already
+designed for its meaning:
 
-**Open detail.** `healthkit_readiness.field` is a `CHECK` constraint, so a new field needs the
-table-rebuild pattern already used by `0055`. Before reusing it, confirm the readiness reader selects
-named fields only; if a rebuild is unattractive, a sibling table with an identical shape and
-provenance convention is acceptable, but the two must not diverge in semantics.
+| Metric | Store | Why there |
+|---|---|---|
+| VO₂max (Apple and third-party) | `measurement`, `metric_key = 'vo2max'`, `source = 'device'` | A periodic outcome that must never change a prescription. The definition already exists with direction, unit and aggregation declared |
+| Resting HR, HRV, body weight | `healthkit_readiness` | Daily state that can gate a load (Phase 3A, unchanged) |
+| Apple exercise minutes | cardio corpus, daily series | Neither state nor periodic outcome; a daily activity quantity (deferred to C5) |
+
+`measurement.method` is what keeps protocols apart: "Apple Watch estimate" and "Athlytic" are separate
+values in one column, which is the table's stated purpose — comparing two protocols as one series is a
+silent data error. VO₂max is labelled *Apple's estimate* in every surface, never a measurement.
+
+**Two additive columns.** `measurement` has a uuid primary key and no natural uniqueness, so a re-run
+would duplicate 399 VO₂max rows silently: C3 adds `external_id TEXT` with a partial unique index
+(`WHERE external_id IS NOT NULL`, the `high_intensity_exposure` pattern) and a nullable `measured_at`
+for the sample timestamp. Additive, no existing row touched, readiness path untouched.
 
 ### DEC-CARDIO-07 — Manual cardio is preserved, not migrated, not merged
 
@@ -359,7 +368,7 @@ Logical entities, in the vocabulary the schema should use:
 |---|---|
 | `external_workout` | One imported HealthKit workout: UUID, activity type, interval, summary statistics, source provenance |
 | `health_sample` | Timestamped samples (HR, power) with workout association and association confidence. Not `observation`: that name already means AFC-3 rendered observations |
-| `health_metric` | Standalone observations: VO₂max, resting HR, HRV, body mass, exercise minutes |
+| — | No standalone metric table: VO₂max lives in `measurement`, readiness state in `healthkit_readiness` (`DEC-CARDIO-06`) |
 | `workout_link` | Append-only link events between an external workout and a session, with method, confidence and `supersedes_id` |
 | `external_status_event` | Append-only absence/deletion/reappearance events |
 | `cardio_session` | Analytical view over an imported workout for supported modalities; never a second source of truth |
@@ -439,11 +448,12 @@ representable and never rendered as zero activity.
 Extend the Phase 3A ingestion idiom. Promote from staging under the C1 rule. Times in UTC with source
 offset retained; canonical units; original activity type retained; provenance on every row; raw
 observations separate from derived aggregates; indexes for the 7-day, 28-day and per-workout access
-paths.
+paths. Plus the two additive `measurement` columns that make a VO₂max import idempotent
+(`DEC-CARDIO-06`).
 
 **Acceptance.** Promotion is re-runnable and deterministic; the same staging data always yields the
-same canonical rows; append-only triggers hold; `cardio_log` and existing readiness behaviour are
-unchanged.
+same canonical rows; append-only triggers hold; a re-run adds no duplicate `measurement` row; `cardio_log`,
+the readiness path and existing `measurement` rows are unchanged.
 
 ### C4 — Linking and the reconciliation queue
 
