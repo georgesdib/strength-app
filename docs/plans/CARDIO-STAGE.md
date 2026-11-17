@@ -213,11 +213,14 @@ one status line added (see §12).
 
 ### DEC-CARDIO-09 — Workout uniqueness is the HealthKit object UUID, not device-scoped
 
-**Decision.** `UNIQUE (healthkit_uuid)` for imported workouts, deliberately unlike the readiness
-table's device-scoped key.
+**Decision.** One identity column, filled from whichever source produced the row: the HealthKit object
+UUID when the row came from the app, and a deterministic `sha256` content key — activity, start, end,
+source bundle, duration — when it came from the export, which carries no sample UUIDs. Never
+device-scoped, unlike the readiness table.
 
-**Consequences.** A re-paired device or a second iPhone re-uploads the same workouts idempotently.
-The originating device is recorded as provenance, not as identity.
+**Consequences.** A re-paired device or a second iPhone re-uploads the same workouts idempotently, and
+history promoted from a file stays idempotent on re-run. The two regimes never meet, because
+`DEC-CARDIO-18` splits the timeline rather than letting them overlap (§C1b, §C2).
 
 ### DEC-CARDIO-10 — Deterministic metrics only
 
@@ -297,7 +300,7 @@ or a data-quality defect, and no reconciliation rule penalises them.
 **Consequences.** Coverage reporting distinguishes "no wearable record" from "no training" — the same
 distinction `DEC-CARDIO-04` makes for deletion.
 
-### DEC-CARDIO-17 — `cardio-policy/v2` is the only source of import and retention values
+### DEC-CARDIO-17 — `cardio-policy/v3` is the only source of import and retention values
 
 **Decision.** The values C2–C5 read — whitelist, measurement classes, retention, quality gates, import
 range, link bands — live in [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md) and change only by version bump
@@ -306,7 +309,22 @@ with the audit evidence that forced the change. A threshold that exists only in 
 **Consequences.** Policy changes are reviewable without reading the implementation, and a retune is a
 version bump plus a rebuild rather than a migration.
 
-## 5. What this stage does not do
+### DEC-CARDIO-18 — History is promoted from the export; only new data arrives through HealthKit
+
+**Decision.** Everything up to the export's own cutoff is promoted offline from `export.xml`; everything
+after it arrives through the app's HealthKit queries. The app never performs the historical backfill.
+The cutoff is not a date someone chooses: promotion records `history_cutoff` = the maximum sample
+timestamp in the file, and incremental sync queries `start > history_cutoff` with a 7-day lookback,
+deduplicated on `DEC-CARDIO-09` identity.
+
+**Rationale.** Ten years of resumable, retryable backfill through a phone is the least testable part of
+the connector, and the data is already on the machine and already verified by C0. Splitting the
+timeline by construction also keeps the two identity regimes (content key, UUID) from ever having to
+reconcile.
+
+**Consequences.** History is fixed: a gap needs a fresh export, not a backfill re-run, and deletions in
+the history are undetectable. The lookback window covers samples that land with older timestamps after
+the cutoff — a late-syncing device, not a policy edge case.
 
 Automatic cardio prescription or scheduling; automatic strength-programme changes; unified
 strength/cardio fatigue scores; proprietary VO₂max estimation; AI-generated programming; automated
@@ -377,7 +395,7 @@ the derived layer already exists (`DEC-CARDIO-12`).
 
 ### C1 — Decision record and versioned policy
 
-**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v2`.
+**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v3`.
 
 The policy fixes, with the audit's numbers behind each: modality whitelist (nine analytics modalities,
 everything else import-only by default); measurement classification into mandatory, optional, deferred
@@ -390,18 +408,31 @@ bands from `DEC-CARDIO-02`/`DEC-CARDIO-13`.
 implicit in code. Where the audit could not settle a value, the policy states the rule that settles it
 later (a policy bump or a `method_version` bump), rather than a placeholder.
 
-### C2 — iOS HealthKit connector
+### C1b — History promotion from the export (offline)
+
+**Scope.** A one-time, re-runnable, CLI-only promotion of `export.xml` through the canonical model, under
+`cardio-policy`. Not an endpoint, not part of the app, not reachable from the network. Runs where the
+file is — this machine or the server — and records `history_cutoff` on completion.
+
+**Acceptance.** Re-running the promotion produces no duplicates and no changes; `history_cutoff` is
+recorded and exported for C2; the promoted count matches the audit (1,431 workouts, ≈546 k in-workout
+and tail samples); nothing outside the whitelist is classified; a second run after a fresh export is
+additive only.
+
+### C2 — iOS HealthKit connector (new data only)
 
 Extend read authorisation to workouts, workout routes, HR, HRV, resting HR, VO₂max, body mass, active
 energy, distance, power and exercise minutes. The phone usage description already covers that full
-scope (owner decision 2026-11-17); the authorisation request and the re-consent path still land here,
-and a scope that was never granted is never silently extended. Full historical backfill in bounded, retryable batches; anchored incremental
-queries with persisted anchors; deletion and change handling emitting status events rather than
-deletes; resumable progress; visible coverage.
+scope (owner decision 2026-11-17); the authorisation request and the re-consent path land here, and a
+scope that was never granted is never silently extended. Anchored incremental queries from
+`history_cutoff` with a 7-day lookback, for workouts **and** heart-rate samples separately so recovery
+tails arrive separately; deletion and change handling emitting status events rather than deletes;
+visible coverage.
 
-**Acceptance.** Import resumes after interruption; repeated import is idempotent on HealthKit UUID;
-no confirmed-absent record is silently deleted; no duplicate appears after re-pair; authorisation
-denied is representable and never rendered as zero activity.
+**Acceptance.** Incremental sync is idempotent on HealthKit UUID; no confirmed-absent record is
+silently deleted; no duplicate appears after re-pair; a recovery tail arriving in a later sync attaches
+to its workout; records before `history_cutoff` are never re-uploaded; authorisation denied is
+representable and never rendered as zero activity.
 
 ### C3 — Canonical model and promotion
 
@@ -462,14 +493,15 @@ test asserts that no prescription, load, RIR, volume or scheduling path reads th
 
 | Step | Content | Gate to proceed |
 |---|---|---|
-| 0 | C0 spike and audit | Six questions answered with figures |
-| 1 | C1 decisions and versioned policy | Bands and tiers fixed; whitelist declared |
-| 2 | C2 connector, backfill first | Resumable, idempotent, events not deletes |
-| 3 | C3 canonical model and promotion | Promotion re-runnable; append-only intact |
-| 4 | C4 linking and queue | Bands reproduce; unlink works |
-| 5 | C5 analytics | Fixtures reproduce; unclassified ≠ 0 |
-| 6 | C6 dashboards | Web/iOS agree |
-| 7 | C7 hardening | Guard test passes; performance at audited volume |
+| 0 | C0 spike and audit | Six questions answered with figures — **done 2026-11-17** |
+| 1 | C1 decisions and versioned policy | Bands and tiers fixed; whitelist declared — **done 2026-11-17** |
+| 2 | C3 canonical model | Append-only intact; identity column per `DEC-CARDIO-09` |
+| 3 | C1b history promotion | Re-run is a no-op; `history_cutoff` recorded |
+| 4 | C2 connector, incremental only | Idempotent; tails attach late; nothing before the cutoff |
+| 5 | C4 linking and queue | Bands reproduce; unlink works |
+| 6 | C5 analytics | Fixtures reproduce; unclassified ≠ 0 |
+| 7 | C6 dashboards | Web/iOS agree |
+| 8 | C7 hardening | Guard test passes; performance at audited volume |
 
 Each gate is a stop, not a formality. A failed gate sends the work back to the previous step; it does
 not proceed under a caveat.
@@ -543,7 +575,7 @@ the backend status authority and this plan does not restate its status tables.
 ## 13. Related
 
 - [C0 audit](CARDIO-C0-AUDIT.md) — the measured export and matchability numbers behind this plan
-- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v2`, the values the implementation reads
+- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v3`, the values the implementation reads
 - [Plan index](README.md) ·
   [iOS client phase plan](IOS-CLIENT-PLAN.md) ·
   [Athlete Feedback & Coaching](AFC.md) ·

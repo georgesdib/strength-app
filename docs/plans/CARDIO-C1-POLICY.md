@@ -1,8 +1,9 @@
 # CARDIO POLICY v1 — WHAT IS IMPORTED, KEPT, CLASSIFIED AND SHOWN
 
-**Version:** `cardio-policy/v2`, 2026-11-17. Supersedes `cardio-policy/v1` (same day): golf moved to
-analytics, the time-in-zone gate replaced by a continuity test, and the recovery-retention rules made
-explicit. See §11.
+**Version:** `cardio-policy/v3`, 2026-11-17. Supersedes `cardio-policy/v2` (same day): the history is
+promoted from the export and only new data arrives through HealthKit (§7). v2 had moved golf to
+analytics, replaced the time-in-zone gate with a continuity test, and made the recovery-retention rules
+explicit. See §10.
 **Status:** active policy for C2–C5. Nothing is implemented yet; this document is the specification the
 implementation reads.
 **Owner:** the athlete. Every number here is derived from [the C0 audit](CARDIO-C0-AUDIT.md); changes
@@ -115,18 +116,31 @@ a separate, labelled series (`DEC-CARDIO-14`).
 The 5-minute floor removes 44 micro-workouts (3 %) from activity totals while leaving their record in
 the history.
 
-## 7. Import range, order and resumability
+## 7. Import range, split and resumability
 
-- **Range:** all available history, 2016-06-21 onwards. Nothing is truncated and nothing is back-filled
-  beyond what HealthKit holds.
-- **Shape:** one-time manual backfill, month by month, newest first; then anchored incremental sync on
-  app foreground.
-- **Resumability:** per-month checkpoint, idempotent on the HealthKit UUID, safe to re-run from any
-  month without duplicating.
-- **Expected volume:** 1,431 workouts and ≈546 k HR samples today — a backfill measured in minutes, not
-  hours, on a home LAN.
-- **Failure:** a failed month is retried, never skipped silently; a record absent from a later query
-  becomes a status event (`DEC-CARDIO-04`), never a delete.
+The timeline is split, and the split is by construction rather than by scheduling
+(`DEC-CARDIO-18`).
+
+**History — from the file.** Everything from 2016-06-21 up to `history_cutoff` is promoted offline
+from `export.xml`: one time, CLI only, re-runnable, never through the app and never exposed as an
+endpoint. `history_cutoff` is the maximum sample timestamp in the file, recorded by the promotion — not
+a date chosen in advance.
+
+**New data — through the app.** Anchored queries with `start > history_cutoff` and a **7-day lookback**,
+on app foreground. Workouts and heart-rate samples are anchored **separately**: a recovery tail can
+arrive after the workout that owns it, and a tail that has not arrived is pending, never an absence.
+
+**Identity.** One column, two sources (`DEC-CARDIO-09`): the HealthKit UUID for rows from the app, a
+`sha256` content key for rows from the export. They never meet, because nothing before
+`history_cutoff` is ever uploaded by the app.
+
+**Volume.** 1,431 workouts, ≈546 k in-workout and tail samples. The promotion is minutes; the
+incremental path carries a handful of sessions a week.
+
+**Failure and deletion.** A failed sync is retried, never skipped silently. Absence from a later query
+becomes a status event (`DEC-CARDIO-04`), never a delete. **Deletion inside the history is
+undetectable** — a static file has no tombstones — and a gap needs a fresh export rather than a backfill
+re-run.
 
 ## 8. Link policy (numeric, as implemented)
 
@@ -155,6 +169,7 @@ Band version `link_v1`. Every link stores method, band version and inputs; unlin
 |---|---|---|---|
 | v1 | 2026-11-17 | First policy | [C0 audit](CARDIO-C0-AUDIT.md) |
 | v2 | 2026-11-17 | Golf moved to analytics; time-in-zone gate replaced by a continuity test; recovery retention and sync rules made explicit | Density is bimodal by recording mode (2016–2018 and 2026 at 55–60 samples/min, 2019–2025 at 0.1–0.7), and 70 % of workouts carry a computable HRR |
+| v3 | 2026-11-17 | Timeline split: history promoted from the export, new data through the app; `history_cutoff` and the 7-day lookback defined; content-key identity for file rows | `DEC-CARDIO-18`; the export carries no sample UUIDs |
 
 ## 11. Deliberately absent
 
