@@ -297,6 +297,15 @@ or a data-quality defect, and no reconciliation rule penalises them.
 **Consequences.** Coverage reporting distinguishes "no wearable record" from "no training" — the same
 distinction `DEC-CARDIO-04` makes for deletion.
 
+### DEC-CARDIO-17 — `cardio-policy/v1` is the only source of import and retention values
+
+**Decision.** The values C2–C5 read — whitelist, measurement classes, retention, quality gates, import
+range, link bands — live in [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md) and change only by version bump
+with the audit evidence that forced the change. A threshold that exists only in code is a defect.
+
+**Consequences.** Policy changes are reviewable without reading the implementation, and a retune is a
+version bump plus a rebuild rather than a migration.
+
 ## 5. What this stage does not do
 
 Automatic cardio prescription or scheduling; automatic strength-programme changes; unified
@@ -368,15 +377,18 @@ the derived layer already exists (`DEC-CARDIO-12`).
 
 ### C1 — Decision record and versioned policy
 
-Turn the audit into the versioned inputs the pipeline reads: modality whitelist (analytics) vs
-import-only list; measurement classification (mandatory / optional / deferred / ignored); HR retention
-and downsampling; historical range and resumability; import trigger; data-quality thresholds per
-metric; final link bands. The measured basis to decide against: 546 k of 1.1 M HR samples fall inside
-workout windows (≈65 MB canonical), METs exist for 99 % of walks but 8 % of runs, and 810 routes sit
-unmatched.
+**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v1`.
 
-**Acceptance.** Each item is a named, versioned artefact. Nothing is left implicit in code. The policy
-is re-derivable from the audit without re-opening the debate.
+The policy fixes, with the audit's numbers behind each: modality whitelist (nine analytics modalities,
+everything else import-only by default); measurement classification into mandatory, optional, deferred
+and ignored; heart-rate retention (in-workout only, full resolution, background dropped); standalone
+metric source rules and display minimums; per-metric data-quality gates including the 5-minute floor
+that removes 44 micro-workouts from totals; import range, order and resumability; and the numeric link
+bands from `DEC-CARDIO-02`/`DEC-CARDIO-13`.
+
+**Acceptance — met.** Every item is a named, versioned artefact in one document. Nothing is left
+implicit in code. Where the audit could not settle a value, the policy states the rule that settles it
+later (a policy bump or a `method_version` bump), rather than a placeholder.
 
 ### C2 — iOS HealthKit connector
 
@@ -531,6 +543,7 @@ the backend status authority and this plan does not restate its status tables.
 ## 13. Related
 
 - [C0 audit](CARDIO-C0-AUDIT.md) — the measured export and matchability numbers behind this plan
+- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v1`, the values the implementation reads
 - [Plan index](README.md) ·
   [iOS client phase plan](IOS-CLIENT-PLAN.md) ·
   [Athlete Feedback & Coaching](AFC.md) ·
