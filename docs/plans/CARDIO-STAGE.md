@@ -4,10 +4,10 @@
 HealthKit ingestion, cardio analytics and the monitoring dashboards. Component implementation
 documentation remains in its owning repository.
 
-**Status:** proposed 2026-11-17. Nothing in this document is implemented. C0 is documentation and a
-local, throwaway data spike only; C1 to C7 are gated on the C1 decision record. No runtime
-behaviour, API, schema, dependency, contract or training rule changes until a workstream is
-implemented and tested.
+**Status:** proposed 2026-11-17. C0 (the measured audit) is complete — see
+[CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md), which corrected three decisions in this plan. Nothing else is
+implemented: C1 to C7 are gated on the C1 decision record, and no runtime behaviour, API, schema,
+dependency, contract or training rule changes until a workstream is implemented and tested.
 
 **Roadmap workstream:** [ROADMAP §4.13a](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md)
 (v1.6, cardio depth). This plan delivers its A0/A1 evidence and defers A2/A3 — see
@@ -44,6 +44,9 @@ This section is a precondition, not background. Every item was verified in the r
 | Device-scoped uniqueness `UNIQUE (device_id, field, sample_id)` | `migrations/0054_healthkit_readiness.sql` | Correct for readiness, wrong for workouts: re-pairing or a second device would duplicate them. |
 | `high_intensity_exposure` with `UNIQUE (source, source_id)` and `supersedes_id` | `migrations/0024_high_intensity_exposure.sql` | Precedent for external identity plus correction-by-new-row. |
 | Append-only void/unvoid event table plus derived state | `migrations/0031_session_void_vbt.sql` | The pattern deletion must follow (§4, DEC-CARDIO-04). |
+| Derived-analytics layer: `analytics_revision`, `analytics_build`, `method_version`, disposable rebuildable derived rows | `migrations/0061`–`0063`, `docs/design/DERIVED-ANALYTICS-ARCHITECTURE.md` | Derived cardio metrics are a family there, not a second promotion mechanism (§4, DEC-CARDIO-12). |
+| `cardio_log` holds **0 rows**; `healthkit_readiness` holds 94, all from 2026 | production database read 2026-11-17 | Manual cardio has never been used, and HealthKit reaches readiness for one year only. |
+| 373 of 378 sessions have `duration_basis='unavailable'` and no timestamp; only 5 carry a measured interval | production database read 2026-11-17 | Interval overlap cannot be the primary matching signal for history (§4, DEC-CARDIO-02). |
 | `workout_session` with `started_at`, `ended_at`, `duration_measured_s`, `status` | `migrations/0017_workout.sql` | Overlap matching needs only these columns; no session schema change is required to match. |
 | Watch already saves every recorded strength session as an `HKWorkout`, tagged `HKMetadataKeyExternalUUID` | `StrengthWatch/WatchHealthKitAnchor.swift` | A full history import will contain the app's own strength sessions. Reconciliation is core work, not an enhancement. |
 | That external UUID is the watch-local `sessionUUID`; no server column stores it | `StrengthCore/Execution/WatchSessionRecord.swift` | No exact link exists for history. Overlap matching carries the stage; an explicit link is added forward (§4, DEC-CARDIO-02 and DEC-CARDIO-11). |
@@ -79,27 +82,31 @@ reschedules a session from HealthKit data.
 assert that the import path has no write access to `session`, `workout_session` or prescription
 tables.
 
-### DEC-CARDIO-02 — Overlap-first reconciliation, with numeric bands and append-only links
+### DEC-CARDIO-02 — Time-first reconciliation in two tiers, with append-only links
 
-**Decision.** Match on temporal overlap, corroborated but not gated by other evidence. Bands:
+**Decision.** Match on time, and say which method produced the link. Two tiers, because the data has
+two shapes:
 
-| Overlap ratio | Other evidence | Outcome |
+| Tier | Signal | Bands |
 |---|---|---|
-| ≥ 0.90 | exactly one candidate, resistance activity type, same day | auto-link |
-| 0.60 – 0.90 | one or more candidates | reconciliation queue |
-| < 0.60 | any | no link; workout stays in activity history |
-| any | ≥ 2 candidates ≥ 0.60 | queue only, never auto |
+| A — interval overlap | Jaccard on `[started_at, ended_at]` vs the workout interval | ≥ 0.90 with exactly one candidate → auto-link; 0.60–0.90 → queue; < 0.60 → no link |
+| B — day containment | same `occurred_on` as the workout's start date | exactly one candidate → queue with a one-click confirm; ≥ 2 candidates → queue, never auto |
 
-Overlap ratio is Jaccard on `[started_at, ended_at]` for the session and the HealthKit workout.
-The bands are configuration, versioned, and reported with every link so a later retune is auditable.
-Links are append-only events with `supersedes_id`; unlink is an event; an explicit link is never
-superseded by an inferred one.
+Tier A applies to every session that has an interval: the 5 watch-recorded sessions today and every
+session recorded from now on. Tier B is the only available signal for the 373 imported sessions, which
+store a date and no timestamps, and it is labelled as lower confidence wherever it is shown.
 
-**Alternatives rejected.** Requiring an exact shared identifier (unavailable for history, §2) and
-requiring temporal-overlap-plus-activity-type-plus-duration consensus before any link (leaves the
-history permanently unlinked, which is the failure mode this decision removes).
+The method, tier and band version are recorded on every link. Links are append-only events with
+`supersedes_id`; unlink is an event; an explicit link is never superseded by an inferred one. Tier B
+never auto-links, even with one candidate: a same-day coincidence must cost the athlete one tap, not
+one wrong enrichment.
 
-**Consequences.** The queue is a permanent, first-class surface with counts, not a transient warning.
+**Alternatives rejected.** Requiring an exact shared identifier — C0 measured exactly one historically
+(`DEC-CARDIO-11`). Requiring an interval for every link — that would leave 99 % of the history
+permanently unlinked.
+
+**Consequences.** The queue is a permanent, first-class surface with counts, split by tier so the
+confidence mix stays visible.
 
 ### DEC-CARDIO-03 — Staging store, declared promotion rule, canonical tables hold promoted data only
 
@@ -124,8 +131,9 @@ event too, so a flapping source is visible rather than silent.
 
 **Decision.** Classify in this order, and record which tier produced the classification:
 
-1. `HKMetadataKeyAverageMETs` where Apple supplies it;
-2. pace-derived METs for walking, running and cycling (documented equation, cited);
+1. pace-derived METs for running and cycling where distance and duration exist (documented equation,
+   cited) — Apple supplies METs for only 8 % of runs and 21 % of rides (C0 §2);
+2. `HKMetadataKeyAverageMETs` where Apple supplies it — 99 % of walks, 80 % of strength workouts;
 3. `%HRR` only where age and a same-day or recent resting HR exist;
 4. otherwise `unclassified`.
 
@@ -182,12 +190,27 @@ it is not reproduced.
 ### DEC-CARDIO-11 — Forward exact link from new sessions
 
 **Decision.** New watch-recorded sessions persist the HealthKit workout's `externalUUID` alongside the
-session at creation, so future reconciliation is exact. History is not backfilled by guesswork;
-overlap matching (`DEC-CARDIO-02`) covers it, and a repair path exists for any historical mapping
-recoverable from existing idempotency receipts — to be verified in C0, not assumed.
+session at creation, so future reconciliation is exact.
+
+**C0 measured the history, and it does not repair.** The export does carry the identifier — under
+`HKExternalUUID`, the raw value of `HKMetadataKeyExternalUUID` — on 27 workouts, of which exactly one
+is `source_name = "StrengthApp"`. Idempotency receipts are pruned, so no server-side mapping is
+recoverable. History therefore rests on `DEC-CARDIO-02`, and the forward link is the only path to exact
+matching.
 
 **Consequences.** A small contract addition in the iOS finish path; no change to how sessions are
 recorded today.
+
+### DEC-CARDIO-12 — Derived cardio metrics join the existing derived-analytics layer
+
+**Decision.** Weekly activity, exposure and fitness-trend values are materialised as a family in the
+layer that already exists (`analytics_revision`, `analytics_build`, `method_version`, disposable rows,
+availability gated on a ready build) rather than through a new promotion or caching mechanism. The
+staging → canonical promotion of `DEC-CARDIO-03` feeds source tables; the derived layer reads them.
+
+**Consequences.** Cardio analytics inherit the existing rebuild, invalidation and versioning behaviour,
+and a metric change is a `method_version` bump rather than a migration. The ODROID cost profile is the
+one already measured for the core family.
 
 ## 5. What this stage does not do
 
@@ -208,7 +231,7 @@ HealthKit (iPhone + Watch)          C0 spike: export.xml
                                                    |
                                                    v
                                     canonical append-only tables
-                                    (external_workout, observation, metric,
+                                    (external_workout, health_sample, metric,
                                      workout_link, status events, provenance)
                                                    |
                                     +--------------+--------------+
@@ -223,7 +246,7 @@ Logical entities, in the vocabulary the schema should use:
 | Entity | Responsibility |
 |---|---|
 | `external_workout` | One imported HealthKit workout: UUID, activity type, interval, summary statistics, source provenance |
-| `health_observation` | Timestamped samples (HR, power) with workout association and association confidence |
+| `health_sample` | Timestamped samples (HR, power) with workout association and association confidence. Not `observation`: that name already means AFC-3 rendered observations |
 | `health_metric` | Standalone observations: VO₂max, resting HR, HRV, body mass, exercise minutes |
 | `workout_link` | Append-only link events between an external workout and a session, with method, confidence and `supersedes_id` |
 | `external_status_event` | Append-only absence/deletion/reappearance events |
@@ -236,13 +259,13 @@ already means an in-progress strength execution, and the two names will be confu
 
 ### C0 — Local spike and measured audit
 
-**Status:** proposed. No shipped code, no schema, no endpoint, no migration.
+**Status:** complete 2026-11-17 — [CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md). No shipped code, no schema,
+no endpoint, no migration.
 
-Read Apple's own export (`Settings → Health → Export All Health Data`) with a local, stdlib-only parser
-into throwaway SQLite under `data/` or `private/`. This data is personal health data: it never leaves
-the machine, is never committed, and is deleted when the audit is closed.
+Apple's own export (`Settings → Health → Export All Health Data`) was parsed with a stdlib streaming
+parser into a throwaway store under `private/`, and joined read-only against the production database.
 
-Produce a short audit containing numbers, not opinions:
+The audit answered all six questions with figures:
 
 1. Workout inventory by activity type and year, with counts.
 2. Per modality: share with HR samples, distance, active energy, `AverageMETs`, power, elevation.
@@ -253,15 +276,19 @@ Produce a short audit containing numbers, not opinions:
    of historical links is viable.
 6. Whether Apple exercise minutes and VO₂max samples are present, with their sources and date range.
 
-**Acceptance.** The audit answers all six with figures, or states plainly which cannot be answered and
-why. `DEC-CARDIO-02`'s bands and `DEC-CARDIO-05`'s tier coverage are re-checked against it.
+**Acceptance — met.** Every question is answered with figures; §8 of the audit states plainly what it
+does not establish. It re-checked and corrected three things: matching had to become two-tier
+(`DEC-CARDIO-02`), the intensity ladder had to invert for running and cycling (`DEC-CARDIO-05`), and
+the derived layer already exists (`DEC-CARDIO-12`).
 
 ### C1 — Decision record and versioned policy
 
 Turn the audit into the versioned inputs the pipeline reads: modality whitelist (analytics) vs
 import-only list; measurement classification (mandatory / optional / deferred / ignored); HR retention
 and downsampling; historical range and resumability; import trigger; data-quality thresholds per
-metric; final link bands.
+metric; final link bands. The measured basis to decide against: 546 k of 1.1 M HR samples fall inside
+workout windows (≈65 MB canonical), METs exist for 99 % of walks but 8 % of runs, and 810 routes sit
+unmatched.
 
 **Acceptance.** Each item is a named, versioned artefact. Nothing is left implicit in code. The policy
 is re-derivable from the audit without re-opening the debate.
@@ -411,6 +438,7 @@ the backend status authority and this plan does not restate its status tables.
 
 ## 13. Related
 
+- [C0 audit](CARDIO-C0-AUDIT.md) — the measured export and matchability numbers behind this plan
 - [Plan index](README.md) ·
   [iOS client phase plan](IOS-CLIENT-PLAN.md) ·
   [Athlete Feedback & Coaching](AFC.md) ·
