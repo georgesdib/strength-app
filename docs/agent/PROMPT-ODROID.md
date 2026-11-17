@@ -50,6 +50,25 @@ When a change requires Xcode, simulator, iPhone, or Apple Watch testing:
 - Do not update portfolio submodule pointers during ordinary implementation.
 - Do not edit deployed files or alter main-server configuration as a substitute for a reviewed source change.
 
+## Deployment paths (verified 2026-11-17)
+
+The service runs from a checkout at `/home/dsh/strength-app/strength-training-app` with its
+virtualenv at `.venv/` inside it — **not** `/home/dsh/strength-training-app/`, which appears in
+older unit comments and does not exist. Working directories, unit `ExecStart` lines and any
+`systemctl` troubleshooting must use the real path or fail with `status=203/EXEC`.
+
+| Item | Value |
+|---|---|
+| Portfolio checkout | `/home/dsh/strength-app` |
+| Backend checkout | `/home/dsh/strength-app/strength-training-app` |
+| Virtualenv | `/home/dsh/strength-app/strength-training-app/.venv/bin/python` |
+| Database | `/home/dsh/strength-app/strength-training-app/data/coach.db` |
+| Web unit | `strength-coach-web.service` (port 8000, home LAN only) |
+| Cardio linker | `strength-cardio-link.timer`, every 10 min, `SuccessExitStatus=1` |
+
+Run git and `systemctl` as `dsh` (`runuser -u dsh --`): the checkout is owned by that user, and git
+refuses it as `root` with "dubious ownership".
+
 ## Completion report
 
 Return:
