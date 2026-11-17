@@ -21,9 +21,8 @@ completion/abandon, Progress, opt-in HealthKit HRV/RHR/bodyweight readiness, Key
 Home/Away server routing by Home Server reachability with a Prefer Home manual override (no
 Wi-Fi SSID, Location or Access Wi-Fi Information entitlement), Settings Exercise Library with read-only configurations, e1RM and paginated
 working-set history,
-296 unit tests
-after R1–R10, Phase 3A, Phase 4 and the Phase 6 watch slices (2026-11-14), plus optional live UI
-smoke tests. Phase 3A is closed 2026-11-08; physical
+296 unit tests after R1–R10, Phase 3A, Phase 4 and the Phase 6 watch slices (2026-11-14; 441 as of
+2026-11-17), plus optional live UI smoke tests. Phase 3A is closed 2026-11-08; physical
 HealthKit acceptance was owner-confirmed and Phase 3B is out of scope. R7 (asynchronous
 prescription request with session-type and minimum-session settings) is **implemented and closed
 2026-11-08**: the app builds with an iOS 27.0 deployment target and the client tests pass on the
