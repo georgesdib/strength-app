@@ -445,6 +445,9 @@ representable and never rendered as zero activity.
 
 ### C3 — Canonical model and promotion
 
+**Status:** in progress 2026-11-17 — migration `0064_cardio_corpus` landed on `development`, applied and
+verified against a copy; promotion scaffolding outstanding. Not applied to the production database.
+
 Extend the Phase 3A ingestion idiom. Promote from staging under the C1 rule. Times in UTC with source
 offset retained; canonical units; original activity type retained; provenance on every row; raw
 observations separate from derived aggregates; indexes for the 7-day, 28-day and per-workout access
