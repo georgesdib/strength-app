@@ -445,8 +445,18 @@ representable and never rendered as zero activity.
 
 ### C3 — Canonical model and promotion
 
-**Status:** in progress 2026-11-17 — migration `0064_cardio_corpus`, the store module and the offline
-promotion CLI are on `development`. Promotion of the real export into a scratch database produced
+**Status:** complete 2026-11-17 — **deployed to the main server**: backup
+`coach-pre-0064-20261117T195520.db`, schema 0064 applied, export promoted, service restarted and
+answering. The production corpus holds 1,430 workouts, 599,927 samples and 400 VO₂max rows (399
+imported plus the 1 manual row that already existed), cutoff `2026-11-17T17:49:23Z`, `quick_check` ok,
+240 MB.
+
+The server checkout is 13 commits behind `development`: the migration, store module and CLI were
+copied in for the backfill and removed afterwards, so the working tree stayed clean. The recorded
+migration checksum came from the committed file, so the next fast-forward deploy matches it and
+`db.migrate` stays a no-op.
+
+Migration `0064_cardio_corpus`, the store module and the offline promotion CLI are on `development`. Promotion of the real export into a scratch database produced
 1,430 workouts (1,431 seen — one export duplicate collapsed on identical key), 599,927 samples
 (560,167 in-workout, 39,760 tail), 399 VO₂max rows with the Apple/Athlytic split preserved, and
 `history_cutoff = 2026-11-17T17:49:23Z`; a second run created nothing. Not applied to the production
@@ -469,6 +479,30 @@ same canonical rows; append-only triggers hold; a re-run adds no duplicate `meas
 the readiness path and existing `measurement` rows are unchanged.
 
 ### C4 — Linking and the reconciliation queue
+
+**Interface (planned, not yet implemented).** Linking is a re-runnable backend job, never a
+read-time view:
+
+```
+# report what would link, by tier and method; writes nothing
+python tools/cardio_link.py --db data/coach.db --dry-run
+
+# append link events for unambiguous pairs; leave the rest queued
+python tools/cardio_link.py --db data/coach.db --apply
+
+# after the fact: unresolved queue and link counts by method
+python tools/cardio_link.py --db data/coach.db --report
+```
+
+`--apply` is the only writing mode and the only mode that requires an explicit database
+(`--db`, no default). Matching is restricted to strength activity types
+(`TraditionalStrengthTraining`, `FunctionalStrengthTraining`); a run on the same day as a session
+is not a candidate. An existing link is never modified by a later run — correcting one is an explicit
+unlink (`DEC-CARDIO-02`). The day basis for tier B is the server's zone: the workout's start is
+converted from its `HKTimeZone` before comparison, and the basis is recorded on the link.
+
+The queue is surfaced as this report plus an unresolved count on the web dashboard; no review screen
+until the queue is non-trivial.
 
 Overlap matching per `DEC-CARDIO-02`, the queue surface, manual link and unlink, and the de-dup hint
 for manual cardio per `DEC-CARDIO-07`. Every link records method, confidence, band version and inputs.
