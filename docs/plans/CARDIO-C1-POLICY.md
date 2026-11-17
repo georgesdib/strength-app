@@ -15,7 +15,7 @@ The rule this document exists to enforce: **nothing is decided in code that is n
 | Every HealthKit workout, all activity types | Imported, stored, displayed in activity history |
 | Workout statistics (active energy, distance, HR average/min/max) | Imported where present |
 | Heart-rate series inside workout windows | Imported for analytics modalities only (§4) |
-| Heart rate outside workout windows | **Not imported** — 554 k samples with no metric behind them |
+| Heart rate outside workout windows | **Not imported**, except a 10-minute tail after each workout end (§4) |
 | Routes (`HKWorkoutRoute`) | Deferred (810 files, 211 MB); no v1 metric needs them |
 | Standalone metrics (resting HR, HRV, VO₂max, body mass, exercise minutes) | Imported as observations (§5) |
 
@@ -65,8 +65,10 @@ Promotion from import-only to analytics is a policy version bump, never a runtim
 
 - **Kept:** samples whose timestamp falls inside a non-resistance workout of an analytics modality, or
   inside any workout of the resistance domain (cheap, and enrichment needs them).
-- **Dropped:** everything else. Background HR supports no v1 metric; resting HR is a separate series
-  that HealthKit already aggregates.
+- **Kept, too:** a **10-minute tail after every workout end**, for heart-rate recovery. Measured:
+  52,466 samples (≈6 MB) — cheap enough that dropping them would be arbitrary.
+- **Dropped:** everything else — ≈502 k background samples. Background HR supports no v1 metric, and
+  resting HR is a separate series HealthKit already aggregates.
 - **Resolution:** full, as recorded. No downsampling at v1 — running and cycling arrive at ~55–60
   samples/min and the total is ≈65 MB. Revisit only if the canonical store exceeds 250 MB, and then by
   policy bump.
@@ -97,7 +99,7 @@ a separate, labelled series (`DEC-CARDIO-14`).
 | Session frequency / modality mix | any imported workout |
 | Pace at comparable HR | running/cycling, distance ≥ 1 km, ≥ 5 HR samples |
 | Power at comparable HR | cycling, power present, ≥ 5 HR samples |
-| HR recovery | **not computable** — no reliable post-workout sample association; deferred |
+| Heart-rate recovery | peak sample within 60 s before the end **and** a post-workout sample within ±20 s of +60 s. Measured: 1,003 workouts (70 %). HRR at +120 s is the fallback; a negative drop is real (HR rose) and is never clamped to zero |
 | Strength enrichment | matched workout with HR statistics or ≥ 1 HR sample |
 
 The 5-minute floor removes 44 micro-workouts (3 %) from activity totals while leaving their record in
@@ -142,3 +144,8 @@ Band version `link_v1`. Every link stores method, band version and inputs; unlin
 Training-load impulse (TRIMP, sRPE × duration), combined fatigue scores, HR zones defined by anything
 other than what `DEC-CARDIO-05` produces, VO₂max estimation, route analysis, sleep, clinical records,
 and any per-athlete threshold learned from data. Each would need its own decision and its own evidence.
+
+**Corrected 2026-11-17:** heart-rate recovery was listed here as not computable. It is computable for
+70 % of workouts from the post-workout tail, and §4 and §6 were amended the same day. The original
+claim was an assumption about sample density, not a measurement — the kind of thing this audit exists
+to catch.
