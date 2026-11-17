@@ -1127,15 +1127,22 @@ older base.*
 - The rest timer is app-level and rendered above the tab bar on every screen. Completion is
   recorded once in the AppModel, dismisses the bar, and cancels the pending notification; the
   local notification has a **Done** action and is presented in the foreground.
-- Form rating is available on the exercise screen with the existing current-rating/correction
-  semantics.
+- The first set starts the exercise, warm-ups included, and **End exercise** ends it: it closes
+  the rest that exercise owns, records `exercise_completed` and offers the optional 1–5 form
+  rating with an explicit skip. Navigation records nothing, so an exercise is a preview until a
+  set is logged. Several exercises may stay open at once: a superset is recorded as overlapping
+  exercise intervals, and starting a set in another one interrupts the rest.
+- Form rating is offered at End exercise (and finish), not from a standalone section.
 - Workout-detail sets expose the stable plan-item identity as `plan_item_index`; the planned-set
-  completion and the swap/set-count guards use it.
-- Warm-up rows render on the exercise screen. The server prepends `min(20 kg, first ramp set)`
-  (10 reps, configurable) and de-duplicates it when it equals the first rung; skipping warm-ups
-  never gates working sets.
-- Unplanned and warm-up sets are indexed above the entire planned range, so logging one before a
-  planned set cannot collide with a later working set and suppress it.
+  completion and the swap/set-count guards use it, excluding RIR 6.
+- Warm-up rows render on the exercise screen and fill the ordinary set controls. The server
+  prepends `min(20 kg, first ramp set)` (10 reps, configurable) and de-duplicates it when it equals
+  the first rung; skipping warm-ups never gates working sets.
+- Warm-ups are ordinary sets. RIR 6 is the only marker, decided at save: it takes an index at 1000
+  or above so it never occupies a planned slot, opens no rest, and stays out of the working-set
+  count. An unplanned working set never takes an index at 1000 or above.
+- The rest interval is persisted per workout: a relaunch resumes it, and an interval that ended
+  while the app was closed is recorded at the real end it reached.
 - Verified: 226 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
   pytest suite. Physical iPhone notification/timer and warm-up acceptance was owner-confirmed
   2026-11-14.
