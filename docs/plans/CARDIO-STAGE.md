@@ -480,11 +480,19 @@ the readiness path and existing `measurement` rows are unchanged.
 
 ### C4 — Linking and the reconciliation queue
 
-**Status:** applied to the main server 2026-11-17. 318 sessions linked (315 `day_containment`,
-3 `interval_overlap`, overlaps 0.97–1.00), 318 link events, 378 sessions unchanged,
-`quick_check` ok, second run `auto_linkable: 0`. Queue: 62 — 54 Health-only workouts with no
-session that day, 6 on three two-workout days, 1 partial interval overlap (0.80), 1 measured
-session with no overlap. Resolving those is manual (`--link`), by design.
+**Status:** applied and resolved on the main server 2026-11-17. **322 sessions linked** — 315
+`day_containment`, 3 `interval_overlap` (overlaps 0.97–1.00), 4 `manual` — 378 sessions unchanged,
+`quick_check` ok, a second run finding nothing to link.
+
+The queue was resolved by hand the same day. Three days held two strength workouts each; every pair
+was a 1–7 minute watch start/stop artefact beside the real 41–52 minute session, so the real workout
+was linked and the artefact left unlinked. The fourth was a measured session whose workout overlapped
+at 0.80, just under the auto threshold. Deliberately left unlinked: the four short artefacts, and one
+65-minute Bevel workout on a day whose only session is a **one-second** measured session at 07:29 — a
+session-side artefact, not a cardio one, and worth a separate look.
+
+Remaining: 56 sessions with no workout record that day, which is the honest state of a history that
+predates the watch, not a queue.
 
 **Interface (implemented).** Linking is a re-runnable backend job, never a read-time view:
 
