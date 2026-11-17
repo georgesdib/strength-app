@@ -130,6 +130,9 @@ never been used.
 2. **`DEC-CARDIO-05` (intensity).** METs cannot lead for running (8 %) or cycling (21 %). Amended tier
    order: pace-derived METs for running/cycling where distance exists; Apple METs where present
    (walking 99 %, strength 80 %); %HRR with age and resting HR; else `unclassified`.
+   *Amended again the same day: a concordance check showed MET and `%HRmax` classifications agree on
+   only 13 % of the 829 workouts carrying both, so the ladder is provisional, the method is chosen at
+   C5, and resistance work is excluded from aerobic minutes outright.*
 3. **`DEC-CARDIO-12` (new).** Derived cardio metrics join the existing derived-analytics layer
    (`analytics_revision`, `analytics_build`, `method_version`, disposable rebuildable rows) as a
    family, instead of a second promotion mechanism.

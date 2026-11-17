@@ -126,32 +126,38 @@ derived in the query. Rows are never updated or deleted.
 **Consequences.** No page shows imported data as missing without saying why. Reappearance emits an
 event too, so a flapping source is visible rather than silent.
 
-### DEC-CARDIO-05 — Intensity ladder for WHO-equivalent minutes
+### DEC-CARDIO-05 — Intensity classification is provisional; the method is chosen at C5
 
-**Decision.** Classify in this order, and record which tier produced the classification:
+**Amended 2026-11-17 after a concordance check that contradicted the earlier ladder.** 829 workouts
+carry both Apple's `AverageMETs` and an average heart rate. Classifying each way — MET bands (light
+< 3, moderate 3–6, vigorous > 6) against `%HRmax` with the observed maximum of 200 bpm (light < 64 %,
+moderate 64–76 %, vigorous > 76 %) — they agree on **109 (13 %)**. Every disagreement runs the same way:
+METs count the workout, heart rate calls it light (walking 414/452, strength 141/284, cycling 13/23,
+swimming 14/17). Not one goes the other way.
 
-1. pace-derived METs for running and cycling where distance and duration exist (documented equation,
-   cited) — Apple supplies METs for only 8 % of runs and 21 % of rides (C0 §2);
-2. `HKMetadataKeyAverageMETs` where Apple supplies it — 99 % of walks, 80 % of strength workouts;
-3. `%HRmax` from the athlete's **observed** maximum (200 bpm in this store) where a workout has heart
-   rate but no METs — deliberately not `%HRR`, because the backend stores no age and an invented one
-   would be a fabricated input;
-4. otherwise `unclassified`.
+Neither figure measures the truth. Apple's workout METs are themselves modelled from heart rate, motion
+and personal data, and for resistance training they are close to a table constant. `%HRmax` is
+hypersensitive to the assumed maximum: with a true maximum of 190 rather than 200, strength's average of
+127 bpm moves from 64 % to 67 % and 601 classifications flip. A single observed sample is a weak anchor
+for the whole denominator.
 
-`WHO-equivalent minutes = moderate + 2 × vigorous`, computed over classified minutes only, with the
-unclassified balance reported separately. `unclassified` is a first-class API value and never zero.
+**Decided now — definitional, not empirical.** Resistance-type workouts (traditional and functional
+strength training) never produce aerobic moderate or vigorous minutes under any method. WHO states the
+aerobic and the muscle-strengthening recommendations separately; neither proxy can describe resistance
+work, and counting it as moderate aerobic activity is a category error rather than an estimate.
+Resistance work is counted as resistance exposure and nothing else.
 
-**Why METs lead and heart rate does not.** WHO's threshold is expressed in METs — moderate 3–6,
-vigorous above 6 — so a MET-based classification *is* the guideline's own definition, while heart rate
-is a proxy for it. C0 also shows why heart rate cannot lead on its own: strength workouts average 127
-bpm with maxima up to 190, which as a share of observed maximum reads as vigorous and would count sets
-of squats as aerobic vigorous activity. Heart rate is used where it is the better signal: the
-within-workout intensity distribution (per sample, which a MET average cannot give) and the fallback
-above. Observed maximum is preferred to `220 − age` because it is measured rather than predicted, and
-because no age exists to subtract from.
+**Deferred to C5.** For aerobic modalities no method is fixed. C5 computes the WHO-equivalent number
+under at least three candidates — Apple's own exercise minutes, MET-based (pace-derived where distance
+and duration exist), and `%HRmax` from an observed maximum — and reports coverage, year-on-year
+stability and agreement with Apple's exercise minutes for each, before one becomes
+`method_version = cardio_v1`. The chosen method is recorded as a modelling decision, not as a
+conclusion the data forces.
 
-**Consequences.** The headline number is auditable tier by tier, and coverage is a visible number
-that can improve as data quality improves. No VO₂max estimator is introduced (`DEC-CARDIO-10`).
+**Consequences.** C2/C3 store the inputs and no verdict: METs, heart-rate series, pace, distance and
+Apple exercise minutes. `unclassified` stays a first-class value and never zero. Flipping the method
+later is a `method_version` bump (`DEC-CARDIO-12`), not a migration. No VO₂max estimator is introduced
+(`DEC-CARDIO-10`).
 
 ### DEC-CARDIO-06 — Standalone physiological metrics reuse the Phase 3A convention
 
@@ -392,7 +398,9 @@ VO₂max (labelled estimate), HR recovery and comparable-workload trends; descri
 exposure kept separate from mechanical and resistance exposure.
 
 **Acceptance.** Every metric names its method and inputs; fixed fixtures reproduce every value; missing
-inputs produce `unclassified` or `insufficient data`, never zero; no metric mixes exposures.
+inputs produce `unclassified` or `insufficient data`, never zero; no metric mixes exposures. The
+intensity method is chosen here from a written three-method comparison (`DEC-CARDIO-05`), and that
+comparison is part of the release evidence.
 
 ### C6 — Dashboards
 
@@ -474,7 +482,11 @@ verified backup and one restore drill before the first such migration.
   the export path is sufficient for history and only incremental sync needs the app.
 - **O-4** Whether historical exact links are recoverable from existing idempotency receipts; verified,
   never assumed.
-- **O-5** Whether Apple exercise minutes are useful as a cross-check on classified minutes, or noise.
+- **O-5** Whether Apple exercise minutes are useful as a cross-check on classified minutes, or noise —
+  partly answered: C0 found 71 k records, and `DEC-CARDIO-05` makes them one of the three candidate
+  methods.
+- **O-6** Which method becomes `cardio_v1` — a C5 gate, decided from the comparison `DEC-CARDIO-05`
+  requires, not in advance.
 
 ## 12. Accompanying edits
 
