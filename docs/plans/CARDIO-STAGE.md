@@ -309,7 +309,7 @@ or a data-quality defect, and no reconciliation rule penalises them.
 **Consequences.** Coverage reporting distinguishes "no wearable record" from "no training" — the same
 distinction `DEC-CARDIO-04` makes for deletion.
 
-### DEC-CARDIO-17 — `cardio-policy/v3` is the only source of import and retention values
+### DEC-CARDIO-17 — `cardio-policy/v4` is the only source of import and retention values
 
 **Decision.** The values C2–C5 read — whitelist, measurement classes, retention, quality gates, import
 range, link bands — live in [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md) and change only by version bump
@@ -404,7 +404,7 @@ the derived layer already exists (`DEC-CARDIO-12`).
 
 ### C1 — Decision record and versioned policy
 
-**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v3`.
+**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v4`.
 
 The policy fixes, with the audit's numbers behind each: modality whitelist (nine analytics modalities,
 everything else import-only by default); measurement classification into mandatory, optional, deferred
@@ -500,9 +500,10 @@ the readiness path and existing `measurement` rows are unchanged.
 
 ### C4 — Linking and the reconciliation queue
 
-**Status:** applied and resolved on the main server 2026-11-17. **322 sessions linked** — 315
-`day_containment`, 3 `interval_overlap` (overlaps 0.97–1.00), 4 `manual` — 378 sessions unchanged,
-`quick_check` ok, a second run finding nothing to link.
+**Status:** applied and resolved on the main server 2026-11-17. **326 sessions linked** — 318
+`day_containment`, 3 `interval_overlap` (overlaps 0.97–1.00), 5 `manual` — after the corpus rebuild
+(`0066`) and the first phone-uploaded workout; `quick_check` ok, re-runs find nothing new to link
+beyond genuine ambiguity.
 
 The queue was resolved by hand the same day. Three days held two strength workouts each; every pair
 was a 1–7 minute watch start/stop artefact beside the real 41–52 minute session, so the real workout
@@ -690,7 +691,7 @@ the backend status authority and this plan does not restate its status tables.
 ## 13. Related
 
 - [C0 audit](CARDIO-C0-AUDIT.md) — the measured export and matchability numbers behind this plan
-- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v3`, the values the implementation reads
+- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v4`, the values the implementation reads
 - [Plan index](README.md) ·
   [iOS client phase plan](IOS-CLIENT-PLAN.md) ·
   [Athlete Feedback & Coaching](AFC.md) ·
