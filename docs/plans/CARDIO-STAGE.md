@@ -549,10 +549,14 @@ and per modality so a change in Apple's model cannot masquerade as a change in b
 
 ### C6 — Dashboards
 
-**Status:** API slice live 2026-11-17. `GET /api/cardio/summary?weeks=12` serves weekly activity,
+**Status:** web slice live 2026-11-17. `GET /api/cardio/summary?weeks=12` serves weekly activity,
 rolling 7/28-day windows, per-year coverage and the resistance share from a classification cache
-(migration `0065`); measured 0.11 s on the ODROID against a 0.66 s `/api/settings` baseline. The
-web page and the iOS overview are still to come.
+(migration `0065`); measured 0.11 s on the ODROID against a 0.66 s `/api/settings` baseline.
+
+The Cardio view now carries a **Recorded activity** panel: rolling 7- and 28-day equivalents,
+resistance share for the calendar year, weekly and yearly tables, and unclassified minutes printed as
+their own column. It is read-only and has no controls — imported activity is not editable here. The
+iOS overview and the time-in-zone chart are still to come.
 
 **Why a cache appeared.** The first endpoint version recomputed classification per request and took
 ~4 s, because classifying a workout falls back to the mean of its heart-rate series. `0065` stores
