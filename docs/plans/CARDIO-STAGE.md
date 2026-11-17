@@ -90,16 +90,15 @@ two shapes:
 | Tier | Signal | Bands |
 |---|---|---|
 | A — interval overlap | Jaccard on `[started_at, ended_at]` vs the workout interval | ≥ 0.90 with exactly one candidate → auto-link; 0.60–0.90 → queue; < 0.60 → no link |
-| B — day containment | same `occurred_on` as the workout's start date | exactly one candidate → queue with a one-click confirm; ≥ 2 candidates → queue, never auto |
+| B — day containment | same `occurred_on` as the workout's start date | unique on both sides → auto-link (`DEC-CARDIO-13`); ≥ 2 candidates on either side → queue, never auto |
 
 Tier A applies to every session that has an interval: the 5 watch-recorded sessions today and every
 session recorded from now on. Tier B is the only available signal for the 373 imported sessions, which
-store a date and no timestamps, and it is labelled as lower confidence wherever it is shown.
+store a date and no timestamps, and it is labelled `day_containment` wherever it is shown.
 
 The method, tier and band version are recorded on every link. Links are append-only events with
 `supersedes_id`; unlink is an event; an explicit link is never superseded by an inferred one. Tier B
-never auto-links, even with one candidate: a same-day coincidence must cost the athlete one tap, not
-one wrong enrichment.
+auto-links only under the bidirectional uniqueness rule of `DEC-CARDIO-13`.
 
 **Alternatives rejected.** Requiring an exact shared identifier — C0 measured exactly one historically
 (`DEC-CARDIO-11`). Requiring an interval for every link — that would leave 99 % of the history
@@ -134,11 +133,22 @@ event too, so a flapping source is visible rather than silent.
 1. pace-derived METs for running and cycling where distance and duration exist (documented equation,
    cited) — Apple supplies METs for only 8 % of runs and 21 % of rides (C0 §2);
 2. `HKMetadataKeyAverageMETs` where Apple supplies it — 99 % of walks, 80 % of strength workouts;
-3. `%HRR` only where age and a same-day or recent resting HR exist;
+3. `%HRmax` from the athlete's **observed** maximum (200 bpm in this store) where a workout has heart
+   rate but no METs — deliberately not `%HRR`, because the backend stores no age and an invented one
+   would be a fabricated input;
 4. otherwise `unclassified`.
 
 `WHO-equivalent minutes = moderate + 2 × vigorous`, computed over classified minutes only, with the
 unclassified balance reported separately. `unclassified` is a first-class API value and never zero.
+
+**Why METs lead and heart rate does not.** WHO's threshold is expressed in METs — moderate 3–6,
+vigorous above 6 — so a MET-based classification *is* the guideline's own definition, while heart rate
+is a proxy for it. C0 also shows why heart rate cannot lead on its own: strength workouts average 127
+bpm with maxima up to 190, which as a share of observed maximum reads as vigorous and would count sets
+of squats as aerobic vigorous activity. Heart rate is used where it is the better signal: the
+within-workout intensity distribution (per sample, which a MET average cannot give) and the fallback
+above. Observed maximum is preferred to `220 − age` because it is measured rather than predicted, and
+because no age exists to subtract from.
 
 **Consequences.** The headline number is auditable tier by tier, and coverage is a visible number
 that can improve as data quality improves. No VO₂max estimator is introduced (`DEC-CARDIO-10`).
@@ -212,17 +222,23 @@ staging → canonical promotion of `DEC-CARDIO-03` feeds source tables; the deri
 and a metric change is a `method_version` bump rather than a migration. The ODROID cost profile is the
 one already measured for the core family.
 
-### DEC-CARDIO-13 — Tier B ships, and never links without confirmation
+### DEC-CARDIO-13 — Tier B auto-links when the day is unique on both sides
 
-**Decision.** Both tiers are in scope. Tier B (same-day containment) does not auto-link under any
-condition: it presents a one-tap confirmation, and an unconfirmed candidate enriches nothing.
+**Decision.** Both tiers are in scope. A session and a workout sharing a calendar day link
+**automatically** when all three hold: exactly one session on that day, exactly one strength-type workout
+on that day, and that workout is not already linked to another session. Anything else — two sessions,
+two workouts, or an existing link — goes to the queue and links only on confirmation. Every tier-B link
+records `method = day_containment`, is labelled as such wherever it is shown, and can be unlinked in one
+action.
 
-**Rationale.** C0 measured 320 of 378 sessions with exactly one same-day candidate and no interval, so
-tier-A-only would leave 85 % of the history unenriched. The confirm step keeps the guess where it
-belongs — with the athlete.
+**Rationale.** C0 measured 378 sessions on 378 distinct days — no day carries two sessions — with 320
+days holding exactly one strength workout. A 320-row confirmation screen would be abandoned, and an
+abandoned queue enriches nothing. The bidirectional uniqueness rule is what makes automatic linking
+safe: the case that would go wrong (two sessions, one workout) cannot be linked by rule, and it is the
+only ambiguous case the history can produce.
 
-**Consequences.** A review surface is a launch requirement, not a later nicety, and its unconfirmed
-count is shown rather than buried.
+**Consequences.** No review surface for the 320; a queue only for genuine ambiguity (3 days today).
+Links are labelled and reversible, so a wrong one can be found and undone without auditing the set.
 
 ### DEC-CARDIO-14 — Every source is imported and labelled; none is excluded from totals
 
@@ -364,8 +380,9 @@ Overlap matching per `DEC-CARDIO-02`, the queue surface, manual link and unlink,
 for manual cardio per `DEC-CARDIO-07`. Every link records method, confidence, band version and inputs.
 
 **Acceptance.** A link never creates a session; an explicit link is never displaced; ambiguous matches
-are visible and countable; unlink restores the prior state; the queue count is shown, not buried. Tier B
-never links without confirmation (`DEC-CARDIO-13`), and an unconfirmed candidate enriches nothing.
+are visible and countable; unlink restores the prior state; the queue count is shown, not buried. A
+tier-B auto-link requires uniqueness on both sides (`DEC-CARDIO-13`), and every auto-link is labelled
+and reversible.
 
 ### C5 — Analytics
 

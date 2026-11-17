@@ -124,7 +124,9 @@ never been used.
    378 sessions have no interval. Overlap stays the rule for every session that has one — today the 5
    watch-recorded sessions and every future one — and calendar-day containment with a single candidate
    is the fallback for the imported corpus, explicitly labelled lower confidence. Two candidates on a
-   day never auto-link, regardless of method.
+   day never auto-link, regardless of method. *Amended the same day by `DEC-CARDIO-13` at the owner's
+   instruction: the per-item confirm step was dropped, because the 378 sessions sit on 378 distinct
+   days, so same-day linking is unique on both sides for 320 of them.*
 2. **`DEC-CARDIO-05` (intensity).** METs cannot lead for running (8 %) or cycling (21 %). Amended tier
    order: pace-derived METs for running/cycling where distance exists; Apple METs where present
    (walking 99 %, strength 80 %); %HRR with age and resting HR; else `unclassified`.
