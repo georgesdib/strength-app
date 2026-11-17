@@ -212,6 +212,47 @@ staging → canonical promotion of `DEC-CARDIO-03` feeds source tables; the deri
 and a metric change is a `method_version` bump rather than a migration. The ODROID cost profile is the
 one already measured for the core family.
 
+### DEC-CARDIO-13 — Tier B ships, and never links without confirmation
+
+**Decision.** Both tiers are in scope. Tier B (same-day containment) does not auto-link under any
+condition: it presents a one-tap confirmation, and an unconfirmed candidate enriches nothing.
+
+**Rationale.** C0 measured 320 of 378 sessions with exactly one same-day candidate and no interval, so
+tier-A-only would leave 85 % of the history unenriched. The confirm step keeps the guess where it
+belongs — with the athlete.
+
+**Consequences.** A review surface is a launch requirement, not a later nicety, and its unconfirmed
+count is shown rather than buried.
+
+### DEC-CARDIO-14 — Every source is imported and labelled; none is excluded from totals
+
+**Decision.** Workouts and samples from third-party apps (Sheiko Gold, Strongur, Strong, RunGap, JEFIT,
+Athlytic, HeavySet, Bevel, Shortcuts and any future source) are imported on equal terms and displayed
+with their source. Activity totals include them. No series is silently merged across sources: a
+third-party estimate is labelled as such wherever it appears, including Athlytic's VO₂max.
+
+**Consequences.** The history is complete rather than Apple-shaped. The cost is that a source change is
+visible as a step in a trend — which is information, not noise, and is the honest alternative to
+silently preferring Apple.
+
+### DEC-CARDIO-15 — Activity Health recorded but StrengthApp did not is shown, read-only
+
+**Decision.** The 55 strength workouts on days with no session (47 in 2022) appear in the activity
+history, labelled as recorded in Health but never logged in StrengthApp. They never become sessions and
+never enter strength volume, tonnage or set counts.
+
+**Consequences.** The record stops being invisible without contaminating the training ledger. The same
+rule covers every future external workout that has no counterpart.
+
+### DEC-CARDIO-16 — 2021 is real training without a wearable record
+
+**Decision.** The 40 imported 2021 sessions are taken as genuine training in a period when the watch was
+not worn (HealthKit holds 3 training days that year). They are not treated as import loss, duplication
+or a data-quality defect, and no reconciliation rule penalises them.
+
+**Consequences.** Coverage reporting distinguishes "no wearable record" from "no training" — the same
+distinction `DEC-CARDIO-04` makes for deletion.
+
 ## 5. What this stage does not do
 
 Automatic cardio prescription or scheduling; automatic strength-programme changes; unified
@@ -323,7 +364,8 @@ Overlap matching per `DEC-CARDIO-02`, the queue surface, manual link and unlink,
 for manual cardio per `DEC-CARDIO-07`. Every link records method, confidence, band version and inputs.
 
 **Acceptance.** A link never creates a session; an explicit link is never displaced; ambiguous matches
-are visible and countable; unlink restores the prior state; the queue count is shown, not buried.
+are visible and countable; unlink restores the prior state; the queue count is shown, not buried. Tier B
+never links without confirmation (`DEC-CARDIO-13`), and an unconfirmed candidate enriches nothing.
 
 ### C5 — Analytics
 
@@ -337,8 +379,9 @@ inputs produce `unclassified` or `insufficient data`, never zero; no metric mixe
 
 ### C6 — Dashboards
 
-Web: weekly overview, guideline progress, modality distribution, history, workout detail with HR
-series, fitness trends, coverage and synchronisation status. iOS: this week's aerobic minutes, session
+Web: weekly overview, guideline progress, modality distribution, history — including Health-only
+workouts labelled per `DEC-CARDIO-15` — workout detail with HR series, fitness trends, source labels per
+`DEC-CARDIO-14`, coverage and synchronisation status. iOS: this week's aerobic minutes, session
 count and 4-week trend; recent workouts; resting HR and VO₂max where available; recovery context;
 last successful sync and coverage. Detailed charts stay on the web.
 
