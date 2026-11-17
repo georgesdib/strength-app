@@ -527,6 +527,16 @@ and reversible.
 
 ### C5 — Analytics
 
+**Status:** first slice implemented and reporting against the live corpus 2026-11-17
+(`features/cardio_metrics.py`, `tools/cardio_report.py`); no dashboard yet. Cascade classification,
+coverage by year, per-modality breakdown, rolling 7/28-day windows and time-in-zone are computed from
+1,430 workouts and 319,980 classified minutes (**54,724 WHO-equivalent**).
+
+Findings worth the stage: **resistance contributes 20,301 of the 54,724 equivalent minutes (37 %)**,
+reported separately rather than excluded; coverage is 100 % for 2022–2024 but 0 % for 2019–2020 (no
+heart rate, no METs) and 83–89 % for 2025–2026; **275 workouts pass continuity** for time-in-zone —
+dense in 2016–2018 and 2026, sparse in 2019–2025, exactly as the density analysis predicted.
+
 WHO-equivalent minutes and coverage by tier; weekly moderate/vigorous/equivalents; session counts;
 duration and modality distribution; rolling 4-week, 12-week, 7-day and 28-day windows; resting HR,
 VO₂max (labelled estimate), HR recovery and comparable-workload trends; descriptive cardiovascular

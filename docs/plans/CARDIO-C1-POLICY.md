@@ -1,9 +1,9 @@
 # CARDIO POLICY v1 — WHAT IS IMPORTED, KEPT, CLASSIFIED AND SHOWN
 
-**Version:** `cardio-policy/v3`, 2026-11-17. Supersedes `cardio-policy/v2` (same day): the history is
-promoted from the export and only new data arrives through HealthKit (§7). v2 had moved golf to
-analytics, replaced the time-in-zone gate with a continuity test, and made the recovery-retention rules
-explicit. See §10.
+**Version:** `cardio-policy/v4`, 2026-11-17. Supersedes `cardio-policy/v3` (same day): the continuity
+test is `and`, not `or` (§4), because coverage alone admitted sparse series. v3 split the timeline
+between the export and HealthKit; v2 moved golf to analytics and replaced the samples-per-minute gate.
+See §10.
 **Status:** active policy for C2–C5. Nothing is implemented yet; this document is the specification the
 implementation reads.
 **Owner:** the athlete. Every number here is derived from [the C0 audit](CARDIO-C0-AUDIT.md); changes
@@ -79,7 +79,12 @@ Promotion from import-only to analytics is a policy version bump, never a runtim
 - **Sync:** heart-rate samples carry their own anchor. A workout and its recovery tail may arrive in
   separate syncs, and a tail that has not arrived is **pending**, never an absence (`DEC-CARDIO-04`).
 - **Quality — continuity, not rate.** A series is usable for time-in-zone when its median inter-sample
-  gap is ≤ 30 s **or** samples cover ≥ 50 % of the workout's duration. A samples-per-minute threshold is
+  gap is ≤ 30 s, **and** no internal gap exceeds 120 s, **and** samples cover ≥ 50 % of the workout's
+  duration. Each condition alone lies. Coverage alone admits three samples across two hours; the
+  median alone admits a cluster of samples at the start and one hours later, which is exactly what a
+  strength session looks like. Measured on the real corpus, the first two versions admitted 336 of 381
+  strength workouts to time-in-zone; the widest-gap condition reduces that to zero and leaves 275
+  eligible workouts overall. A samples-per-minute threshold is
   rejected because it measures the recording mode rather than the data: density is bimodal across the
   history (chest strap 2016–2018 and live recording 2026 sit at 55–60 samples/min; wrist background
   sampling 2019–2025 sits at 0.1–0.7), so a fixed rate would admit some years and reject others for the
@@ -109,7 +114,7 @@ a separate, labelled series (`DEC-CARDIO-14`).
 |---|---|
 | WHO-equivalent minutes | duration ≥ 5 min **and** a classification tier (METs or HR) |
 | Moderate/vigorous split | as above; tier recorded per minute |
-| Time in zone | continuity: median inter-sample gap ≤ 30 s **or** ≥ 50 % of duration covered |
+| Time in zone | continuity: median gap ≤ 30 s **and** widest gap ≤ 120 s **and** ≥ 50 % of duration covered |
 | Session frequency / modality mix | any imported workout |
 | Pace at comparable HR | running/cycling, distance ≥ 1 km, ≥ 5 HR samples |
 | Power at comparable HR | cycling, power present, ≥ 5 HR samples |
@@ -173,6 +178,7 @@ Band version `link_v1`. Every link stores method, band version and inputs; unlin
 | v1 | 2026-11-17 | First policy | [C0 audit](CARDIO-C0-AUDIT.md) |
 | v2 | 2026-11-17 | Golf moved to analytics; time-in-zone gate replaced by a continuity test; recovery retention and sync rules made explicit | Density is bimodal by recording mode (2016–2018 and 2026 at 55–60 samples/min, 2019–2025 at 0.1–0.7), and 70 % of workouts carry a computable HRR |
 | v3 | 2026-11-17 | Timeline split: history promoted from the export, new data through the app; `history_cutoff` and the 7-day lookback defined; content-key identity for file rows | `DEC-CARDIO-18`; the export carries no sample UUIDs |
+| v4 | 2026-11-17 | Continuity needs density, no long internal gap, and span | Coverage alone admitted sparse series; the median alone admitted strength sessions (a sample cluster plus one hours later). 336 of 381 strength workouts passed the first two versions |
 
 ## 11. Deliberately absent
 
