@@ -1145,9 +1145,22 @@ older base.*
   another workout** no longer fire together.
 - The watch rest bar offers **−15s** instead of End rest, and schedules a local end-of-rest
   notification (the on-screen haptic stays).
-- Bar-speed fields appear only when the plan item carries a `velocity_target`.
+- Bar-speed fields initially appeared only when the plan item carried a `velocity_target`
+  (superseded 2026-11-17: capture is not gated on a target).
 - The watch finish captures productivity and acknowledges a `409 workout_not_active` from a
   retried finish instead of staying on the finish screen.
+
+### VBT target display and bar-speed eligibility — 2026-11-17 (implemented)
+
+- The plan's `velocity_target` is now shown beside RIR on both clients: the iPhone exercise target,
+  planned-set, review and active-workout rows, and the log-set sheet (`Velocity target` under RIR),
+  plus the watch exercise header and RIR sheet. The clients format the issued value only; they do
+  not derive, clamp or recompute a target.
+- Supersedes the 2026-11-14 bullet above: bar-speed capture is not gated on a target. Both clients
+  offer it for external-load work and exclude bodyweight work. The target, when issued, is
+  displayed, and the server still owns calibration and adherence.
+- Verified by `PrescriptionVelocityTargetTests` and `StrengthApp/scripts/ci.sh` (watch and embedded
+  watch builds; 441 tests, 1 skipped).
 
 ### Phase 3A — HealthKit HRV/RHR/bodyweight readiness (closed 2026-11-08)
 
