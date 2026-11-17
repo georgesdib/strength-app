@@ -5,7 +5,7 @@ HealthKit ingestion, cardio analytics and the monitoring dashboards. Component i
 documentation remains in its owning repository.
 
 **Status:** proposed 2026-11-17. C0 (the measured audit) is complete — see
-[CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md), which corrected three decisions in this plan. Nothing else is
+[CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md), which corrected several decisions in this plan. Nothing else is
 implemented: C1 to C7 are gated on the C1 decision record, and no runtime behaviour, API, schema,
 dependency, contract or training rule changes until a workstream is implemented and tested.
 
@@ -62,8 +62,10 @@ This section is a precondition, not background. Every item was verified in the r
 3. **Six things stay distinct:** HealthKit workouts, Strength App sessions, cardio analytical
    sessions, physiological observations, and the links between them, and their provenance.
 4. **Captured before modelled.** No metric is introduced before the data that feeds it is measured.
-5. **Cardiovascular, mechanical and resistance exposure stay separate.** No combined fatigue scalar,
-   no silent double counting.
+5. **Cardiovascular, mechanical and resistance exposure stay separate as exposures.** No combined
+   fatigue scalar, and no session is counted twice for the same minutes. This is a bookkeeping rule,
+   not a claim about physiology: a resistance session can be cardiovascular, and classification
+   follows the evidence (`DEC-CARDIO-05`).
 6. **Deterministic and labelled.** Every value identifies its method and its inputs. Missing is not
    zero, and unclassified is not a category to be filled in by guesswork.
 7. **Append-only survives contact with HealthKit.** Corrections, deletions and re-links are events.
@@ -81,6 +83,11 @@ reschedules a session from HealthKit data.
 **Consequences.** A bad match degrades enrichment (visible, correctable), not training history. Tests
 assert that the import path has no write access to `session`, `workout_session` or prescription
 tables.
+
+**Not claimed by this decision.** That a strength session cannot be cardiovascular. Classification
+follows the evidence (`DEC-CARDIO-05`): a resistance session that holds a sustained aerobic intensity
+produces aerobic minutes like any other, while still never entering strength volume, tonnage or set
+counts.
 
 ### DEC-CARDIO-02 — Time-first reconciliation in two tiers, with append-only links
 
@@ -126,7 +133,7 @@ derived in the query. Rows are never updated or deleted.
 **Consequences.** No page shows imported data as missing without saying why. Reappearance emits an
 event too, so a flapping source is visible rather than silent.
 
-### DEC-CARDIO-05 — Intensity classification is provisional; the method is chosen at C5
+### DEC-CARDIO-05 — A cascade: Apple's METs, then heart rate, then unclassified
 
 **Amended 2026-11-17 after a concordance check that contradicted the earlier ladder.** 829 workouts
 carry both Apple's `AverageMETs` and an average heart rate. Classifying each way — MET bands (light
@@ -141,18 +148,33 @@ hypersensitive to the assumed maximum: with a true maximum of 190 rather than 20
 127 bpm moves from 64 % to 67 % and 601 classifications flip. A single observed sample is a weak anchor
 for the whole denominator.
 
-**Decided now — definitional, not empirical.** Resistance-type workouts (traditional and functional
-strength training) never produce aerobic moderate or vigorous minutes under any method. WHO states the
-aerobic and the muscle-strengthening recommendations separately; neither proxy can describe resistance
-work, and counting it as moderate aerobic activity is a category error rather than an estimate.
-Resistance work is counted as resistance exposure and nothing else.
+**Decision — the cascade, fixed now.** Per workout, in order:
 
-**Deferred to C5.** For aerobic modalities no method is fixed. C5 computes the WHO-equivalent number
-under at least three candidates — Apple's own exercise minutes, MET-based (pace-derived where distance
-and duration exist), and `%HRmax` from an observed maximum — and reports coverage, year-on-year
-stability and agreement with Apple's exercise minutes for each, before one becomes
-`method_version = cardio_v1`. The chosen method is recorded as a modelling decision, not as a
-conclusion the data forces.
+1. `HKMetadataKeyAverageMETs` where Apple supplies it; Apple's value is authoritative and is never
+   re-derived or "corrected" by us;
+2. otherwise `%HRmax` from the athlete's observed maximum of 200 bpm, using heart-rate statistics where
+   present and the series otherwise;
+3. otherwise `unclassified`.
+
+`WHO-equivalent minutes = moderate + 2 × vigorous`, computed over classified minutes only, with the
+unclassified balance reported separately.
+
+**Resistance work is not excluded.** A strength session that sustains an aerobic intensity produces
+aerobic minutes like any other workout, and its minutes are counted. What it never does is enter
+strength volume, tonnage or set counts — the separation in principle 5 is about double counting, not
+about physiology. Preferring Apple's figure for lifting is the more conservative choice anyway: heart
+rate overstates aerobic intensity during resistance work because of the pressor response, so a raw
+`%HRmax` reading there is an upper bound.
+
+**Coverage, measured.** The cascade classifies 1,298 of 1,431 workouts (90.7 %): 970 by METs, 328 by
+heart rate, 133 unclassified. Pre-2021 is better than assumed — 230 of the 312 workouts in 2016–2020
+carry heart rate written by **RunGap** from a non-Apple sensor, so those years are mostly classifiable
+even without a watch.
+
+**Accepting Apple's values has a price, stated once.** Apple's workout METs are its own model, and
+Apple's exercise minutes begin only in 2021 (zero records before). When Apple changes that model, the
+series steps and the step is not auditable from our side. Every value therefore stores the vendor and
+the tier that produced it, and no value is silently recomputed.
 
 **Consequences.** C2/C3 store the inputs and no verdict: METs, heart-rate series, pace, distance and
 Apple exercise minutes. `unclassified` stays a first-class value and never zero. Flipping the method
@@ -398,9 +420,9 @@ VO₂max (labelled estimate), HR recovery and comparable-workload trends; descri
 exposure kept separate from mechanical and resistance exposure.
 
 **Acceptance.** Every metric names its method and inputs; fixed fixtures reproduce every value; missing
-inputs produce `unclassified` or `insufficient data`, never zero; no metric mixes exposures. The
-intensity method is chosen here from a written three-method comparison (`DEC-CARDIO-05`), and that
-comparison is part of the release evidence.
+inputs produce `unclassified` or `insufficient data`, never zero; no metric mixes exposures. Every
+classified minute records which tier produced it (`DEC-CARDIO-05`), and coverage is reported per year
+and per modality so a change in Apple's model cannot masquerade as a change in behaviour.
 
 ### C6 — Dashboards
 
@@ -482,11 +504,9 @@ verified backup and one restore drill before the first such migration.
   the export path is sufficient for history and only incremental sync needs the app.
 - **O-4** Whether historical exact links are recoverable from existing idempotency receipts; verified,
   never assumed.
-- **O-5** Whether Apple exercise minutes are useful as a cross-check on classified minutes, or noise —
-  partly answered: C0 found 71 k records, and `DEC-CARDIO-05` makes them one of the three candidate
-  methods.
-- **O-6** Which method becomes `cardio_v1` — a C5 gate, decided from the comparison `DEC-CARDIO-05`
-  requires, not in advance.
+- **O-5** *Closed.* Apple exercise minutes exist for 71 k records but only from 2021, so they are a
+  cross-check on post-2021 totals and not a history-long baseline.
+- **O-6** *Closed.* The method is the cascade in `DEC-CARDIO-05`; nothing is deferred to C5.
 
 ## 12. Accompanying edits
 

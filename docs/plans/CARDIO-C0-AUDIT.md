@@ -1,8 +1,8 @@
 # C0 AUDIT — HEALTHKIT EXPORT AND SESSION MATCHABILITY
 
 **Status:** measured 2026-11-17 against the owner's Apple Health export. This is the C0 deliverable of
-[the cardio stage plan](CARDIO-STAGE.md); it records numbers, not opinions, and it changes three
-decisions in that plan (§7).
+[the cardio stage plan](CARDIO-STAGE.md); it records numbers, not opinions, and it changed several
+decisions in that plan (§7, §9).
 
 **Sources.** `private/export.zip` (126 MB archive, 2.0 GB `export.xml`, 870 entries, exported
 2026-11-17 17:56) parsed with a stdlib streaming parser into a throwaway store at
@@ -107,7 +107,7 @@ So:
 | Metric | Rows | Sources | Range |
 |---|---|---|---|
 | VO₂max | 399 | Apple Watch 374, **Athlytic 25** | 2022-01 → 2026-11 |
-| Apple exercise minutes | 71,003 | Apple Watch 63,956, iPhone 5,948, iPhone 1,099 | 2011-08 → 2026-11 |
+| Apple exercise minutes | 71,003 | Apple Watch 63,956, iPhone 5,948, iPhone 1,099 | 2021 only → 2026-11 (zero before 2021) |
 | Resting HR | 1,719 | Apple Watch | — |
 | HRV (SDNN) | 31,894 | Apple Watch | — |
 | Body mass | 2,046 | mixed | — |
@@ -127,12 +127,12 @@ never been used.
    day never auto-link, regardless of method. *Amended the same day by `DEC-CARDIO-13` at the owner's
    instruction: the per-item confirm step was dropped, because the 378 sessions sit on 378 distinct
    days, so same-day linking is unique on both sides for 320 of them.*
-2. **`DEC-CARDIO-05` (intensity).** METs cannot lead for running (8 %) or cycling (21 %). Amended tier
-   order: pace-derived METs for running/cycling where distance exists; Apple METs where present
-   (walking 99 %, strength 80 %); %HRR with age and resting HR; else `unclassified`.
-   *Amended again the same day: a concordance check showed MET and `%HRmax` classifications agree on
-   only 13 % of the 829 workouts carrying both, so the ladder is provisional, the method is chosen at
-   C5, and resistance work is excluded from aerobic minutes outright.*
+2. **`DEC-CARDIO-05` (intensity).** Settled as a cascade — Apple's METs, then `%HRmax`, then
+   `unclassified` — after two rounds of evidence. METs cannot lead for running (8 %) or cycling (21 %),
+   and the two proxies agree on only 13 % of the workouts carrying both (§9), so neither settles the
+   question; the cascade uses whichever exists and labels every minute with its tier. Resistance work
+   is not excluded from aerobic minutes: that is a bookkeeping rule, not a physiological one. Coverage:
+   1,298 of 1,431 workouts (90.7 %).
 3. **`DEC-CARDIO-12` (new).** Derived cardio metrics join the existing derived-analytics layer
    (`analytics_revision`, `analytics_build`, `method_version`, disposable rebuildable rows) as a
    family, instead of a second promotion mechanism.
@@ -146,6 +146,7 @@ never been used.
 
 ## 8. What this audit does not establish
 
+
 - Whether an import through `HKAnchoredObjectQuery` returns the same record set and metadata as the
   export (the export is the phone's flattened view; the app-side query is not measured here).
 - Whether read authorisation covers any of this once re-requested in C2, and how the prompt behaves on
@@ -154,3 +155,47 @@ never been used.
 - Why 2021 has 40 sessions and 3 HealthKit strength days — the import and the watch disagree there,
   and the cause is not determined by this data.
 - Anything about other devices or other people: this is one athlete's store.
+
+## 9. Concordance check and cascade coverage (added 2026-11-17, after §7 was written)
+
+**Do the two intensity proxies agree?** Among the 829 workouts carrying both Apple `AverageMETs` and an
+average heart rate:
+
+| MET classification | HR classification | n |
+|---|---|---|
+| moderate | light | 601 |
+| vigorous | moderate | 107 |
+| light | light | 54 |
+| moderate | moderate | 41 |
+| vigorous | vigorous | 14 |
+| vigorous | light | 12 |
+
+Agreement: 109/829 = **13 %**, and every disagreement except twelve runs the same way — METs count the
+workout, heart rate calls it light (walking 414/452, strength 141/284, cycling 13/23, swimming 14/17).
+Neither proxy measures the truth: Apple's METs are modelled from heart rate and motion and, for
+lifting, close to a table constant; `%HRmax` is hypersensitive to the assumed maximum (at 190 rather
+than 200 bpm, 601 classifications flip).
+
+**Does the cascade cover the history?** Tier per workout:
+
+| Year | METs | HR | Unclassified | Total |
+|---|---|---|---|---|
+| 2016 | 0 | 12 | 7 | 19 |
+| 2017 | 0 | 100 | 18 | 118 |
+| 2018 | 0 | 118 | 34 | 152 |
+| 2019 | 0 | 0 | 20 | 20 |
+| 2020 | 0 | 0 | 3 | 3 |
+| 2021 | 9 | 0 | 0 | 9 |
+| 2022 | 183 | 41 | 3 | 227 |
+| 2023 | 245 | 22 | 8 | 275 |
+| 2024 | 252 | 11 | 0 | 263 |
+| 2025 | 148 | 0 | 14 | 162 |
+| 2026 | 133 | 24 | 26 | 183 |
+
+Overall: 970 by METs, 328 by heart rate, 133 unclassified — **90.7 % classified**.
+
+The pre-2021 years are better than the earlier reading of this audit suggested: 230 of the 312 workouts
+in 2016–2020 carry heart rate, written by **RunGap** from a non-Apple sensor (414,339 samples before
+2021). Those years therefore classify mostly by `%HRmax`, while 2022 onwards classifies mostly by Apple's
+METs. That is a tier boundary in the middle of the history, not a behaviour change, and coverage must be
+displayed beside any trend that crosses it. 2019–2020 is the genuine gap: 23 workouts, no heart rate.
