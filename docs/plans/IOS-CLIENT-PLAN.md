@@ -274,12 +274,15 @@ so VBT entry no longer moves the set's recorded time.
   the set keeps its original id and timestamp; replay with the same key is a no-op; a correction
   after finish is rejected; existing set/remove/form paths are unchanged.
 
-### R11 — Rest timer Live Activity (dropped 2026-11-14)
+### R11 — Rest timer Live Activity (dropped 2026-11-14; reinstated 2026-11-17)
 
-**Status:** **dropped 2026-11-14; not needed.** Restored earlier the same day after a plan rewrite
-dropped it, then closed: the watch schedules a local end-of-rest notification, the phone shows its
-rest timer in-app, and a Live Activity could not cover watch-owned sessions without a
-WatchConnectivity event channel (contract §21). The original scope is kept below for the record.
+**Status:** **reinstated 2026-11-17 for phone-owned sessions.** The earlier drop was because a
+Live Activity could not cover watch-owned sessions without a WatchConnectivity event channel
+(contract §21). The phone now owns an exercise lifecycle of its own and persists its rest interval,
+so a phone-owned rest can drive one. Delivered: a widget extension target, the rest Live Activity
+on the Lock Screen and Dynamic Island with a system-rendered countdown, and a Control Center /
+Action button control that opens the app. Not yet delivered: **+15 s** and **skip** from inside the
+activity (they remain in-app), and physical-device acceptance. The original scope is kept below.
 
 Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
 does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
