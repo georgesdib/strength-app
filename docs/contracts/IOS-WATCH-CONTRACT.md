@@ -351,7 +351,7 @@ of the extraction.
 
 ### 10.1 Revision contract
 
-- Every plan write (swap, add, remove, set-count) increments
+- Every plan write (swap, add, remove, set-count, move) increments
   `workout_session.plan_revision` in the same transaction and returns the new value.
   `GET .../execution` returns it with the plan.
 - The watch stores the revision with its snapshot and never writes plan content.

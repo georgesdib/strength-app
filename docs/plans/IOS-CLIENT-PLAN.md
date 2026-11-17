@@ -29,8 +29,8 @@ prescription request with session-type and minimum-session settings) is **implem
 2026-11-08**: the app builds with an iOS 27.0 deployment target and the client tests pass on the
 available iOS 27.2 simulator; the app launches, and the live UI flow passed twice — once with the resolver off and once with it on against a copy of the
 real database. R2 is closed as absorbed by R7's `plans/current` read. R8 (active-workout plan editing) is **closed 2026-11-08**;
-its authenticated exercise-catalogue, online-only and no-solved-load decisions are recorded; R8 is
-closed.
+its authenticated exercise-catalogue, online-only, server-solved-load and move decisions are
+recorded; R8 is closed (extended 2026-11-17).
 Server contracts:
 [`design/IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) and
 [`design/IOS-R8-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R8-CONTRACT.md). Later phases remain proposals and need
@@ -1086,25 +1086,29 @@ target and unit-tested on the available iOS 27.2 simulator (73 tests, 0 failures
 data effects, tests, acceptance and rollback.
 
 R8 brings the web UI's existing live-workout edits to the phone: swap a plan item's exercise, add an
-exercise, remove one, and change a set count. It supersedes the Phase 2 clause "no plan edits,
-exercise swap, set-count change".
+exercise, remove one, move one, and change a set count. It supersedes the Phase 2 clause "no plan
+edits, exercise swap, set-count change". Move was added on 2026-11-17 with a solved load on add
+(`DEC-IOS-08`, `DEC-IOS-09`).
 
 - Every edit runs through the existing `workout.py` services (`swap_exercise`, `add_exercise`,
-  `remove_exercise`, `change_sets`); they rewrite `plan_modified_json` and append
+  `remove_exercise`, `change_sets`, `move_exercise`); they rewrite `plan_modified_json` and append
   `workout_event` rows. The issued plan JSON is never modified, so prescribed and performed stay
   separately reconstructible.
-- The phone never supplies a load or a replacement plan. Add sends only the exercise id and the
-  service applies its defaults (3×8–12 @ RIR 2, no load); swap clears the load and records why.
-  The owner enters the performed load when logging the set; R8 does not run the load solver.
+- The phone never supplies a load or a replacement plan. Add sends the exercise id (and optionally
+  the shape) and the server solves that slot the same way it solves a swap — its own load, warm-ups
+  and VBT target from its own history; unsolvable exercises are added with a null load and a visible
+  reason. Swap re-solves the replacement rather than clearing the load. The owner enters the
+  performed load when logging the set; the client never runs the load solver.
 - Exercise choice comes from an authenticated read-only `GET /api/ios/v1/exercises`; the app loads
   it while online. R8 does not add an offline queue; R1 journaling covers attempted edits only.
 - Swap is blocked after sets are logged; set count cannot go below logged sets; the last item cannot
   be removed; ambiguous unattributed sets block edits. Removing an item with logged sets keeps those
   sets and warns first. An expected-exercise guard returns `409 plan_changed` instead of letting a
-  stale index edit the wrong lift.
-- A plan item's `order_index` is its stable identity across remove/swap/add; logged sets store it in
-  `prescription_item_index`, so removing an earlier item does not renumber later attributions. The
-  current display position is separate, and legacy positional rows use a same-exercise fallback.
+  stale index edit the wrong lift, and a move to an out-of-range position does the same.
+- A plan item's `order_index` is its stable identity across remove/swap/add/move; logged sets store
+  it in `prescription_item_index`, so removing an earlier item does not renumber later attributions
+  and moving an item never detaches its sets. The current display position is separate, and legacy
+  positional rows use a same-exercise fallback.
 - The web UI shares the service guards and returns 409 for rejected edits; it does not gain the
   iPhone picker or any new R8 screen.
 - In progress only, idempotent, full workout payload returned; no schema change.
