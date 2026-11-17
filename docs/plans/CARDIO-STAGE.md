@@ -440,8 +440,14 @@ phone's 16-byte UUID keys (guard written for the export's 32-byte digests); the 
 seven-day lookback to workouts, duplicating three pre-cutoff sessions and forcing a corpus rebuild
 (`0066`); and the sync cursor advanced to "now", hiding a workout that ended before the sync ran.
 
-**Not wired yet:** deletion events (the endpoint exists, the client does not send them), and METs for
-phone-uploaded workouts, so new ones classify by heart rate.
+Later the same evening, two more ingest defects surfaced only under a real retry: a single
+implausible VO₂max value rejected the whole batch (now per-item tolerant), and a re-sent sample
+compared its raw `Z`-suffixed timestamp against the stored `+00:00` form and was reported as a
+conflict (now normalised before comparison). A sync now returns 200.
+
+**Not wired yet:** deletion events (the endpoint exists, the client does not send them). METs and
+effort are read on the client but no post-cutoff workout has exercised them yet — the only
+phone-uploaded workout predates both fields.
 
 
 Extend read authorisation to workouts, workout routes, HR, HRV, resting HR, VO₂max, body mass, active
