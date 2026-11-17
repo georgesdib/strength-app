@@ -157,7 +157,7 @@ Band version `link_v1`. Every link stores method, band version and inputs; unlin
 
 ## 9. Change control
 
-1. A policy change is a version bump (`cardio-policy/v2`) with the audit evidence that forced it.
+1. A policy change is a version bump (`cardio-policy/v4` next) with the audit evidence that forced it.
 2. A change to a *calculation* is a `method_version` bump in the derived layer
    (`DEC-CARDIO-12`), independent of this policy.
 3. Nothing in this policy may change a load, a set, a prescription or a schedule (`DEC-CARDIO-01`).
