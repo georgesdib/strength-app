@@ -6,8 +6,9 @@ no scope), INT-4c is parked on Apple's PCC entitlement, and **INT-9 (the Siri AI
 deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and INT-13 (the Today summary
 card) were added on 2026-11-16 and are implemented on the iOS client**, with physical-device
 acceptance outstanding. **INT-11 (Explain the System, local knowledge retrieval) was implemented and
-closed on 2026-11-16 with documented limitations; INT-12 (web search and RAG) is deferred.** This plan
-document itself changes no runtime, API, schema, dependency, prompt or training rule.
+closed on 2026-11-16 with documented limitations; INT-12 (web search and RAG) is deferred; the
+constrained proposer is withdrawn 2026-11-17.** This plan document itself changes no runtime, API,
+schema, dependency, prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
 refreshed the Siri AI preview status, and §7.6 added the readiness design and recorded that MCP is not
@@ -1469,7 +1470,7 @@ what the evidence suggests, what to discuss with the deterministic engine — wi
 write. It was gated on the INT-3/INT-5 evaluation and owner approval because it sits close to advice.
 
 **Exclusions retained.** Structured proposals, approval flows and any write remain outside this
-workstream; a future proposer belongs to `DEC-LLM-09` and its own gated plan.
+workstream. `DEC-LLM-09` was withdrawn on 2026-11-17; any future write path needs a new decision.
 
 ### INT-9 — Siri AI adoption pass (deferred; gated on iOS 27.3)
 
@@ -1827,7 +1828,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 10 | No caching in INT-1/INT-2; revisit only with measured latency | approve | `ADR-INT-010` |
 | 11 | Siri AI Developer Preview excluded; stable App Intents only | **accepted 2026-11-15**; adoption on the owner's own device once iOS 27.3 ships | `ADR-INT-011` (accepted) |
 | 12 | Phase 1b (retire the minimal LLM selector) before INT-5 | approve; otherwise two model surfaces coexist | `ADR-INT-012` |
-| 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer is deferred/unscheduled | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
+| 13 | This plan supersedes the earlier LLM and Apple Intelligence forward plans; the constrained proposer was withdrawn 2026-11-17 | approve; §16 lists exactly what remains in force | `ADR-INT-013` |
 | 14 | Siri AI readiness without adoption: INT-7 ships tool-ready metadata, Spotlight-indexable entities and snippet-ready views, with no preview symbol before the adoption pass | **accepted 2026-11-15**; makes the December adoption additive rather than a rewrite (§7.6) | `ADR-INT-011` (accepted, amended) |
 | 15 | Workout lifecycle surfaces: `StartWorkoutIntent` + a donated end intent for the watch Action button, user-selected HomeKit scenes on start and end (phone and watch), and user-selected Shortcuts on start and end (phone only) | **accepted 2026-11-15**; Pause/Resume excluded; exactly one device executes the scenes per session; the Shortcuts channel is best-effort and phone-only | `ADR-INT-018` (accepted) |
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
@@ -1924,7 +1925,7 @@ retained items in §16.3.
 | `LLM-INTEGRATION-PLAN.md` §8.1 field-level outbound-data inventory | the privacy precondition for every model path; adopted by reference in §9 | backend, unchanged |
 | `LLM-INTEGRATION-PLAN.md` §9 evaluation and rollout gates | gate vocabulary for any narrated or write path; adopted by reference where an INT phase narrates | backend, unchanged |
 | Phase 1b selector retirement (`DEC-LLM-14`) | it made INT-5 the only model surface (`ADR-INT-012`); **retired 2026-11-15** and recorded here so it is not reintroduced | backend, done |
-| Constrained proposer (`DEC-LLM-09`, LLM plan §7, phases 4–5) | a **write** capability outside this read-only workstream; **reclassified as deferred/unscheduled**, requirements retained, any future work needs a new decision | backend, unscheduled |
+| Constrained proposer (`DEC-LLM-09`, LLM plan §7, phases 4–5) | a **write** capability outside this read-only workstream; **withdrawn 2026-11-17** when the CLI proposal surface was removed for CLI/UI parity. No write-capable LLM path remains; any future proposal capability needs a new decision | backend, closed |
 | AFC (`docs/plans/AFC.md`) | not an LLM plan; it is the deterministic producer of the evidence consumed here | portfolio |
 | iOS phase contracts (Phase 1/2/3A/4/R7/R8/watch) | they exclude AI surfaces and are unchanged | portfolio contracts |
 | `docs/ARCHITECTURE.md` §3 boundaries and `PRIVACY.md` §7 | they constrain every model path and remain true | backend docs |
@@ -1937,8 +1938,9 @@ retained items in §16.3.
   provider-neutral `strength_coach/intelligence/context.py` (`ADR-INT-002`).
 - **Apple Intelligence and PCC move** from an unscheduled Phase 5 bullet to a specified, independently
   disableable INT-4/INT-5 scope with no silent cloud fallback (`ADR-INT-007`).
-- **The constrained proposer becomes deferred/unscheduled.** It is not dropped: its decision,
-  requirements and gates stay recorded, and re-activating it requires a new decision.
+- **The constrained proposer is withdrawn.** The CLI `run --propose` path was removed on
+  2026-11-17 because it broke CLI/UI parity, so `DEC-LLM-09` is closed rather than deferred. Its
+  requirements remain as historical record; any future write capability needs a new decision.
 - **No completed phase is reopened.** All previously closed work (iOS Phases 0–6, R1–R10,
   AFC-2 to AFC-4) keeps its recorded status.
 
