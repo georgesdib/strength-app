@@ -297,7 +297,7 @@ or a data-quality defect, and no reconciliation rule penalises them.
 **Consequences.** Coverage reporting distinguishes "no wearable record" from "no training" — the same
 distinction `DEC-CARDIO-04` makes for deletion.
 
-### DEC-CARDIO-17 — `cardio-policy/v1` is the only source of import and retention values
+### DEC-CARDIO-17 — `cardio-policy/v2` is the only source of import and retention values
 
 **Decision.** The values C2–C5 read — whitelist, measurement classes, retention, quality gates, import
 range, link bands — live in [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md) and change only by version bump
@@ -377,7 +377,7 @@ the derived layer already exists (`DEC-CARDIO-12`).
 
 ### C1 — Decision record and versioned policy
 
-**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v1`.
+**Status:** complete 2026-11-17 — [CARDIO-C1-POLICY.md](CARDIO-C1-POLICY.md), `cardio-policy/v2`.
 
 The policy fixes, with the audit's numbers behind each: modality whitelist (nine analytics modalities,
 everything else import-only by default); measurement classification into mandatory, optional, deferred
@@ -543,7 +543,7 @@ the backend status authority and this plan does not restate its status tables.
 ## 13. Related
 
 - [C0 audit](CARDIO-C0-AUDIT.md) — the measured export and matchability numbers behind this plan
-- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v1`, the values the implementation reads
+- [C1 policy](CARDIO-C1-POLICY.md) — `cardio-policy/v2`, the values the implementation reads
 - [Plan index](README.md) ·
   [iOS client phase plan](IOS-CLIENT-PLAN.md) ·
   [Athlete Feedback & Coaching](AFC.md) ·

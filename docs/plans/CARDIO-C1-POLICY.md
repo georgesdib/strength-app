@@ -1,6 +1,8 @@
 # CARDIO POLICY v1 — WHAT IS IMPORTED, KEPT, CLASSIFIED AND SHOWN
 
-**Version:** `cardio-policy/v1`, 2026-11-17. Supersedes nothing.
+**Version:** `cardio-policy/v2`, 2026-11-17. Supersedes `cardio-policy/v1` (same day): golf moved to
+analytics, the time-in-zone gate replaced by a continuity test, and the recovery-retention rules made
+explicit. See §11.
 **Status:** active policy for C2–C5. Nothing is implemented yet; this document is the specification the
 implementation reads.
 **Owner:** the athlete. Every number here is derived from [the C0 audit](CARDIO-C0-AUDIT.md); changes
@@ -37,9 +39,10 @@ Measured basis: 1,431 workouts, 546,283 HR samples inside workout windows, ≈65
 | Mixed cardio | 8 | analytics |
 | Tennis / pickleball / badminton / squash | 12 | analytics (intermittent; see §6 floor) |
 | Rowing, elliptical, stair climbing | 0 | analytics — whitelisted ahead of data, same rules |
+| Golf | 30 | analytics — intermittent, and Apple's METs include cart and pause time, so its minutes are weaker evidence than a walk of the same length |
 
 **Import-only** — stored and displayed, never intensity-classified, never counted as aerobic minutes:
-golf, fitness gaming, snowboarding, diving, cooldown, core training, kickboxing, mind and body, yoga,
+fitness gaming, snowboarding, diving, cooldown, core training, kickboxing, mind and body, yoga,
 flexibility, other, and every type not listed above. Unknown types default here, not to analytics.
 
 **Resistance domain:** traditional and functional strength training are imported and reconciled
@@ -72,9 +75,16 @@ Promotion from import-only to analytics is a policy version bump, never a runtim
 - **Resolution:** full, as recorded. No downsampling at v1 — running and cycling arrive at ~55–60
   samples/min and the total is ≈65 MB. Revisit only if the canonical store exceeds 250 MB, and then by
   policy bump.
-- **Quality:** a workout's series counts as usable for time-in-zone at ≥ 1 sample/min of duration.
-  Measured medians: running 59.5, cycling 54.7, swimming 19.5, walking 1.8, **strength 0.1** — so lifting
-  never produces a zone distribution, by data rather than by exception.
+- **Sync:** heart-rate samples carry their own anchor. A workout and its recovery tail may arrive in
+  separate syncs, and a tail that has not arrived is **pending**, never an absence (`DEC-CARDIO-04`).
+- **Quality — continuity, not rate.** A series is usable for time-in-zone when its median inter-sample
+  gap is ≤ 30 s **or** samples cover ≥ 50 % of the workout's duration. A samples-per-minute threshold is
+  rejected because it measures the recording mode rather than the data: density is bimodal across the
+  history (chest strap 2016–2018 and live recording 2026 sit at 55–60 samples/min; wrist background
+  sampling 2019–2025 sits at 0.1–0.7), so a fixed rate would admit some years and reject others for the
+  same physiological evidence. Under the continuity test, lifting still produces no zone distribution —
+  its median gap is minutes, not seconds — but for a reason the data states rather than a rate someone
+  chose.
 
 ## 5. Standalone metrics
 
@@ -95,7 +105,7 @@ a separate, labelled series (`DEC-CARDIO-14`).
 |---|---|
 | WHO-equivalent minutes | duration ≥ 5 min **and** a classification tier (METs or HR) |
 | Moderate/vigorous split | as above; tier recorded per minute |
-| Time in zone | HR series at ≥ 1 sample/min |
+| Time in zone | continuity: median inter-sample gap ≤ 30 s **or** ≥ 50 % of duration covered |
 | Session frequency / modality mix | any imported workout |
 | Pace at comparable HR | running/cycling, distance ≥ 1 km, ≥ 5 HR samples |
 | Power at comparable HR | cycling, power present, ≥ 5 HR samples |
@@ -139,7 +149,14 @@ Band version `link_v1`. Every link stores method, band version and inputs; unlin
 3. Nothing in this policy may change a load, a set, a prescription or a schedule (`DEC-CARDIO-01`).
 4. Values here are the inputs the implementation reads; a number that exists only in code is a defect.
 
-## 10. Deliberately absent
+## 10. Change log
+
+| Version | Date | Change | Evidence |
+|---|---|---|---|
+| v1 | 2026-11-17 | First policy | [C0 audit](CARDIO-C0-AUDIT.md) |
+| v2 | 2026-11-17 | Golf moved to analytics; time-in-zone gate replaced by a continuity test; recovery retention and sync rules made explicit | Density is bimodal by recording mode (2016–2018 and 2026 at 55–60 samples/min, 2019–2025 at 0.1–0.7), and 70 % of workouts carry a computable HRR |
+
+## 11. Deliberately absent
 
 Training-load impulse (TRIMP, sRPE × duration), combined fatigue scores, HR zones defined by anything
 other than what `DEC-CARDIO-05` produces, VO₂max estimation, route analysis, sleep, clinical records,

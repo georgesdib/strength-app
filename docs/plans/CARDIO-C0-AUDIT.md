@@ -194,6 +194,13 @@ than 200 bpm, 601 classifications flip).
 
 Overall: 970 by METs, 328 by heart rate, 133 unclassified — **90.7 % classified**.
 
+**Heart-rate density is bimodal by recording mode, not by era.** Median samples per minute of workout:
+2016–2018 at 55–60 (a chest strap writing through RunGap), 2019–2025 at 0.1–0.7 (wrist background
+sampling), 2026 at 7–10, and 9–10.7/min across August–November 2026. The share of workouts reaching
+1 sample/min follows: 100 %, 42–48 %, 73 % by year. A samples-per-minute gate therefore measures the
+recording mode rather than the data and would change meaning as Apple changes sampling; `cardio-policy/v2`
+replaces it with a continuity test (median gap ≤ 30 s or ≥ 50 % coverage).
+
 The pre-2021 years are better than the earlier reading of this audit suggested: 230 of the 312 workouts
 in 2016–2020 carry heart rate, written by **RunGap** from a non-Apple sensor (414,339 samples before
 2021). Those years therefore classify mostly by `%HRmax`, while 2022 onwards classifies mostly by Apple's
