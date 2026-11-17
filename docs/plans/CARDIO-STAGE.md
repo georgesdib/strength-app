@@ -480,8 +480,13 @@ the readiness path and existing `measurement` rows are unchanged.
 
 ### C4 — Linking and the reconciliation queue
 
-**Interface (planned, not yet implemented).** Linking is a re-runnable backend job, never a
-read-time view:
+**Status:** applied to the main server 2026-11-17. 318 sessions linked (315 `day_containment`,
+3 `interval_overlap`, overlaps 0.97–1.00), 318 link events, 378 sessions unchanged,
+`quick_check` ok, second run `auto_linkable: 0`. Queue: 62 — 54 Health-only workouts with no
+session that day, 6 on three two-workout days, 1 partial interval overlap (0.80), 1 measured
+session with no overlap. Resolving those is manual (`--link`), by design.
+
+**Interface (implemented).** Linking is a re-runnable backend job, never a read-time view:
 
 ```
 # report what would link, by tier and method; writes nothing
