@@ -570,6 +570,12 @@ and per modality so a change in Apple's model cannot masquerade as a change in b
 
 ### C6 — Dashboards
 
+**C6c — hide an imported workout (implemented 2026-11-17).** `cardio_exclusion` records hide/show as
+append-only events (latest wins); every metric and the linker filter on the current state, and the
+Cardio panel lists recent workouts with a Hide action. Verified on the main server: hiding the
+17 November session moved 2026 from 8,264.2 to 8,228.1 minutes and showing restored 8,264.2. This
+replaces anchored deletion sync, which could never have covered export-era rows.
+
 **Status:** web slice live 2026-11-17. `GET /api/cardio/summary?weeks=12` serves weekly activity,
 rolling 7/28-day windows, per-year coverage and the resistance share from a classification cache
 (migration `0065`); measured 0.11 s on the ODROID against a 0.66 s `/api/settings` baseline.
