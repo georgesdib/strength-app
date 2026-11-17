@@ -1562,9 +1562,10 @@ rejected index files are purged, citations use repository namespaces, source blo
 untrusted, and index status reports every source including missing roots. Allowlist, chunker, incremental FTS5 index, knowledge CLI, retrieval, citation
 checking, explain/status endpoints, background startup indexing and web/iOS Explain tabs are in place.
 A 15-question evaluation is complete. Known limitations: programme-block answers include some
-archive/contract context; no direct outcome evidence is cited for the reactive trigger counts; iOS
-physical-device acceptance is outstanding; no release tag was created. No follow-up context, web
-search or RAG is included.
+archive/contract context; no direct outcome evidence is cited for the reactive trigger counts. The
+owner closed the remaining device-acceptance and release-tag items on 2026-11-17 by decision: no
+separate physical-device run was made and no dedicated tag was cut, so Explain ships with the next
+tagged release. No follow-up context, web search or RAG is included.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
@@ -1728,8 +1729,9 @@ facts the chat already sends, gated by an explicit model selection and the exist
 the footer states the model so the athlete can see when words came from off the device. The output is
 displayed, never stored as a prescription, session or measurement.
 
-**Status.** **Implemented 2026-11-16** (decision 20, `ADR-INT-022`) at the owner's request; iOS-only,
-with physical-device acceptance outstanding.
+**Status.** **Implemented 2026-11-16** (decision 20, `ADR-INT-022`) at the owner's request; iOS-only.
+**Closed 2026-11-17** by owner decision: the physical-device acceptance was waived rather than run,
+and the card ships with the next tagged client release.
 
 ## 12. Dependencies and sequencing
 
@@ -1749,9 +1751,10 @@ INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
-INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval
+INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval; device/release items
+          owner-closed 2026-11-17
 INT-12    deferred — web search and RAG; after INT-11, new provider/ADR
-INT-13    implemented 2026-11-16 — Today summary card (iOS only; device acceptance outstanding)
+INT-13    closed 2026-11-17 — Today summary card (iOS only; owner-closed without a device run)
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
 ```

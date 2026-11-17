@@ -804,8 +804,9 @@ comes from the Keychain, and nothing is logged off the device beyond what the pr
 carries.
 
 **Status.** **Accepted 2026-11-16** (decision 20) at the owner's request, amending INT-4d's chat-only
-boundary for this surface only. Implemented 2026-11-16 on the iOS client; physical-device acceptance
-outstanding.
+boundary for this surface only. Implemented 2026-11-16 on the iOS client. **Closed 2026-11-17** by
+owner decision: the physical-device acceptance was waived rather than run, and the card ships with the
+next tagged client release.
 
 ## Rejected architectural alternatives (summary)
 
