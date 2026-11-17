@@ -269,8 +269,9 @@ is re-derivable from the audit without re-opening the debate.
 ### C2 — iOS HealthKit connector
 
 Extend read authorisation to workouts, workout routes, HR, HRV, resting HR, VO₂max, body mass, active
-energy, distance, power and exercise minutes, with a reviewed usage description and a re-consent path
-for existing installs. Full historical backfill in bounded, retryable batches; anchored incremental
+energy, distance, power and exercise minutes. The phone usage description already covers that full
+scope (owner decision 2026-11-17); the authorisation request and the re-consent path still land here,
+and a scope that was never granted is never silently extended. Full historical backfill in bounded, retryable batches; anchored incremental
 queries with persisted anchors; deletion and change handling emitting status events rather than
 deletes; resumable progress; visible coverage.
 
