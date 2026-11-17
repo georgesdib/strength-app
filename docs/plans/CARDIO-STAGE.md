@@ -393,14 +393,17 @@ verified backup and one restore drill before the first such migration.
 Landed 2026-11-17 on task branches. Not merged into `development` and not pushed; nothing is committed
 to `main`.
 
-| Repository | Change | Commit |
+| Repository | Change | Commits |
 |---|---|---|
-| Portfolio | This plan, the plan-index entry and the documentation registration | this branch |
-| Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here, A2/A3 stay v1.6, v1.6 stays open | `9ac0a67` |
-| iOS | `docs/README.md` index pointer, explicitly marked proposed and not implemented | `a2e84e6` |
+| Portfolio | This plan, the plan-index entry and the documentation registration | `5e473cf` |
+| Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here, A2/A3 stay v1.6, v1.6 stays open | `9ac0a67`, `9a9a39e` |
+| iOS | `docs/README.md` index pointer, plus `docs/HEALTHKIT.md` describing the current read/write scope and privacy limits | `a2e84e6`, `359baf4`, `2c644d6` |
 
-The iOS repository has no dedicated HealthKit/readiness implementation note, so the pointer lives in
-its documentation index; adding one is the iOS owner's call, not this plan's.
+Links to this plan point at the portfolio `development` branch: `main` carries release pins and lags
+`development`, so a `main` link would 404 until the next release merge.
+
+`docs/HEALTHKIT.md` was the missing iOS-side reference this plan needed for C2. It describes shipped
+behaviour only and records the entitlement/usage-string discrepancy C2 must resolve.
 
 No submodule pointer update and no portfolio consolidation is part of this task. `ROADMAP.md` remains
 the backend status authority and this plan does not restate its status tables.
