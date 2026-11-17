@@ -452,10 +452,11 @@ promotion CLI are on `development`. Promotion of the real export into a scratch 
 `history_cutoff = 2026-11-17T17:49:23Z`; a second run created nothing. Not applied to the production
 database.
 
-**Measured deviation from the estimate:** the canonical store is 263 MB, not the ≈65 MB estimated in
-C0 — the 64-character identity keys and their indexes dominate. That crosses the policy's own
-"revisit above 250 MB" trigger, so the retention values need a `cardio-policy/v4` decision before
-this is deployed.
+**Storage:** the first promotion produced 263 MB, not the ≈65 MB estimated in C0 — the 64-character
+hex identity keys and their indexes dominated. Keys are now stored as the 32-byte digest, which
+measured 222 MB — under the policy's 250 MB trigger, so no retention change is needed. The remaining
+31 MB of `idx_health_sample_kind` is left in place until C5 shows whether any metric reads samples
+without going through a workout.
 
 Extend the Phase 3A ingestion idiom. Promote from staging under the C1 rule. Times in UTC with source
 offset retained; canonical units; original activity type retained; provenance on every row; raw
