@@ -65,7 +65,7 @@ Form ratings and the post-session review use existing server review/form contrac
 
 ### Explicitly not a first-release prerequisite
 
-HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) remains deferred; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
+HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) was **retired 2026-11-18** as superseded by the cardio stage; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
 
 ## 2. Architectural invariants
 
@@ -95,10 +95,10 @@ HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-rele
 
 ## 4. Phased implementation plan
 
-Each phase is separately reviewable. Add only the endpoints, migrations, client screens, and tests needed for that phase. The first connected vertical slice was implemented before any offline queue, HealthKit importer, or model feature. Phases 0–2, Phase 3A, Phase 4, Phase 6.0–6.7 and R1–R5/R7–R10 are closed; R11 was dropped; Phase 3B and Phase 5 need separate approval before they start.
+Each phase is separately reviewable. Add only the endpoints, migrations, client screens, and tests needed for that phase. The first connected vertical slice was implemented before any offline queue, HealthKit importer, or model feature. Phases 0–2, Phase 3A, Phase 4, Phase 6.0–6.7 and R1–R5/R7–R11 are closed; Phase 3B was retired on 2026-11-18; Phase 5 needs separate approval before it starts.
 
-**Implementation order (owner decision, 2026-11-07):** Phases 0–2, 3A and 4 are complete; next are
-3B (Apple Workout imports) and Phase 5. Phase numbers stay stable so existing references do not move;
+**Implementation order (owner decision, 2026-11-07):** Phases 0–2, 3A and 4 are complete; next is
+Phase 5. 3B (Apple Workout imports) was retired on 2026-11-18 as superseded by the cardio stage. Phase numbers stay stable so existing references do not move;
 the order reflected an always-on home server, where offline capture was optional and HealthKit
 readiness was the reason to build the app.
 
@@ -182,9 +182,15 @@ and implementation on 2026-11-08; the server migration, canonical merge, import 
 HealthKit path are implemented. Unit, simulator and live-server workflow verification pass;
 physical HealthKit acceptance is owner-confirmed and Phase 3A is closed. Do not duplicate or vary
 the contract rules here.
-Phase 3B remains separate below.
+Phase 3B, below, was retired on 2026-11-18.
 
 **Phase 3B: Apple Workout summaries and related cardio data, if useful**
+
+**Retired 2026-11-18 — superseded by the cardio stage plan.** The HealthKit workout import this
+phase described shipped at backend 1.6.0: `external_workout` with identity and duplicate
+handling, explicit append-only links that leave ambiguous records separate, and descriptive cardio
+with provenance ([cardio stage plan](CARDIO-STAGE.md)). The scope below is kept as the historical
+record; it is not pending work.
 
 1. Import completed HealthKit workout summaries only after the HRV/RHR slice is stable. Preserve workout type, start/end, duration, source/device and HealthKit object identity where available.
 2. Preview before materializing/importing. Keep Apple strength workout summaries as summaries: never infer exercises, sets, repetitions, loads or RIR.
@@ -193,6 +199,11 @@ Phase 3B remains separate below.
 5. Keep HealthKit source deletion/updates and duplicate protection auditable. Do not retain raw sample time series unless a separate user-facing need justifies it.
 
 #### Apple Workout Effort Score and session RPE
+
+**Closed 2026-11-18.** No Apple-supplied effort is mapped into the effective session sRPE: the
+manual value is the only source (`DEC-SRPE-01`), and the watch's HealthKit effort score is written
+*from* sRPE rather than read into it. The rules below record what such a path would have required,
+so a future proposal starts from facts rather than from scratch.
 
 When supported effort data is available for an Apple workout that the owner has explicitly associated with an application session, it **may populate the effective session sRPE only when no manual sRPE already exists**. It is an optional source, not a requirement for Phase 2 or the first release.
 
@@ -570,9 +581,9 @@ not duplicate that matrix here. The minimum gates are the observable states (fea
 unavailable, enabled, noEligibleSample, eligibleSample, staleSample, importError), manual-over-
 HealthKit precedence through the canonical effective-readiness merge, sample identity and
 single-flight import, authoritative refresh after acknowledgement, and no sleep/score changes.
-Phase 3B, a separate contract, must additionally prove repeated workout import idempotency, no
-inferred strength sets, separate ambiguous association, explicit Apple-effort provenance, manual
-sRPE precedence and no prescription/rubric changes.
+Phase 3B was retired on 2026-11-18: the cardio stage covers its ingestion half (import idempotency,
+no inferred strength sets, ambiguous associations left separate) and no Apple-effort path exists —
+manual sRPE precedence stands.
 
 ### Phase 4
 
@@ -621,8 +632,8 @@ rate and HealthKit) and 6.6 (phone mirror, plan revisions and active-session cor
 complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
 the R rollback dry run all confirmed; no Phase 6 follow-ups remain.
 
-Phase 3B (Apple Workout summaries and related cardio data) remains a separate proposal and needs
-its own approved contract. Phase 5 remains optional and separately approved. R7 and R8 are
+Phase 3B (Apple Workout summaries and related cardio data) was retired on 2026-11-18 as superseded
+by the cardio stage plan. Phase 5 remains optional and separately approved. R7 and R8 are
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
 R10 closed on 2026-11-14 (timing implemented on both devices; iOS velocity correction superseded by
@@ -630,8 +641,8 @@ the server's post-workout History edit). R11 (rest timer Live Activity) was drop
 reinstated on 2026-11-17 for phone-owned sessions and **closed 2026-11-18**: +15 s and Skip act from
 the Lock Screen and the expanded Island, and the physical-device acceptance was waived.
 
-Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
-remains a separate contract; Phase 6.7 is fully confirmed (W1–W12 and R).
+Do not begin PCC work without separate approval. Phase 4 is closed; Phase 3B is retired; Phase 6.7
+is fully confirmed (W1–W12 and R).
 
 ## 12. References
 
@@ -710,7 +721,7 @@ backup is the fallback when the rollback itself went wrong.
 | 1 | Remove the iOS facade routes and delete device rows (§13.2); the existing server is untouched. | Nothing. |
 | 2 | Disable the facade; the issued-plan and receipt tables are additive and can be dropped (§13.2). The web/CLI path never depended on them. | Prescriptions and workouts already committed remain valid. |
 | 3A | Disable the feature and remove the canonical-merge integration; drop `healthkit_readiness` with the paired migration row (§13.2). Manual readiness and prior readiness history remain. | Manual entries and prior readiness history; no HealthKit observation survives. |
-| 3B | Separate contract; not implemented by Phase 3A. | — |
+| 3B | Retired 2026-11-18, superseded by the cardio stage plan. | — |
 | 4 | The queue is client-side; disabling it returns the Phase 2 online behavior. Server receipt rows can be pruned. | Any acknowledged server records remain. |
 | 5 | Each enhancement is independently disableable; removing one leaves the core flows intact. | Everything core. |
 
@@ -907,8 +918,8 @@ that without checking. The additive table can otherwise remain while the client 
 
 **Phase 0 complete 2026-11-07. Phase 1 complete 2026-11-07. Phase 2 complete and closed
 2026-11-07**, simulator-verified and owner-confirmed on the physical iPhone. Phase 3A and Phase 4
-are closed; Phase 6.0–6.7 are complete (6.7 owner-confirmed 2026-11-14). Phase 3B and
-Phase 5 remain separate proposals without an approved contract.
+are closed; Phase 6.0–6.7 are complete (6.7 owner-confirmed 2026-11-14). Phase 3B was retired on
+2026-11-18; Phase 5 remains a separate proposal without an approved contract.
 
 ### Phase 1 completion record
 
