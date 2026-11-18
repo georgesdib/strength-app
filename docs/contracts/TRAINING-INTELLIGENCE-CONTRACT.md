@@ -195,7 +195,11 @@ Rules:
 | `identity` | device ids, tokens, database paths | never included |
 
 A capability that includes `health` data MUST set `privacy.class` to `health`, list the fields,
-and record the reason in `limitations`. The field-level outbound inventory required by
+and record the reason in `limitations`. Cardio minutes, time-in-zone and VO₂max are `health`: a client
+that forwards them to an off-device model requires its own explicit, default-off consent, separate
+from any plan/prescription consent (`DEC-LONGEVITY-02`). The web `/api/intelligence/narrate` route
+enforces this at execution: a health-class envelope without `health_consent: true` is rejected
+before the remote model is called. The field-level outbound inventory required by
 `LLM-INTEGRATION-PLAN.md` §8.1 MUST be completed for any model path before it is enabled.
 
 ## 7. MCP surface
@@ -257,6 +261,7 @@ and record the reason in `limitations`. The field-level outbound inventory requi
 | 8 | `get_programme_block_summary` | **yes** (INT-2) | yes | yes | `features/deload.py`, `features/regime_change.py`, `prescribe/volume_budget.py` |
 | 9 | `compare_training_periods` | **yes** (INT-2) | yes | yes | `features/attendance.py`, `features/adherence_analytics.py`, `features/volume.py` |
 | 10 | `get_weekly_review` | **yes** (INT-3) | yes | yes | composition of 5, 8, and the trends |
+| 11 | `get_longevity_assessment` | **yes** (1.7.0; corrected 1.7.1) | yes | yes | `features/cardio_metrics.py` `adequacy()`, `prescribe/volume_budget.py`, `measurement` (`vo2max`) |
 | — | `explain_prescription` | **rejected as a tool** | — | — | model capability over tool 6 (see §7.9) |
 
 `get_weekly_review_data` is not a separate tool: `get_weekly_review` returns the deterministic
@@ -607,7 +612,52 @@ INT-4 work.
 }
 ~~~
 
-#### 7.5.11 Why `explain_prescription` is not a tool
+#### 7.5.11 `get_longevity_assessment`
+
+**Purpose.** One deterministic answer to "how is aerobic activity, is there a fitness reading worth
+trusting, and what is left in the week?" — facts only.
+
+**Input.** `as_of` (date; default today in `Europe/London`).
+
+**Output facts.** `last_week` (completed week: moderate and vigorous minutes, moderate-equivalents,
+`relation`: `below`/`inside`/`above`/`unknown`, gate, `classified_share`,
+`unclassified_minutes` and `tier_minutes`), `current_week` (minutes so far, days and sessions
+remaining, no relation), `vo2max` (value, unit, `measured_on`, `source` and `method`, `status`:
+`current`/`stale`/`absent`), `time_in_zone` (continuity-eligible workouts, minutes by zone,
+`covered_minutes`/`workout_minutes`/`unobserved_minutes`, `coverage_share` and
+`temporal_coverage_share`, `method`), `patterns` (per managed pattern: volume headroom in sets).
+The API key `inside` is rendered by clients as "within"; `above` is its own state.
+
+`relation` is `above` only when the moderate-equivalent total exceeds the upper 300-minute
+reference. Above the band is context, not a verdict: the contract forbids describing it as
+excessive, harmful or a maximum safe dose.
+
+**Source.** `cardio_metrics.activity_summary` and `adequacy()`, `prescribe.volume_budget`,
+`measurement` (`vo2max`). Composition only; no new table.
+
+**Deterministic.** Yes.
+
+**Coverage.** No classified activity in the window → `no_data` with `missing` naming the inputs.
+Below the classification floor → `insufficient`, and `relation` MUST be `unknown`, never `below`.
+Time-in-zone coverage MUST be reported because it covers a subset of workouts. Temporal coverage
+(integrated sample time ÷ eligible workout time) MUST be reported separately from continuity
+eligibility, and zone minutes MUST NOT exceed the elapsed time represented by valid samples.
+
+**Privacy.** Class `health`; the fields are cardio minutes, time-in-zone and VO₂max. A host that sends
+these facts to an off-device model MUST gate them behind its own explicit consent (DEC-LONGEVITY-02).
+The web narration route enforces the same boundary server-side: a health-class envelope is not
+handed to the configured remote model unless the request carries an explicit `health_consent`
+flag, and the browser must show the disclosure (naming the configured provider/model) before it
+sets that flag. Deterministic facts remain available with narration disabled.
+
+**Prose.** Not part of this tool. Advisory text is a host capability (§7.9) written from these facts;
+the tool MUST NOT return prose, a recommendation or a target.
+
+**iOS.** Yes.
+
+**Status.** Implemented 2026-11-18; released in 1.7.0; corrected in 1.7.1.
+
+#### 7.5.12 Why `explain_prescription` is not a tool
 
 `explain_prescription` was a candidate. It is rejected for v1 because:
 

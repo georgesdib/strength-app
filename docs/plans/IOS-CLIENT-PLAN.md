@@ -21,16 +21,15 @@ completion/abandon, Progress, opt-in HealthKit HRV/RHR/bodyweight readiness, Key
 Home/Away server routing by Home Server reachability with a Prefer Home manual override (no
 Wi-Fi SSID, Location or Access Wi-Fi Information entitlement), Settings Exercise Library with read-only configurations, e1RM and paginated
 working-set history,
-296 unit tests
-after R1–R10, Phase 3A, Phase 4 and the Phase 6 watch slices (2026-11-14), plus optional live UI
-smoke tests. Phase 3A is closed 2026-11-08; physical
+296 unit tests after R1–R10, Phase 3A, Phase 4 and the Phase 6 watch slices (2026-11-14; 441 as of
+2026-11-17), plus optional live UI smoke tests. Phase 3A is closed 2026-11-08; physical
 HealthKit acceptance was owner-confirmed and Phase 3B is out of scope. R7 (asynchronous
 prescription request with session-type and minimum-session settings) is **implemented and closed
 2026-11-08**: the app builds with an iOS 27.0 deployment target and the client tests pass on the
 available iOS 27.2 simulator; the app launches, and the live UI flow passed twice — once with the resolver off and once with it on against a copy of the
 real database. R2 is closed as absorbed by R7's `plans/current` read. R8 (active-workout plan editing) is **closed 2026-11-08**;
-its authenticated exercise-catalogue, online-only and no-solved-load decisions are recorded; R8 is
-closed.
+its authenticated exercise-catalogue, online-only, server-solved-load and move decisions are
+recorded; R8 is closed (extended 2026-11-17).
 Server contracts:
 [`design/IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) and
 [`design/IOS-R8-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R8-CONTRACT.md). Later phases remain proposals and need
@@ -275,12 +274,15 @@ so VBT entry no longer moves the set's recorded time.
   the set keeps its original id and timestamp; replay with the same key is a no-op; a correction
   after finish is rejected; existing set/remove/form paths are unchanged.
 
-### R11 — Rest timer Live Activity (dropped 2026-11-14)
+### R11 — Rest timer Live Activity (dropped 2026-11-14; reinstated 2026-11-17)
 
-**Status:** **dropped 2026-11-14; not needed.** Restored earlier the same day after a plan rewrite
-dropped it, then closed: the watch schedules a local end-of-rest notification, the phone shows its
-rest timer in-app, and a Live Activity could not cover watch-owned sessions without a
-WatchConnectivity event channel (contract §21). The original scope is kept below for the record.
+**Status:** **reinstated 2026-11-17 for phone-owned sessions.** The earlier drop was because a
+Live Activity could not cover watch-owned sessions without a WatchConnectivity event channel
+(contract §21). The phone now owns an exercise lifecycle of its own and persists its rest interval,
+so a phone-owned rest can drive one. Delivered: a widget extension target, the rest Live Activity
+on the Lock Screen and Dynamic Island with a system-rendered countdown, and a Control Center /
+Action button control that opens the app. Not yet delivered: **+15 s** and **skip** from inside the
+activity (they remain in-app), and physical-device acceptance. The original scope is kept below.
 
 Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
 does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
@@ -660,9 +662,9 @@ Before applying any iOS migration to a live database, and before any rollback th
    committed transactions that still live only in the WAL.
 2. Take a consistent backup through SQLite's backup API, never a raw file copy:
    `python tools/db_transfer.py export --db data/coach.db` (archive under `data/exports/`, which is
-   git-ignored) or `python tools/backup_app.py`. `db_transfer` snapshots with
-   `sqlite3.Connection.backup`, so WAL contents are included, and it refuses to import over a target
-   whose `-wal`/`-shm` sidecars still exist.
+   git-ignored) or `python3 ../scripts/backup_app.py` from `strength-training-app/`. `db_transfer`
+   snapshots with `sqlite3.Connection.backup`, so WAL contents are included, and it refuses to
+   import over a target whose `-wal`/`-shm` sidecars still exist.
 3. Run `PRAGMA quick_check` against the snapshot and record the archive path and the
    `schema_migration` version in the phase's completion record.
 
@@ -740,21 +742,21 @@ backing up.
 ```bash
 lsof -nP -iTCP:$PORT -sTCP:LISTEN || true
 mkdir -p "$BACKUPS"
-.venv/bin/python tools/backup_app.py "$BACKUPS"
+python3 ../scripts/backup_app.py "$BACKUPS"
 ```
 
 Record the archive path and checksum. Verify it immediately:
 
 ```bash
-LATEST=$(ls -t "$BACKUPS"/strength-training-app-*.tar.gz | head -1)
+LATEST=$(ls -t "$BACKUPS"/strength-app-*.tar.gz | head -1)
 echo "$LATEST"
 (cd "$BACKUPS" && shasum -a 256 -c "$(basename "$LATEST").sha256")
 sqlite3 "$DB" "SELECT version FROM schema_migration ORDER BY version DESC LIMIT 1;"
 ```
 
-The full archive includes a consistent SQLite snapshot plus source/docs/config and is mode 600,
-but it is not encrypted. Keep it off the phone and out of git. Do not continue if the checksum or
-snapshot verification fails.
+The full archive covers all three repositories and includes a consistent SQLite snapshot plus
+source/docs/config; it is mode 600 but not encrypted. Keep it off the phone and out of git. Do not
+continue if the checksum or snapshot verification fails.
 
 #### 2. Apply migrations 0054/0055 and start the server
 
@@ -1086,25 +1088,29 @@ target and unit-tested on the available iOS 27.2 simulator (73 tests, 0 failures
 data effects, tests, acceptance and rollback.
 
 R8 brings the web UI's existing live-workout edits to the phone: swap a plan item's exercise, add an
-exercise, remove one, and change a set count. It supersedes the Phase 2 clause "no plan edits,
-exercise swap, set-count change".
+exercise, remove one, move one, and change a set count. It supersedes the Phase 2 clause "no plan
+edits, exercise swap, set-count change". Move was added on 2026-11-17 with a solved load on add
+(`DEC-IOS-08`, `DEC-IOS-09`).
 
 - Every edit runs through the existing `workout.py` services (`swap_exercise`, `add_exercise`,
-  `remove_exercise`, `change_sets`); they rewrite `plan_modified_json` and append
+  `remove_exercise`, `change_sets`, `move_exercise`); they rewrite `plan_modified_json` and append
   `workout_event` rows. The issued plan JSON is never modified, so prescribed and performed stay
   separately reconstructible.
-- The phone never supplies a load or a replacement plan. Add sends only the exercise id and the
-  service applies its defaults (3×8–12 @ RIR 2, no load); swap clears the load and records why.
-  The owner enters the performed load when logging the set; R8 does not run the load solver.
+- The phone never supplies a load or a replacement plan. Add sends the exercise id (and optionally
+  the shape) and the server solves that slot the same way it solves a swap — its own load, warm-ups
+  and VBT target from its own history; unsolvable exercises are added with a null load and a visible
+  reason. Swap re-solves the replacement rather than clearing the load. The owner enters the
+  performed load when logging the set; the client never runs the load solver.
 - Exercise choice comes from an authenticated read-only `GET /api/ios/v1/exercises`; the app loads
   it while online. R8 does not add an offline queue; R1 journaling covers attempted edits only.
 - Swap is blocked after sets are logged; set count cannot go below logged sets; the last item cannot
   be removed; ambiguous unattributed sets block edits. Removing an item with logged sets keeps those
   sets and warns first. An expected-exercise guard returns `409 plan_changed` instead of letting a
-  stale index edit the wrong lift.
-- A plan item's `order_index` is its stable identity across remove/swap/add; logged sets store it in
-  `prescription_item_index`, so removing an earlier item does not renumber later attributions. The
-  current display position is separate, and legacy positional rows use a same-exercise fallback.
+  stale index edit the wrong lift, and a move to an out-of-range position does the same.
+- A plan item's `order_index` is its stable identity across remove/swap/add/move; logged sets store
+  it in `prescription_item_index`, so removing an earlier item does not renumber later attributions
+  and moving an item never detaches its sets. The current display position is separate, and legacy
+  positional rows use a same-exercise fallback.
 - The web UI shares the service guards and returns 409 for rejected edits; it does not gain the
   iPhone picker or any new R8 screen.
 - In progress only, idempotent, full workout payload returned; no schema change.
@@ -1121,15 +1127,22 @@ older base.*
 - The rest timer is app-level and rendered above the tab bar on every screen. Completion is
   recorded once in the AppModel, dismisses the bar, and cancels the pending notification; the
   local notification has a **Done** action and is presented in the foreground.
-- Form rating is available on the exercise screen with the existing current-rating/correction
-  semantics.
+- The first set starts the exercise, warm-ups included, and **End exercise** ends it: it closes
+  the rest that exercise owns, records `exercise_completed` and offers the optional 1–5 form
+  rating with an explicit skip. Navigation records nothing, so an exercise is a preview until a
+  set is logged. Several exercises may stay open at once: a superset is recorded as overlapping
+  exercise intervals, and starting a set in another one interrupts the rest.
+- Form rating is offered at End exercise (and finish), not from a standalone section.
 - Workout-detail sets expose the stable plan-item identity as `plan_item_index`; the planned-set
-  completion and the swap/set-count guards use it.
-- Warm-up rows render on the exercise screen. The server prepends `min(20 kg, first ramp set)`
-  (10 reps, configurable) and de-duplicates it when it equals the first rung; skipping warm-ups
-  never gates working sets.
-- Unplanned and warm-up sets are indexed above the entire planned range, so logging one before a
-  planned set cannot collide with a later working set and suppress it.
+  completion and the swap/set-count guards use it, excluding RIR 6.
+- Warm-up rows render on the exercise screen and fill the ordinary set controls. The server
+  prepends `min(20 kg, first ramp set)` (10 reps, configurable) and de-duplicates it when it equals
+  the first rung; skipping warm-ups never gates working sets.
+- Warm-ups are ordinary sets. RIR 6 is the only marker, decided at save: it takes an index at 1000
+  or above so it never occupies a planned slot, opens no rest, and stays out of the working-set
+  count. An unplanned working set never takes an index at 1000 or above.
+- The rest interval is persisted per workout: a relaunch resumes it, and an interval that ended
+  while the app was closed is recorded at the real end it reached.
 - Verified: 226 iOS unit tests, the watch scheme build in `scripts/ci.sh`, and the full server
   pytest suite. Physical iPhone notification/timer and warm-up acceptance was owner-confirmed
   2026-11-14.
@@ -1141,9 +1154,22 @@ older base.*
   another workout** no longer fire together.
 - The watch rest bar offers **−15s** instead of End rest, and schedules a local end-of-rest
   notification (the on-screen haptic stays).
-- Bar-speed fields appear only when the plan item carries a `velocity_target`.
+- Bar-speed fields initially appeared only when the plan item carried a `velocity_target`
+  (superseded 2026-11-17: capture is not gated on a target).
 - The watch finish captures productivity and acknowledges a `409 workout_not_active` from a
   retried finish instead of staying on the finish screen.
+
+### VBT target display and bar-speed eligibility — 2026-11-17 (implemented)
+
+- The plan's `velocity_target` is now shown beside RIR on both clients: the iPhone exercise target,
+  planned-set, review and active-workout rows, and the log-set sheet (`Velocity target` under RIR),
+  plus the watch exercise header and RIR sheet. The clients format the issued value only; they do
+  not derive, clamp or recompute a target.
+- Supersedes the 2026-11-14 bullet above: bar-speed capture is not gated on a target. Both clients
+  offer it for external-load work and exclude bodyweight work. The target, when issued, is
+  displayed, and the server still owns calibration and adherence.
+- Verified by `PrescriptionVelocityTargetTests` and `StrengthApp/scripts/ci.sh` (watch and embedded
+  watch builds; 441 tests, 1 skipped).
 
 ### Phase 3A — HealthKit HRV/RHR/bodyweight readiness (closed 2026-11-08)
 

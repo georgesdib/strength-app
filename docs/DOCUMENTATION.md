@@ -6,7 +6,7 @@ The portfolio repository (`georgesdib/strength-app`) is the canonical source of 
 
 | Content | Canonical owner | Examples |
 |---|---|---|
-| Overall cross-repository plans, phase roadmaps, shared feature specifications, project architecture, decisions affecting multiple components, server/client contracts, integration requirements, shared acceptance rules, shared operational/data-management policies, agent task routing and handoff | Portfolio | `docs/plans/`, `docs/contracts/`, `docs/decisions/`, `docs/specifications/`, `docs/operations/`, `docs/agent/`, this policy |
+| Overall cross-repository plans, phase roadmaps, shared feature specifications, project architecture, decisions affecting multiple components, server/client contracts, integration requirements, shared acceptance rules, shared operational/data-management policies, agent task routing | Portfolio | `docs/plans/`, `docs/contracts/`, `docs/decisions/`, `docs/specifications/`, `docs/operations/`, `docs/agent/`, this policy |
 | Python implementation architecture, backend API reference, schemas and migration details, config formats, backend-only tests, server operations and code-coupled user guides | Backend | `AGENTS.md`, `ROADMAP.md` for live backend implementation status, `docs/API.md`, `docs/DATA-MODEL.md`, `docs/design/` implementation materials, manifest/viewer docs |
 | Swift architecture, Xcode/build/test procedures, UI implementation, live-test setup, Apple platform details and physical-device acceptance evidence | iOS/watchOS | `AGENTS.md`, `README.md`, `docs/AGENT-*.md`, `USER-GUIDE.md`, `DEVICE-ACCEPTANCE.md`, watch-specific implementation docs |
 
@@ -16,13 +16,16 @@ The portfolio repository (`georgesdib/strength-app`) is the canonical source of 
 - [`docs/plans/README.md`](plans/README.md) is the portfolio-level plan and roadmap locator. It links the backend implementation roadmap without duplicating it because that file is consumed by backend tests and the docs viewer.
 - [`docs/plans/IOS-CLIENT-PLAN.md`](plans/IOS-CLIENT-PLAN.md) is the canonical cross-repository iOS phase plan.
 - [`docs/plans/AFC.md`](plans/AFC.md) is the canonical cross-repository Athlete Feedback & Coaching plan; the backend `docs/AFC.md` is a compatibility pointer.
-- [`docs/plans/TRAINING-INTELLIGENCE.md`](plans/TRAINING-INTELLIGENCE.md) is the canonical cross-repository Training Intelligence plan (capability layer, MCP server, iOS adapters, phases INT-1 to INT-8). It supersedes the forward-planning content of the earlier LLM and Apple Intelligence plans, names what remains in force, and must be amended rather than duplicated by any new intelligence proposal. Its [audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) is a dated record, and [`docs/decisions/TRAINING-INTELLIGENCE-ADR.md`](decisions/TRAINING-INTELLIGENCE-ADR.md) holds its cross-repository decisions.
+- [`docs/plans/CARDIO-STAGE.md`](plans/CARDIO-STAGE.md) is the canonical cross-repository cardio stage plan: HealthKit ingestion, canonical backend cardio data, overlap-based strength reconciliation and cardiovascular monitoring. It delivers the ROADMAP §4.13a A0/A1 evidence and defers A2/A3; backend implementation status remains in the backend roadmap.
+- [`docs/plans/TRAINING-INTELLIGENCE.md`](plans/TRAINING-INTELLIGENCE.md) is the canonical cross-repository Training Intelligence plan (capability layer, MCP server, iOS adapters, phases INT-1 to INT-13). It supersedes the forward-planning content of the earlier LLM and Apple Intelligence plans, names what remains in force, and must be amended rather than duplicated by any new intelligence proposal. Its [audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) is a dated record, and [`docs/decisions/TRAINING-INTELLIGENCE-ADR.md`](decisions/TRAINING-INTELLIGENCE-ADR.md) holds its cross-repository decisions.
 - [`docs/contracts/README.md`](contracts/README.md) indexes the canonical server/client phase contracts, including the [Training Intelligence MCP/envelope contract](contracts/TRAINING-INTELLIGENCE-CONTRACT.md).
-- `docs/agent/` is the source for shared task routing, prompts and machine handoff. Machine-only private instructions remain untracked and local.
+- `docs/agent/` is the source for shared task routing, prompts. Machine-only private instructions remain untracked and local.
 
 ## Documentation tooling
 
 Cross-repository documentation rendering lives in the portfolio repository. [`scripts/docs_pdf.py`](../scripts/docs_pdf.py) builds one PDF from the portfolio, backend and iOS documentation, grouping and labelling each repository; installation, usage and privacy rules are in [`DOCUMENTATION-PDF.md`](DOCUMENTATION-PDF.md). Component repositories must not keep a duplicate copy of this tool.
+
+Cross-repository backup tooling is portfolio-owned for the same reason: [`scripts/backup_app.py`](../scripts/backup_app.py) archives the portfolio, backend and iOS repositories together; scope, exclusions and restore steps are in [`BACKUP.md`](BACKUP.md). Components keep a pointer, not a copy.
 
 A component roadmap may remain local only when it is specifically the component's implementation-status authority and is coupled to that component's code, tests or tools. The backend `ROADMAP.md` is such an exception; it is not a second cross-repository roadmap. Portfolio documents must link to it rather than restating its active phase status.
 

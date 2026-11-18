@@ -1,8 +1,6 @@
 # Agent documentation
 
-Read [../../AGENTS.md](../../AGENTS.md) first. This directory holds the portfolio-level routing,
-execution and handoff instructions; repository-specific instructions live in each submodule's
-`AGENTS.md`.
+Read [../../AGENTS.md](../../AGENTS.md) first. This directory holds the portfolio-level routing, execution; repository-specific instructions live in each submodule's `AGENTS.md`.
 
 ## Choose one execution prompt
 
@@ -26,7 +24,6 @@ classify the task first.
 ## Process documents
 
 - [TASK-ROUTING.md](TASK-ROUTING.md) — server-only, iOS-only, cross-repo or default.
-- [MACHINE-HANDOFF.md](MACHINE-HANDOFF.md) — branch/commit handoff between the iMac and MacBook.
 - [../DOCUMENTATION.md](../DOCUMENTATION.md) — which repository owns which documentation.
 
 ## Machine-local instructions

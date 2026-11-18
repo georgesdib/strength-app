@@ -7,7 +7,7 @@ The portfolio repository is the canonical home for shared project documentation 
 - [Plans and roadmap navigation](plans/README.md) — authoritative entry point; identifies the active shared plan and links to the backend implementation-status roadmap without duplicating it.
 - [Canonical iOS client phase plan](plans/IOS-CLIENT-PLAN.md) — phases, architecture, dependencies, acceptance, rollback gates and retained completion history.
 - [Athlete Feedback & Coaching (AFC) plan](plans/AFC.md) — canonical cross-repository plan for post-workout evaluation and feedback: evidence contract, AFC-2 (completed), AFC-2i native report, AFC-3 observations, AFC-4 nudges and the gated AFC-5.
-- [Training Intelligence plan](plans/TRAINING-INTELLIGENCE.md) — canonical cross-repository plan for the read-only intelligence capability layer, the standalone MCP server, the iOS Foundation Models adapters and phases INT-1 to INT-9. It **supersedes the forward-planning content** of the backend LLM integration plan and the Apple Intelligence/PCC items in the iOS client plan; the retained constraints are listed in its §16. Its [implementation audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) records the verified starting state.
+- [Training Intelligence plan](plans/TRAINING-INTELLIGENCE.md) — canonical cross-repository plan for the read-only intelligence capability layer, the standalone MCP server, the iOS Foundation Models adapters and phases INT-1 to INT-13; INT-11 (local Explain) is implemented and closed with documented limitations, its device-acceptance and release-tag items owner-closed on 2026-11-17; INT-12 (web search/RAG) is deferred; INT-13 (Today summary card) is implemented and owner-closed on 2026-11-17. It **supersedes the forward-planning content** of the backend LLM integration plan and the Apple Intelligence/PCC items in the iOS client plan; the retained constraints are listed in its §16. Its [implementation audit](plans/TRAINING-INTELLIGENCE-AUDIT.md) records the verified starting state.
 
 ## Contracts and specifications
 
@@ -22,7 +22,6 @@ The portfolio repository is the canonical home for shared project documentation 
 - [Documentation architecture and ownership](DOCUMENTATION.md) — canonical ownership, change rules, and link conventions.
 - [Agent documentation index](agent/README.md) — task routing, execution prompts and machine-specific workflows.
 - [Task routing](agent/TASK-ROUTING.md) — classify server-only, iOS-only, cross-repository and documentation-only tasks.
-- [Machine handoff](agent/MACHINE-HANDOFF.md) — branch, commit and acceptance handoff rules.
 
 ## Component implementation documentation
 
@@ -33,6 +32,11 @@ The portfolio repository is the canonical home for shared project documentation 
 
 - [Combined documentation PDF](DOCUMENTATION-PDF.md) — build one repository-labelled PDF from the portfolio, backend and iOS documentation.
 - [`scripts/docs_pdf.py`](../scripts/docs_pdf.py) — canonical cross-repository PDF builder; supports `--list`, repository filters, private-note inclusion and a configurable output path.
+
+## Project tooling
+
+- [Whole-repository backup](BACKUP.md) — one archive of the portfolio, backend and iOS repositories, with consistent database snapshots and secret exclusion.
+- [`scripts/backup_app.py`](../scripts/backup_app.py) — canonical whole-project backup; `--source-only` produces a code, documentation and configuration archive.
 
 ## Status labels and history
 

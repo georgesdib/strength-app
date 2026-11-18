@@ -1,11 +1,13 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
-**Status:** every record is accepted, deferred or superseded as of 2026-11-15. ADR-INT-001 to
-ADR-INT-014 are implemented or retained, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
+**Status:** every record is accepted, deferred or superseded as of 2026-11-16. ADR-INT-001 to
+ADR-INT-021 are implemented, retained or deferred as recorded, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
-by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. The one open item is
-INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
+by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
+(INT-10, the local daily reminder nudge) is accepted 2026-11-16, as are ADR-INT-020 (INT-11, Explain the
+System) and ADR-INT-022 (INT-13, the Today summary card); ADR-INT-021 (INT-12, web search and RAG) is
+deferred. The one open item is INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -610,6 +612,202 @@ anything — it opens the surface where sRPE is recorded (the phone's active wor
 sheet), matching the Action button's second press. No entitlement, server change or new training path;
 the §1.2 boundary is unchanged. Closed, owner-confirmed 2026-11-15.
 
+## ADR-INT-019 — Local daily reminder nudge (accepted 2026-11-16)
+
+**Context.** The app only exists when the athlete opens it. The one step that actually gates progress is
+readiness entry — without it the server refuses to issue a prescription — so the natural prompt is a
+message at a chosen time of day that names something concrete from the training record and asks for
+readiness. On 2026-11-16 the owner asked for exactly that and answered the four decisions that shape
+it: (a) content computed when the app was last active is acceptable, so no remote push is needed;
+(b) on-device only, no external model; (c) silent when the day is already trained; (d) one time of day.
+The plan's §1.2 excluded "notification intelligence" wholesale, which would have made this look like a
+boundary violation, so the exclusion is narrowed instead of carved around.
+
+**Decision.** Add INT-10 as a local client-side surface, not an intelligence capability and not a
+server feature:
+
+- **Precompute, then schedule.** iOS freezes a local notification's content at scheduling time. The app
+  therefore renders the message while it is in the foreground and schedules one-shot
+  `UNCalendarNotificationTrigger`s (local hour and minute, so DST and time-zone changes follow the
+  device) over a bounded horizon, re-arming by cancel-all-then-rebuild on activation, readiness
+  submission, workout end, configuration change and pairing change. A repeating trigger is rejected: it
+  would freeze one body forever.
+- **On-device only.** The message is rendered by a dedicated two-field on-device shape that reuses the
+  narrative path's availability handling over facts the app already holds — `TodayResponse` plus the
+  issued plan. No capability is fetched for the reminder. The DeepSeek and PCC paths are unreachable
+  from this code path by construction: the scheduler is wired to the on-device generator and offers no
+  provider choice.
+- **Numbers are allowed (owner decision, 2026-11-16).** The reminder enforces only length. An
+  encouragement is not an explanation, and a numeral in a nudge — "five minutes", "two sets" — is not
+  a training claim; the strict `NarrativeValidator` grounding check stays on the weekly review and
+  overview surfaces where a number *is* a claim. The first device run showed why the distinction
+  matters: readiness facts contain no numbers at all, so a model that wrote "5 minutes" failed
+  grounding and the template always shipped.
+- **Template is a first-class outcome.** When the model is unavailable, Apple Intelligence is off, the
+  device is ineligible or validation fails, a deterministic fact-derived message ships instead. This is
+  the opposite of a silent cloud fallback: there is nowhere to fall back to.
+- **Silence.** A day whose session is already recorded gets no nudge, and the pending request is dropped
+  at workout end. Known residual gap: a watch-only session the phone never observes cannot suppress the
+  same day, because suppressing at delivery time requires remote push.
+- **Tap routing.** The notification opens the app on Today, or presents the readiness form when readiness
+  is missing, and offers one action that logs readiness directly.
+
+**Alternatives rejected.** (1) APNs push from the home server at the configured time: fresher content
+and correct suppression, but it needs an Apple push key, a device-token registry, a scheduler and a
+running home server at delivery time — a new service and new personal data for a reminder. (2)
+`BGAppRefreshTask` to render shortly before the time: opportunistic by contract, so it can silently
+fail, and the fallback would be the same precomputed text anyway. (3) A Notification Service Extension:
+only runs for a push, so it presupposes (1). (4) A server-side scheduler without push: cannot deliver
+anything. (5) A repeating daily trigger with a fixed body: one string forever, which defeats the point
+of naming a fact. (6) A second model surface with provider choice: the reminder is unattended, so
+sending training data to a third party while the owner is not looking is a different consent posture
+from the interactive chat; refused.
+
+**Consequences.** A scheduler, a settings section, a shared notification-authorization helper with the
+existing rest-end notifications, a small nudge context in `StrengthCore`, one new `@Generable` output
+shape and a deterministic template, plus tab-selection and pending-route plumbing for the tap. No
+server change, no contract field, no schema change, no entitlement. Staleness is bounded by "since the
+app was last opened", which is acceptable because that is when the facts were true; if the app is never
+opened again, the horizon's final message is intentionally generic rather than a stale specific claim.
+
+**Security.** No credential, endpoint or egress path is added. The rendered body may name a movement, a
+load or a readiness fact the athlete already sees in the app, and never a symptom, a note, a clinical
+detail or a verdict, because it is written for a Lock Screen. The configured time and the message stay
+on the device and never enter the repository, the server, an envelope or a prompt contract.
+
+**Status.** **Accepted 2026-11-16** (decision 17), at the owner's request, after §1.2 was narrowed from
+"notification/Live-Activity intelligence" to Live Activities only. Implemented 2026-11-16 on the iOS
+client (`StrengthApp`, development branch) with automated tests passing; the physical-device checks
+remain outstanding. iOS-only, no backend or contract change. No question from this decision remains
+open.
+
+## ADR-INT-020 — Explain the System: local knowledge retrieval (accepted 2026-11-16)
+
+**Status.** Accepted 2026-11-16 at the owner's request for personal use; implemented and closed
+2026-11-16 with documented limitations. The allowlist, chunker, incremental FTS5 index, knowledge CLI,
+retrieval, citation check, explain/status endpoints, background startup indexing and web/iOS tabs are
+in place. Hardening followed the audit: raw questions are not stored, rejected files are purged,
+citations are repository-qualified, sources are marked untrusted, and every source is reported by
+status.
+
+**Context.** The shipped chat answers from a fixed training-data dossier. The owner wants questions
+about how the system works — readiness calculation, injury-deload evidence, code behaviour — answered
+from the project's docs and source. The corpus is local and versioned; internet access is explicitly
+out of scope. The owner accepts stale docs/code, imperfect retrieval and best-effort citations, and
+permits private personal notes and data as long as secrets are excluded. The external DeepSeek model will see the
+retrieved snippets.
+
+**Decision.** Add a separate Explain surface, web and iOS, backed by:
+
+- a local SQLite FTS5 index over an explicit named allowlist with regex rules;
+- portfolio docs, plans, ADRs, contracts, rules and both source trees, including test source unless
+  removed by a separate test exclusion list (tests are not individually allowlisted); fixtures,
+  snapshots, generated output and test data are always excluded;
+- all non-secret private notes and personal data under private/, including reviews, baselines,
+  evidence and athlete-state files; private/eval/ test data is excluded; credential/key/token
+  patterns and known secret files are denied;
+- path normalisation, traversal and symlink-escape rejection;
+- incremental indexing on server start using path, size, mtime, SHA-256 and a commit stamp, with a
+  background build and an index-readiness state;
+- one read-only explanation endpoint, top chunks plus bounded query expansion, and a PROJECT SOURCES
+  prompt block; test-derived claims are labelled as test expectations, distinct from implementation
+  facts;
+- path:line or section citations opened in the system browser: docs through the existing docs viewer,
+  code through the GitHub blob at the indexed commit with a line anchor; if unavailable, copyable
+  path:line text and no navigation;
+- a minimal citation sanity check: path exists and is allowlisted, line range is inside the file, and
+  a quoted snippet roughly overlaps the cited lines; failures are surfaced as unverified, not silently
+  passed;
+- no web search, arbitrary URL fetch, vector embeddings, model-run shell commands, code execution or
+  writes.
+
+**Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
+local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
+Private permitted text, including personal details, is sent to DeepSeek; secrets filtering is
+best-effort and reviewed by the allowlist. INT-11 is single-question; session-only follow-up context is deferred with INT-12. Retrieval
+quality, substantive citation accuracy and staleness are accepted as personal-use risks, not release
+gates; only the structural citation sanity check above is enforced.
+
+**Rejected alternatives.** Web search/browsing now (separate, higher-risk proposal); unrestricted
+filesystem access (secrets and traversal); vector RAG before keyword retrieval is measured; bundling
+the docs in the iOS app (size, staleness, secret risk); strict citation validation as a release gate
+(owner accepts best-effort).
+
+## ADR-INT-021 — Web search and RAG deferred (2026-11-16)
+
+**Status.** Deferred 2026-11-16. Not approved or scheduled; no implementation. INT-12 is the single
+record for the former separate web-access and RAG candidates, plus deferred follow-up context.
+
+**Context.** INT-11 provides single-question local docs/code explanation. The owner wants a later step
+for web search, session-only follow-up context and, if measured necessary, retrieval-augmented
+generation. The existing MCP server provides
+transport, authentication and a facts-only tool boundary but is not a search engine and has no web
+access. External content is untrusted; search queries leave the server; RAG can add an embedding
+store without improving exact structured facts.
+
+**Decision.** Keep these items deferred behind INT-11. Follow-up context, if approved, is capped
+session-only history with query rewriting and no transcript persistence. The first web slice, if
+approved, uses one
+fixed search provider, opt-in per question, bounded snippets and URL citations; page fetching is a
+separate step with an allowlist and SSRF controls. RAG is permitted only after the INT-11 FTS5
+baseline is measured insufficient. Web content and retrieved sources never compute or override a
+training value and never become a rule. MCP remains facts-only; exposing knowledge search or web
+research over MCP requires a new ADR and contract revision.
+
+**Consequences.** No code, provider key, endpoint, network policy, MCP tool or contract change now.
+Provider, quota, privacy, SSRF, query retention, page-fetch policy and citation evaluation remain
+open decisions for the later phase.
+
+**Rejected now.** Automatic search on every message; arbitrary model-run URLs or shell commands;
+scraping Google HTML; vector RAG before the keyword baseline; MCP as a search transport.
+
+## ADR-INT-022 — Today summary card (accepted 2026-11-16)
+
+**Context.** The owner asked for a short block at the top of Today: one informative passage summarising
+where they stand and one motivational passage, written by the configured agent — on the device or
+DeepSeek. INT-4d had limited DeepSeek to Chat and the reasoning surfaces had stayed on-device, so this
+needed a decision rather than a quiet extension. The first device run of INT-10 had also shown how much
+the wording depends on the fact package, which argued for one explicit card with a visible source
+instead of another silent surface.
+
+**Decision.** Add INT-13 as a client-side presentation surface:
+
+- **Facts:** the Today payload (readiness), the issued plan, and the server's compact four-week
+  overview projection when reachable. No new endpoint, capability or schema field; offline the card is
+  written from local facts.
+- **One generation, two passages,** validated for length and emptiness only. Numbers are allowed,
+  consistent with decision 17: this is encouragement over facts, not an explanation, and the strict
+  number-grounding check stays on the weekly review and overview surfaces.
+- **The model is the chat model choice.** No separate picker, no silent fallback: a DeepSeek selection
+  without a key reports that, and an unavailable on-device model reports why. The footer names the
+  model, so the athlete can see when the wording came from off the device.
+- **Consent:** the DeepSeek path sends readiness and the overview facts on load; plan details are
+  included only while the chat "Include plan and prescription data" toggle is on.
+- **Cost:** one generation per (day, readiness answer, issued plan, model). A manual **Refresh**
+  regenerates, and a Settings toggle removes the block entirely.
+
+**Alternatives rejected.** (1) A second model picker for the card: two choices to keep in sync and two
+consent stories. (2) Silent fallback to the on-device model when DeepSeek fails: it would hide that the
+words came from a different model than the one chosen. (3) Generating on every Today appearance: a model
+call per tab switch on a screen that is opened all day. (4) Folding the summary into the reminder: the
+reminder is precomputed and silent-tested, the card is on demand and visible. (5) Sending the plan with
+the plan toggle off: that toggle is where plan disclosure was consented.
+
+**Consequences.** One card, one view model, two generators and a Settings toggle. No server, contract or
+schema change. The text is displayed and never stored as a prescription, session or measurement. The
+cost is one model call per state change; the worst failure is a card that says why it could not be
+written.
+
+**Security.** DeepSeek receives readiness and four-week facts only after the athlete selects it for
+chat; plan detail additionally requires the plan toggle. The footer is the disclosure. The API key still
+comes from the Keychain, and nothing is logged off the device beyond what the provider request itself
+carries.
+
+**Status.** **Accepted 2026-11-16** (decision 20) at the owner's request, amending INT-4d's chat-only
+boundary for this surface only. Implemented 2026-11-16 on the iOS client. **Closed 2026-11-17** by
+owner decision: the physical-device acceptance was waived rather than run, and the card ships with the
+next tagged client release.
+
 ## Rejected architectural alternatives (summary)
 
 | Alternative | Why rejected |
@@ -625,6 +823,10 @@ the §1.2 boundary is unchanged. Closed, owner-confirmed 2026-11-15.
 | New tables for intelligence output | the trace tables suffice; output is an event, not an artifact |
 | Confidence scores | the system cannot justify them; gate, n, comparability and coverage are honest |
 | Multi-tenancy now | no user model exists; per-user auth is a separate, larger workstream |
+| APNs push for a daily reminder | a push key, token registry, scheduler and a live home server at delivery time — infrastructure for a reminder (ADR-INT-019) |
+| Background refresh to render the reminder on time | opportunistic by contract; would silently fail and fall back to the same precomputed text |
+| Unrestricted filesystem/RAG-for-everything explainer | secrets, traversal and a much larger index; ADR-INT-020 uses a named local allowlist |
+| Web search or RAG in the same slice as INT-11 | different provider, privacy, SSRF and evaluation risks; ADR-INT-021 defers them |
 
 ## Questions resolved by delivery (2026-11-15)
 

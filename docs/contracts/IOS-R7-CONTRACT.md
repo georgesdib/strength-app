@@ -634,7 +634,7 @@ consumption and supersession state. The physical-device pass is not required (§
   A dispatcher still running against a dropped table would only log errors, but it would also write
   to the table between the drop and the `schema_migration` delete.
 
-## 14. Decisions taken and remaining open questions
+## 14. Decisions taken
 
 Settled by the owner on 2026-11-08:
 
@@ -656,14 +656,17 @@ Settled by the owner on 2026-11-08:
    database is never opened writable for a benchmark. A faster development machine is not evidence
    about the deployed host and must not be used to shorten the timeouts.
 
-Still open:
+Closed on 2026-11-17:
 
-1. **Ready-plan default lifetime.** `issued_plan_ttl_seconds` stays at the Phase 2 value of 60
-   minutes, measured from `ready_at`. Raise it (for example to the end of the server-local day) if
-   an hour turns out to be too short in real use; it is config, not code. The recommendation is to
-   keep 60 minutes until the behaviour is observed, because a stale prescription is worse than a
-   repeated request.
-2. **Poll cadence tuning** after the first real 40 s and 90 s builds on the device.
+1. **Ready-plan lifetime is configuration, not an open decision.** `issued_plan_ttl_seconds`
+   defaults to **14400 s (4 hours)** in `config/ios.v1.yaml`, is validated to 60–86400 s and is
+   editable from the web Settings panel. The earlier "keep 60 minutes and observe" recommendation
+   is obsolete; an expired plan is still harmless because the app simply requests another.
+2. **Poll cadence is settled by measured builds.** The resolver takes **35.4–46.2 s on the
+   ODROID-C4** ([PERFORMANCE-PROFILE.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/PERFORMANCE-PROFILE.md)
+   §2–§3), so a normal build completes inside the 1 s/2 s tiers; the 5 s/10 s tiers apply only to
+   a build queued behind a web job. The 1 s → 2 s → 5 s → 10 s ladder stays. Revisit only if a
+   real build is observed past 60 s; §5 already keeps the 60 s threshold as copy, not a timeout.
 
 ## 15. Implementation plan and task breakdown
 

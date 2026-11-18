@@ -17,9 +17,8 @@ This prompt applies when operating in the local MacBook environment.
 2. Classify the task using `docs/agent/TASK-ROUTING.md`.
 3. Read the matching task prompt and repository instructions.
 4. Inspect Git status and submodule state before editing.
-5. Fetch and inspect the task branch from GitHub before accepting a handoff.
-6. Never overwrite local changes or another machine's commits.
-7. Use the appropriate submodule repository for code changes.
+5. Never overwrite local changes or another machine's commits.
+6. Use the appropriate submodule repository for code changes.
 
 ## Apple development
 
@@ -33,24 +32,10 @@ For iOS/watchOS work:
 - Verify the exact commit being tested.
 - Report acceptance results against the branch and commit SHA.
 
-## Handoff back to iMac
-
-When acceptance finds an issue:
-
-- Prefer a concise reproduction report and let the iMac agent implement
-  the correction.
-- If fixing locally is more efficient, commit the fix to the same task
-  branch and push it.
-- Never leave a fix only on the MacBook if the iMac agent must continue.
-- Report the new commit SHA and validation results.
-- Do not merge a PR or declare acceptance complete unless the applicable
-  checks and acceptance criteria are satisfied.
-
 ## Git safety
 
 - Never force-push.
 - Fetch before modifying remote branches.
-- Do not reset or discard another machine's work.
 - Do not update portfolio submodule pointers during ordinary feature work.
 - Do not commit credentials, pairing tokens, private data, or generated
   build artefacts.
