@@ -13,7 +13,7 @@ This is the portfolio-level entry point for shared project plans. The portfolio 
 - [Cardio policy](CARDIO-C1-POLICY.md) — the versioned import, retention, quality-gate and link values
   the cardio implementation reads; changes only by version bump. Status: active (`cardio-policy/v4`),
   2026-11-17.
-- [Cardio stage plan](CARDIO-STAGE.md) — HealthKit-first ingestion, backend-owned canonical cardio data, overlap-based strength reconciliation, cardiovascular and longevity monitoring. **Delivers** the ROADMAP §4.13a A0/A1 evidence (data audit, capture) and **defers** A2/A3 (impulse, shadow load) to v1.6 proper, which remains open. Status: **completed 2026-11-18** — deployed at backend release 1.6.0, owner device acceptance recorded. Deferred items (time-in-zone chart, deletion detection, test debt) are listed in its §14.
+- [Cardio stage plan](CARDIO-STAGE.md) — HealthKit-first ingestion, backend-owned canonical cardio data, overlap-based strength reconciliation, cardiovascular and longevity monitoring. **Delivers** the ROADMAP §4.13a A0/A1 evidence (data audit, capture) and **defers** A2/A3 (impulse, shadow load) to v1.6 proper, which remains open. Status: **completed 2026-11-18** — deployed at backend release 1.6.0, owner device acceptance recorded. Deferred items (deletion detection, test debt) are listed in its §14.
 - [Server/client contract index](../contracts/README.md) — canonical contracts and ownership of their implementation.
 
 ## Component roadmap and active status

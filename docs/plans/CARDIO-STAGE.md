@@ -570,7 +570,7 @@ semantics corrected 2026-11-18 — rolling 7/28-day windows and the weekly list 
 injectable `as_of` (default today, Europe/London) rather than at the last workout, and empty weeks
 are present with zero minutes
 (`features/cardio_metrics.py`, `tools/cardio_report.py`); no dashboard yet. Cascade classification,
-coverage by year, per-modality breakdown, rolling 7/28-day windows and time-in-zone are computed from
+coverage by year, per-modality breakdown, rolling 7/28-day windows and zone minutes are computed from
 1,430 workouts and 319,980 classified minutes (**54,724 WHO-equivalent**).
 
 Findings worth the stage: **resistance contributes 20,301 of the 54,724 equivalent minutes (37 %)**,
@@ -608,7 +608,8 @@ rolling 7/28-day windows, per-year coverage and the resistance share from a clas
 The Cardio view now carries a **Recorded activity** panel: rolling 7- and 28-day equivalents,
 resistance share for the calendar year, weekly and yearly tables, and unclassified minutes printed as
 their own column. It is read-only and has no controls — imported activity is not editable here. The
-iOS overview and the time-in-zone chart are still to come.
+iOS overview later; no time-in-zone chart is planned — zone minutes are produced by the CLI report
+(`tools/cardio_report.py`) and have no UI consumer.
 
 **Why a cache appeared.** The first endpoint version recomputed classification per request and took
 ~4 s, because classifying a workout falls back to the mean of its heart-rate series. `0065` stores
@@ -747,7 +748,6 @@ lives, so none of them looks like an oversight later.
 
 | Item | State | Where recorded |
 |---|---|---|
-| Time-in-zone chart on the web | not built — needs a per-workout zone cache and a decision on showing gaps | plan §C6; LIM-68 context |
 | HealthKit deletion detection | not built — replaced by **Hide**, which also covers export-era rows | `DEC-CARDIO-18`, LIM-67 |
 | Contract-shaped ingest tests (the six defects) | outstanding | plan §C7; LIM-68 |
 | Replacement for the deleted ownership test | outstanding | plan §C7 |
