@@ -29,8 +29,8 @@ INT-12 consolidates the former web-search and RAG candidates into one deferred l
 model, extending INT-4d's chat-only boundary to that one surface; it is client-only like INT-10.
 
 Amended 2026-11-18: the owner waived INT-10's remaining physical-device acceptance — delivery
-timing, tap routing and Focus behaviour — as INT-13's had been waived on 2026-11-17, so INT-10 is
-closed, and shipped in StrengthApp v1.2 on 2026-11-18. Its documented residual gap (a watch-only
+timing, tap routing and Focus behaviour — as INT-13's had been waived on 2026-11-17. INT-10 is
+closed and shipped in StrengthApp v1.2 on 2026-11-18. Its documented residual gap (a watch-only
 session the phone never observes cannot suppress that day's nudge) is unchanged.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
