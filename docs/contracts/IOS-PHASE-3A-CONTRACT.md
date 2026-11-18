@@ -2,11 +2,20 @@
 
 # iOS Phase 3A — HealthKit readiness: HRV, RHR and bodyweight
 
-**Status:** **closed 2026-11-08.** HRV/RHR/bodyweight unit, simulator, live-server workflow and
-physical iPhone HealthKit acceptance are owner-confirmed. Bodyweight is an owner-requested
-extension added 2026-11-08. This contract remains the authoritative Phase 3A specification. No
-Phase 3B, Phase 4 offline capture, HealthKit write access, sleep imports, new score or
-training-rule change is authorized.
+**Status:** **closed 2026-11-08; amended 2026-11-18 for recovery HRV.** HRV/RHR/bodyweight unit,
+simulator, live-server workflow and physical iPhone HealthKit acceptance are owner-confirmed.
+Bodyweight is an owner-requested extension added 2026-11-08. This contract remains the
+authoritative Phase 3A specification. No Phase 3B, Phase 4 offline capture, HealthKit write
+access, sleep imports, new score or training-rule change is authorized.
+
+**Amendment 2026-11-18 — readiness reads recovery HRV.** The owner changed the HRV input from
+"newest SDNN sample" to a recovery value: one median per night from the local 00:00–10:00 window,
+backfilled once from HealthKit and updated nightly. Readiness (including its 28-day baseline)
+reads that series and nothing else; a day with no night has no HRV input and never falls back to a
+daytime reading. The raw newest-sample series is still imported unchanged as the audit record.
+New surface: table `hrv_recovery` (migration 0071) and
+`POST /api/ios/v1/healthkit/hrv-recovery` (dated, idempotent by `sample_id`). The readiness
+sample route keeps its 48-hour rule. RHR, bodyweight, weights and score semantics are unchanged.
 
 **Scope:** fixes the exact server surface, canonical readiness merge, data model, client surface,
 permissions, concurrency, tests, acceptance and rollback for Phase 3A only: opt-in, read-only
@@ -23,27 +32,33 @@ access, sleep imports, a new score or any training-rule change.
 2. Read-only HeartRateVariabilitySDNN (ms), RestingHeartRate (bpm) and BodyMass (kg). No sleep
    duration, sleep stages, Apple Sleep Score, general heart rate, workouts, respiratory data or
    write access.
-3. Newest HRV sample within 48 hours; current local-day RHR; newest bodyweight within 30 days;
+3. Readiness HRV is a nightly recovery value (median SDNN in the local 00:00–10:00 window,
+   amended 2026-11-18); the newest raw HRV sample within 48 hours is still imported as the audit
+   series and never feeds readiness. Current local-day RHR; newest bodyweight within 30 days;
    missing/stale means unknown, never zero.
 4. Manual readiness wins over HealthKit; within HealthKit prefer Apple Watch only when positively
-   identified, otherwise the newest eligible sample. Show source and sample age.
+   identified, otherwise the newest eligible sample. Show source and sample age for the raw
+   import; a recovery night is one value per local date.
 5. HealthKit is off by default. When enabled, values flow into the existing readiness inputs and
    the existing server scoring path. Existing weights, baselines, minimum-reading rules
    and score semantics do not change. No inferred subjective fields or new score.
 6. Explicit Import from HealthKit on Today/Readiness plus an app-open/refresh attempt while
    enabled. No background delivery, observer queries or write access. Request permission only
    when enabled.
-7. No historical backfill; import only the current relevant HRV/RHR/bodyweight values.
-8. Additive provenance schema/API only; no raw HealthKit time series.
+7. The recovery-HRV series is backfilled once from HealthKit (bounded pages, resumable
+   watermark, dated samples) and then updated nightly; the raw readiness sample import stays
+   current-only (amended 2026-11-18).
+8. Additive provenance schema/API only; the recovery series stores one derived value per night,
+   not raw samples, and no raw HealthKit sample history is kept (amended 2026-11-18).
 9. Physical iPhone testing with real HealthKit data is available.
 10. HealthKit values travel to the local server over the existing trusted-LAN plain-HTTP model;
     no external/cloud fallback.
 
 ## 1. Purpose and non-goals
 
-A paired iPhone may optionally read the newest eligible HRV sample and today's resting heart rate
-from HealthKit, send those observations to the existing authenticated local server, and let the
-server merge them into readiness with manual precedence. The server stores small append-only
+A paired iPhone may optionally read the recovery HRV series (one value per night, backfilled from
+HealthKit) and today's resting heart rate from HealthKit, send those observations to the existing
+authenticated local server, and let the server merge them into readiness with manual precedence. The server stores small append-only
 observations with provenance, returns the canonical effective readiness, and remains the sole
 authority for readiness values and scores. The phone never writes HealthKit values directly into
 manual readiness, never computes a score and never changes a prescription.
@@ -51,7 +66,8 @@ manual readiness, never computes a score and never changes a prescription.
 Non-goals:
 
 - No sleep duration, sleep stages, sleep score or inferred sleep.
-- No general heart-rate stream, HRV time series or raw HealthKit sample history.
+- No general heart-rate stream or raw HealthKit sample history; the only HRV time series is the
+  derived nightly recovery value.
 - No Apple Workout summaries, cardio records, workout effort score or sRPE mapping.
 - No HealthKit write, background delivery or observer query.
 - No new readiness score, weights, baselines, readiness gates or training rules.
