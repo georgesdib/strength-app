@@ -201,7 +201,7 @@ would duplicate 399 VO₂max rows silently: C3 adds `external_id TEXT` with a pa
 (`WHERE external_id IS NOT NULL`, the `high_intensity_exposure` pattern) and a nullable `measured_at`
 for the sample timestamp. Additive, no existing row touched, readiness path untouched.
 
-### DEC-CARDIO-07 — Manual cardio is preserved, not migrated, not merged
+### DEC-CARDIO-07 — *Superseded 2026-11-17 by DEC-CARDIO-19*
 
 **Decision.** `cardio_log` stays exactly as it is. Imported workouts are the analytics basis. A manual
 entry that overlaps an imported workout of compatible modality gets a computed de-dup hint; it is
@@ -317,6 +317,21 @@ with the audit evidence that forced the change. A threshold that exists only in 
 
 **Consequences.** Policy changes are reviewable without reading the implementation, and a retune is a
 version bump plus a rebuild rather than a migration.
+
+### DEC-CARDIO-19 — One activity history: manual cardio logging is retired
+
+**Decision.** `cardio_log`, its web form, `POST/GET /api/cardio`, the `cardio` CLI command and
+`append_cardio` are removed (`0069`). The imported corpus is the only activity history; the longevity
+review and `/api/state` read it through `cardio_metrics.activity_summary`, and hiding
+(`cardio_exclusion`) is the correction path.
+
+**Rationale.** Manual logging held zero rows, and the fork it created was visible: the Cardio panel
+showed thousands of imported minutes while the longevity review reported none. Two histories with
+different coverage cannot both be right.
+
+**Consequences.** A session recorded without a device is absent, not unclassified — accepted, because
+the watch is worn. Manual rows could not have carried heart rate, samples or tiers anyway, so nothing
+about their removal reduces measurement quality.
 
 ### DEC-CARDIO-18 — History is promoted from the export; only new data arrives through HealthKit
 
@@ -569,6 +584,11 @@ classified minute records which tier produced it (`DEC-CARDIO-05`), and coverage
 and per modality so a change in Apple's model cannot masquerade as a change in behaviour.
 
 ### C6 — Dashboards
+
+**C6d — one activity history (implemented 2026-11-17).** Manual cardio was retired
+(`DEC-CARDIO-19`): the table dropped by `0069`, the form and route removed, the CLI command deleted,
+and the longevity review repointed at the corpus. Verified on the main server — the review now reports
+54 sessions and 1,869.3 minutes for 12 weeks, where it previously showed zero.
 
 **C6c — hide an imported workout (implemented 2026-11-17).** `cardio_exclusion` records hide/show as
 append-only events (latest wins); every metric and the linker filter on the current state, and the
