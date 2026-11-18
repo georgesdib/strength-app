@@ -746,14 +746,15 @@ the backend status authority and this plan does not restate its status tables.
 ## 14. Closure and deferrals
 
 Closed 2026-11-18 with these items explicitly **not** delivered. Each is recorded where the code
-lives, so none of them looks like an oversight later.
+lives, so none of them looks like an oversight later. Nothing in this table is pending work: the
+owner closed the three test items on 2026-11-18 rather than scheduling them.
 
 | Item | State | Where recorded |
 |---|---|---|
 | HealthKit deletion detection | not built — replaced by **Hide**, which also covers export-era rows | `DEC-CARDIO-18`, LIM-67 |
-| Contract-shaped ingest tests (the six defects) | outstanding | plan §C7; LIM-68 |
-| Replacement for the deleted ownership test | outstanding | plan §C7 |
-| Golden-number analytics fixtures | outstanding | plan §C7 |
+| Contract-shaped ingest tests (the six defects) | not built; **closed by owner decision 2026-11-18** as accepted debt | plan §C7 |
+| Replacement for the deleted ownership test | not built; **closed by owner decision 2026-11-18** as accepted debt | plan §C7 |
+| Golden-number analytics fixtures | not built; **closed by owner decision 2026-11-18** as accepted debt | plan §C7 |
 | METs and `srpe` on a *new* upload | unobserved; owner-accepted | LIM-68 |
 | Manual cardio entry | retired, not deferred | `DEC-CARDIO-19`, LIM-66 |
 | Cardio impulse / shadow load (§4.13a A2–A3) | **retired 2026-11-18**, not deferred: no TRIMP, sRPE impulse, ACWR or unified fatigue score ships | `DEC-LONGEVITY-03`; ROADMAP §4.13a |
