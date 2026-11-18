@@ -1,8 +1,10 @@
 # Longevity assessment — aerobic adequacy, fitness and strength context
 
 **Status:** approved 2026-11-18 by the owner. **Backend implemented 2026-11-18** — one
-`adequacy()` function, the `assessment` block on `GET /api/cardio/summary` and the phone route, and
-the golden fixtures. iOS and web rendering remain. This plan supersedes the v1.6.x cardio-impulse
+`adequacy()` function, the `assessment` block on `GET /api/cardio/summary` and the phone route, the
+golden fixtures, and the `get_longevity_assessment` capability behind MCP tool 11, the iOS
+intelligence route and the chat dossier. iOS Today rendering, the consent toggle and the web panel
+remain. This plan supersedes the v1.6.x cardio-impulse
 deliverable (ROADMAP §4.13a A2/A3).
 
 **One sentence:** three questions get one deterministic answer each, one consent switch guards the
