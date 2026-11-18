@@ -565,7 +565,10 @@ and reversible.
 
 ### C5 — Analytics
 
-**Status:** first slice implemented and reporting against the live corpus 2026-11-17
+**Status:** first slice implemented and reporting against the live corpus 2026-11-17; window
+semantics corrected 2026-11-18 — rolling 7/28-day windows and the weekly list are anchored at an
+injectable `as_of` (default today, Europe/London) rather than at the last workout, and empty weeks
+are present with zero minutes
 (`features/cardio_metrics.py`, `tools/cardio_report.py`); no dashboard yet. Cascade classification,
 coverage by year, per-modality breakdown, rolling 7/28-day windows and time-in-zone are computed from
 1,430 workouts and 319,980 classified minutes (**54,724 WHO-equivalent**).

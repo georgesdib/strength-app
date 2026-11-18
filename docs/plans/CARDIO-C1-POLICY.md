@@ -112,6 +112,7 @@ a separate, labelled series (`DEC-CARDIO-14`).
 
 | Metric | Gate |
 |---|---|
+| Reporting windows | calendar windows ending at an explicit `as_of` (today in Europe/London), never at the last workout; weeks with no workouts are present with zero minutes |
 | WHO-equivalent minutes | duration ≥ 5 min **and** a classification tier (METs or HR) |
 | Moderate/vigorous split | as above; tier recorded per minute |
 | Time in zone | continuity: median gap ≤ 30 s **and** widest gap ≤ 120 s **and** ≥ 50 % of duration covered |
