@@ -35,7 +35,6 @@ Use this when the task type is unclear or spans an unknown part of the portfolio
 
 - Make the smallest coherent change.
 - Preserve existing architecture, naming, tests, and documentation conventions.
-- Add or update tests for new behaviour.
 - Do not add dependencies without justification.
 - Do not commit secrets, personal data, or generated artefacts.
 
