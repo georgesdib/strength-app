@@ -34,15 +34,20 @@ sensitive part, and a model may say what to do about it without the app ever pre
 ### DEC-LONGEVITY-01 — the WHO band is context, advice is advisory
 
 The weekly adequacy figure is compared with the WHO 150–300 minute reference band and described as
-inside, below or unknown. It is not a target with a verdict, and no advice it generates is consumed
-by any other subsystem. Reversal costs a decision record, not a refactor.
+below, within (150–300), above or unknown. The API key for the within state is `inside`; clients
+render it as "within". Above 300 is contextual, never a maximum safe dose or a warning. It is not a
+target with a verdict, and no advice it generates is consumed by any other subsystem. Reversal costs
+a decision record, not a refactor.
 
 ### DEC-LONGEVITY-02 — health measurements are their own consent class
 
 The intelligence contract's `health` class applies to cardio minutes, time-in-zone and VO₂max. When
 the configured model is off-device (DeepSeek), the iOS client sends those fields only with a
-separate, explicit, default-off consent toggle that names the fields and the recipient. Plan and
-prescription data keep their existing separate consent. On-device generation needs no consent.
+separate, explicit, default-off consent toggle that names the fields and the recipient. The web
+narration route enforces the same boundary server-side: a health-class envelope requires an explicit
+`health_consent` flag, and the browser discloses the configured provider/model before setting it.
+Plan and prescription data keep their existing separate consent. On-device generation needs no
+consent.
 
 ### DEC-LONGEVITY-03 — the cardio impulse is retired, not deferred
 
@@ -80,14 +85,16 @@ without scolding.
 
 | Layer | Responsibility |
 |---|---|
-| `features/cardio_metrics.py` | one pure `adequacy(...)` over an already-built summary: three frames, measured/estimated/unclassified and resistance splits, time-in-zone block with coverage, VO₂max block with `current | stale | absent`, per-pattern headroom. No DB reads, no cache rebuild |
+| `features/cardio_metrics.py` | one pure `adequacy(...)` over an already-built summary: three frames, measured/estimated/unclassified and resistance splits, time-in-zone block with coverage, VO₂max block with `current`/`stale`/`absent`, per-pattern headroom. No DB reads, no cache rebuild |
 | `GET /api/cardio/summary` | one additive `assessment` block. No new endpoint, no migration |
 | Intelligence `longevity` capability | the same facts in an envelope (`ok`/`no_data`/`insufficient`, `as_of`, `coverage`, `limitations`, privacy `health`). Facts only — no prose |
-| iOS | Today section = facts + prose from the configured model (on-device or DeepSeek); time-in-zone panel on the Cardio screen |
+| iOS | Today section = facts + prose from the configured model (on-device or DeepSeek); health-tool execution is limited to the consent-aware allowlist; time-in-zone panel on the Cardio screen |
 | Web | Longevity panel reads the same canonical `assessment` block (no second adequacy calculation), requests time-in-zone and headroom deliberately, and gates prose from the configured model behind a health-data disclosure naming the provider/model |
 
-`time_in_zone` is already computed for continuity-eligible workouts and currently only reachable
-through `tools/cardio_report.py`. This plan wires it into the product; it does not rebuild it.
+Before 1.7.0, `time_in_zone` was only reachable through `tools/cardio_report.py`. This plan wired
+it into the product. The 1.7.1 corrective release replaced its equal-per-sample allocation with
+elapsed-time integration, clipping and explicit coverage (see §6.1); the block and the continuity gate
+are otherwise the same.
 
 ## 5. Prose rules
 
@@ -145,8 +152,9 @@ estimate; VO₂max remains a consumer estimate with no age/sex category.
    150 boundary, unclassified-dominated, resistance-heavy, and a stale and an absent VO₂max.
 2. iPhone and web render identical numbers from the same payload block.
 3. The current-week frame contains no relation word; only a completed week is compared.
-4. With the health consent off and DeepSeek selected, the facts render and the prose is
-   deterministic, and a health tool returned by the model is rejected without a provider call.
+4. With the health consent off and DeepSeek selected, the facts render without narration, and a
+   health tool returned by the model is rejected without a provider call. The deterministic facts do
+   not depend on the model.
 5. Nothing in this plan writes a prescription, a rule or a stored decision.
 6. Recovery-tail samples do not change workout classification or time-in-zone.
 7. Time-in-zone zone totals never exceed the elapsed time actually represented by valid samples.
@@ -175,3 +183,5 @@ be unregistered. No schema, no migration, no stored data to unwind.
   (`features/readiness_baseline.py`); a sustained-deviation finding would be a separate decision, and
   it sits on the readiness surface frozen by Phase 5A until 2027-01-22.
 - A strength-preservation verdict needs numeric gates and the Phase 5A gate first (LIM-61).
+- No open longevity product question remains: `Q14` closed with `DEC-LONGEVITY-03`; the Phase 5A
+  evidence gate (`Q30`) is tracked in the monitoring register, not in this plan.

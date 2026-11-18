@@ -620,12 +620,13 @@ trusting, and what is left in the week?" — facts only.
 **Input.** `as_of` (date; default today in `Europe/London`).
 
 **Output facts.** `last_week` (completed week: moderate and vigorous minutes, moderate-equivalents,
-`relation`: `below`/`inside`/`above`/`unknown`, gate), `current_week` (minutes so far, days and
-sessions remaining, no relation), `vo2max` (value, unit, `measured_on`, `source` and `method`,
-`status`: `current`/`stale`/`absent`), `time_in_zone` (continuity-eligible workouts, minutes by
-zone, `covered_minutes`/`workout_minutes`/`unobserved_minutes`, `coverage_share` and
-`temporal_coverage_share`, `method`), `patterns` (per managed pattern: volume headroom in sets),
-`quality` (classified share, unclassified minutes, tier split).
+`relation`: `below`/`inside`/`above`/`unknown`, gate, `classified_share`,
+`unclassified_minutes` and `tier_minutes`), `current_week` (minutes so far, days and sessions
+remaining, no relation), `vo2max` (value, unit, `measured_on`, `source` and `method`, `status`:
+`current`/`stale`/`absent`), `time_in_zone` (continuity-eligible workouts, minutes by zone,
+`covered_minutes`/`workout_minutes`/`unobserved_minutes`, `coverage_share` and
+`temporal_coverage_share`, `method`), `patterns` (per managed pattern: volume headroom in sets).
+The API key `inside` is rendered by clients as "within"; `above` is its own state.
 
 `relation` is `above` only when the moderate-equivalent total exceeds the upper 300-minute
 reference. Above the band is context, not a verdict: the contract forbids describing it as
@@ -654,7 +655,7 @@ the tool MUST NOT return prose, a recommendation or a target.
 
 **iOS.** Yes.
 
-**Status.** Implemented 2026-11-18; released in 1.7.0.
+**Status.** Implemented 2026-11-18; released in 1.7.0; corrected in 1.7.1.
 
 #### 7.5.12 Why `explain_prescription` is not a tool
 
