@@ -4,8 +4,9 @@
 HealthKit ingestion, cardio analytics and the monitoring dashboards. Component implementation
 documentation remains in its owning repository.
 
-**Status:** implemented 2026-11-17, hardened the same day — C0 to C6d and C2 are deployed on the main
-server, C7's code and documentation changes are in, and the measured audit is
+**Status:** **completed 2026-11-18.** C0–C6d and C2 are deployed on the main server at release
+1.6.0; C7's code and documentation are in; device testing is owner-validated. Deferred items are
+listed in §14, not left implicit. The measured audit is
 [CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md). Originally
 implemented: C1 to C7 are gated on the C1 decision record, and no runtime behaviour, API, schema,
 dependency, contract or training rule changes until a workstream is implemented and tested.
@@ -735,6 +736,26 @@ behaviour only and records the entitlement/usage-string discrepancy C2 must reso
 
 No submodule pointer update and no portfolio consolidation is part of this task. `ROADMAP.md` remains
 the backend status authority and this plan does not restate its status tables.
+
+## 14. Closure and deferrals
+
+Closed 2026-11-18 with these items explicitly **not** delivered. Each is recorded where the code
+lives, so none of them looks like an oversight later.
+
+| Item | State | Where recorded |
+|---|---|---|
+| Time-in-zone chart on the web | not built — needs a per-workout zone cache and a decision on showing gaps | plan §C6; LIM-68 context |
+| HealthKit deletion detection | not built — replaced by **Hide**, which also covers export-era rows | `DEC-CARDIO-18`, LIM-67 |
+| Contract-shaped ingest tests (the six defects) | outstanding | plan §C7; LIM-68 |
+| Replacement for the deleted ownership test | outstanding | plan §C7 |
+| Golden-number analytics fixtures | outstanding | plan §C7 |
+| METs and `srpe` on a *new* upload | unobserved; owner-accepted | LIM-68 |
+| Manual cardio entry | retired, not deferred | `DEC-CARDIO-19`, LIM-66 |
+| Cardio impulse / shadow load (§4.13a A2–A3) | remains the backend v1.6.x deliverable | ROADMAP §4.13a |
+
+**Release numbering caveat.** 1.6.0 ships this stage while the roadmap's v1.6 milestone also names
+the impulse model, which did not ship. The roadmap and changelog both say so; the next backend
+release carries the impulse work.
 
 ## 13. Related
 
