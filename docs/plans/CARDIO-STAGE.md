@@ -675,6 +675,19 @@ not proceed under a caveat.
 10. Existing strength functionality, constraints and safety rules are intact, and a test proves the
     health tables are not read by prescription logic.
 
+**Evidence, item by item:** (1) 1,430 export workouts + phone uploads, coverage shown per year;
+(2) 599,927 samples retained, tails included, association recorded; (3) 326 sessions enriched,
+ambiguity queued not guessed; (4) 56 sessions and 55 workouts remain visible unlinked; (5) cascade is
+deterministic with tier labels, policy versioned; (6) both surfaces read one computation, asserted by
+the authenticated route returning the same payload; (7) recovery context is display-only, no
+prescription path reads the health tables (guard test); (8) promotion and linking re-runnable, second
+runs no-ops; (9) coverage and tiers travel with every number; (10) full backend suite green and the
+new guard test proves the separation.
+
+**Owner acceptance:** device testing was validated by the owner on 2026-11-18 — consent, sync,
+re-sync no-op, and the iOS overview. METs and effort on a *new* upload remain unobserved in the data,
+which is why LIM-30 is closed as owner-accepted rather than as measured.
+
 ## 10. Risks and rollback
 
 | Risk | Mitigation |
