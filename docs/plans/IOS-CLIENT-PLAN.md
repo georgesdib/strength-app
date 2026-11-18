@@ -276,7 +276,8 @@ so VBT entry no longer moves the set's recorded time.
 
 ### R11 — Rest timer Live Activity (dropped 2026-11-14; reinstated 2026-11-17)
 
-**Status:** **reinstated 2026-11-17 for phone-owned sessions; controls delivered 2026-11-18.**
+**Status:** **closed 2026-11-18** (reinstated 2026-11-17 for phone-owned sessions; controls
+delivered 2026-11-18).
 The earlier drop was because a Live Activity could not cover watch-owned sessions without a
 WatchConnectivity event channel (contract §21). The phone now owns an exercise lifecycle of its own
 and persists its rest interval, so a phone-owned rest can drive one. Delivered: a widget extension
@@ -285,9 +286,11 @@ countdown, a Control Center / Action button control that opens the app, and **+1
 as `LiveActivityIntent` buttons on the Lock Screen card and in the expanded Island. The persisted
 interval stays the single source of truth: an intent writes it and the app applies it on activation,
 so a locked phone shows the extension and the tab bar agrees once the app is looked at. Compact and
-minimal Island states cannot host buttons. **Physical-device acceptance was not run** — the locked
-tap, force-quit and Dynamic Island behaviours are unproven and recorded as such and ship with
-v1.2.1. The original scope is kept below.
+minimal Island states cannot host buttons. **Physical-device acceptance was waived by owner
+decision on 2026-11-18** rather than run, so the locked tap, force-quit and Dynamic Island
+behaviours are unproven; the feature ships in v1.2.1 with that recorded. The watch's −15 s skip
+alignment is separate watch acceptance and is not part of this item. The original scope is kept
+below.
 
 Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
 does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
@@ -599,8 +602,8 @@ sRPE precedence and no prescription/rubric changes.
 
 ## 11. Status and next task
 
-Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7–R10 reliability work are complete; R11 was dropped
-on 2026-11-14 and reinstated on 2026-11-17 for phone-owned sessions (§R11). Phase 2 delivered
+Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7–R11 reliability work are complete; R11 was dropped
+on 2026-11-14, reinstated on 2026-11-17 and closed on 2026-11-18 (§R11). Phase 2 delivered
 the online strength workflow (readiness write, server-issued prescription, start by issued-plan id,
 active workout, add set, complete/abandon, session RPE, optional form ratings, history/progress,
 manual VBT and idempotency receipts) under
@@ -623,8 +626,9 @@ its own approved contract. Phase 5 remains optional and separately approved. R7 
 recorded in section 4.30 and their contracts rather than as pending next steps.
 
 R10 closed on 2026-11-14 (timing implemented on both devices; iOS velocity correction superseded by
-the server's post-workout History edit). R11 (rest timer Live Activity) was dropped on 2026-11-14 as
-unnecessary.
+the server's post-workout History edit). R11 (rest timer Live Activity) was dropped on 2026-11-14,
+reinstated on 2026-11-17 for phone-owned sessions and **closed 2026-11-18**: +15 s and Skip act from
+the Lock Screen and the expanded Island, and the physical-device acceptance was waived.
 
 Do not begin Phase 3B, cardio or PCC work without separate approval. Phase 4 is closed; Phase 3B
 remains a separate contract; Phase 6.7 is fully confirmed (W1–W12 and R).
