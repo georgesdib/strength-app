@@ -276,13 +276,18 @@ so VBT entry no longer moves the set's recorded time.
 
 ### R11 — Rest timer Live Activity (dropped 2026-11-14; reinstated 2026-11-17)
 
-**Status:** **reinstated 2026-11-17 for phone-owned sessions.** The earlier drop was because a
-Live Activity could not cover watch-owned sessions without a WatchConnectivity event channel
-(contract §21). The phone now owns an exercise lifecycle of its own and persists its rest interval,
-so a phone-owned rest can drive one. Delivered: a widget extension target, the rest Live Activity
-on the Lock Screen and Dynamic Island with a system-rendered countdown, and a Control Center /
-Action button control that opens the app. Not yet delivered: **+15 s** and **skip** from inside the
-activity (they remain in-app), and physical-device acceptance. The original scope is kept below.
+**Status:** **reinstated 2026-11-17 for phone-owned sessions; controls delivered 2026-11-18.**
+The earlier drop was because a Live Activity could not cover watch-owned sessions without a
+WatchConnectivity event channel (contract §21). The phone now owns an exercise lifecycle of its own
+and persists its rest interval, so a phone-owned rest can drive one. Delivered: a widget extension
+target, the rest Live Activity on the Lock Screen and Dynamic Island with a system-rendered
+countdown, a Control Center / Action button control that opens the app, and **+15 s** and **Skip**
+as `LiveActivityIntent` buttons on the Lock Screen card and in the expanded Island. The persisted
+interval stays the single source of truth: an intent writes it and the app applies it on activation,
+so a locked phone shows the extension and the tab bar agrees once the app is looked at. Compact and
+minimal Island states cannot host buttons. **Physical-device acceptance was not run** — the locked
+tap, force-quit and Dynamic Island behaviours are unproven and recorded as such and ship with
+v1.2.1. The original scope is kept below.
 
 Show the iPhone rest countdown and completion on the Lock Screen and Dynamic Island so the owner
 does not have to keep the app open. The countdown uses a self-updating timer text (no per-second
