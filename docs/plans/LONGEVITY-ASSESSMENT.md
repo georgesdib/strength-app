@@ -1,6 +1,7 @@
 # Longevity assessment — aerobic adequacy, fitness and strength context
 
-**Status:** closed 2026-11-18; released in 1.7.0. Implemented as one
+**Status:** closed 2026-11-18; released in 1.7.0 and corrected in 1.7.1 (correctness, privacy
+and integration hardening; no product-decision change). Implemented as one
 `adequacy()` function, the `assessment` block on `GET /api/cardio/summary` and the phone route, the
 golden fixtures, and the `get_longevity_assessment` capability behind MCP tool 11, the iOS
 intelligence route and the chat dossier. The iOS Today section, the health-consent toggle, the time-in-zone panel and the web panel are
@@ -83,7 +84,7 @@ without scolding.
 | `GET /api/cardio/summary` | one additive `assessment` block. No new endpoint, no migration |
 | Intelligence `longevity` capability | the same facts in an envelope (`ok`/`no_data`/`insufficient`, `as_of`, `coverage`, `limitations`, privacy `health`). Facts only — no prose |
 | iOS | Today section = facts + prose from the configured model (on-device or DeepSeek); time-in-zone panel on the Cardio screen |
-| Web | Longevity panel gains the same facts, prose from the configured model, and a visible "written by" line |
+| Web | Longevity panel reads the same canonical `assessment` block (no second adequacy calculation), requests time-in-zone and headroom deliberately, and gates prose from the configured model behind a health-data disclosure naming the provider/model |
 
 `time_in_zone` is already computed for continuity-eligible workouts and currently only reachable
 through `tools/cardio_report.py`. This plan wires it into the product; it does not rebuild it.
@@ -102,15 +103,41 @@ through `tools/cardio_report.py`. This plan wires it into the product; it does n
 - **Aerobic reference:** WHO 150–300 min moderate or 75–150 min vigorous per week, combined by the
   conventional 1 vigorous = 2 moderate equivalence. A convention, not a validated conversion.
 - **Classification:** Apple METs first, then average heart rate as a share of a store-observed
-  maximum (200 bpm today), then unclassified. Whole-workout classification is an estimate: a lifting
-  session's average heart rate can read moderate or vigorous without sustained aerobic work, and an
-  interval session's rests dilute it. Time-in-zone is the sample-based view and covers only
-  continuity-eligible workouts — never merged into the weekly total.
+  maximum (200 bpm today), then unclassified. The fallback mean uses only `association = 'workout'`
+  samples inside the workout's own interval; the ten-minute recovery tail is retained in the corpus
+  but is never exercise intensity. Whole-workout classification is an estimate: a lifting session's
+  average heart rate can read moderate or vigorous without sustained aerobic work, and an interval
+  session's rests dilute it.
+- **Time-in-zone:** only continuity-eligible workouts, never merged into the weekly total. Zone
+  time is the elapsed time between adjacent workout samples, clipped to the workout. The sample at
+  *t* describes *[t, next_t)*; the final sample closes no interval; unobserved time (before the
+  first sample, after the last, or across a gap wider than 120 s) is not extrapolated into a zone.
+  Covered, workout and unobserved minutes are reported separately, and continuity eligibility is
+  reported separately from temporal coverage. This is not a clinical zone-duration measurement.
 - **VO₂max:** a consumer estimate, not a measurement; material error, and generated only during
   outdoor walking, running and hiking, so its presence tracks modality more than fitness. Absence is
   not evidence of poor fitness.
 - **Strength context:** headroom is the configured volume budget, not a measurement of adaptation.
   The plan does not claim cardio caused a strength change, and nothing here is a strength verdict.
+
+### 6.1 Corrective release 1.7.1
+
+Verified against the 1.7.0 code and corrected without reopening the product decisions:
+
+| Finding | Correction | Evidence |
+|---|---|---|
+| Health consent was advertisement-only in the off-device chat | The dispatcher builds an explicit per-request allowlist from the advertised tools and rejects unadvertised health/plan tools before their provider is called | `DeepSeekChatTests` health/plan/unknown-tool cases |
+| Recovery-tail samples could influence intensity | Classification and time-in-zone read only `association = 'workout'` samples inside the workout interval; tails remain in the corpus | `test_cardio_metrics.py` tail/interval cases |
+| Time-in-zone spread workout duration equally over samples | Elapsed-time integration, workout clipping, no allocation across gaps > 120 s or for the final sample, explicit covered/workout/unobserved coverage | uniform/uneven/partial/large-gap/boundary cases |
+| A week above 300 minutes read as "inside" | `relation` gains `above`, and both clients describe the upper bound as context, not a maximum safe dose | 150/300/149.9/300.1 cases in backend and iOS |
+| New HR samples did not invalidate the classification cache | Ingestion drops a cheap state marker; an identical re-import is a no-op | cache-invalidation test |
+| Web panel mixed a four-week average with the weekly WHO band | The panel consumes only `/api/cardio/summary` `assessment`, shows last-week/current-week separately, and requests optional blocks deliberately | static + Node panel tests, shared fixture |
+| VO₂max provenance was incomplete | Value, unit, date, source/method and `current`/`stale`/`absent` are presented on both clients; missing is not poor fitness | iOS and web presentation tests |
+| Remote narration had no web privacy boundary | Health-class capabilities require an explicit `health_consent` flag and a browser disclosure naming the configured provider/model | `test_web_narrate.py` consent cases |
+
+Limitations that remain: sample coverage is reported, not imputed, so a sparse recording yields
+less zone time rather than a clinically precise estimate; whole-workout classification is still an
+estimate; VO₂max remains a consumer estimate with no age/sex category.
 
 ## 7. Acceptance
 
@@ -119,8 +146,16 @@ through `tools/cardio_report.py`. This plan wires it into the product; it does n
 2. iPhone and web render identical numbers from the same payload block.
 3. The current-week frame contains no relation word; only a completed week is compared.
 4. With the health consent off and DeepSeek selected, the facts render and the prose is
-   deterministic.
+   deterministic, and a health tool returned by the model is rejected without a provider call.
 5. Nothing in this plan writes a prescription, a rule or a stored decision.
+6. Recovery-tail samples do not change workout classification or time-in-zone.
+7. Time-in-zone zone totals never exceed the elapsed time actually represented by valid samples.
+8. Adequacy is below, within or above the band at 150, 300 and immediately outside it; "above" is
+   not described as excessive or harmful.
+9. New heart-rate samples for an imported workout invalidate the classification cache; identical
+   re-imports do not.
+10. Web and iOS decode the same assessment fixture (byte-identical in both repositories) and the
+    web panel does not compute adequacy or compare a four-week average with the weekly band.
 
 ## 8. Not in scope
 
