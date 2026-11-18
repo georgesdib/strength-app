@@ -641,8 +641,7 @@ the tool MUST NOT return prose, a recommendation or a target.
 
 **iOS.** Yes.
 
-**Status.** Planned; see
-[`../plans/LONGEVITY-ASSESSMENT.md`](../plans/LONGEVITY-ASSESSMENT.md).
+**Status.** Implemented 2026-11-18; released in 1.7.0.
 
 #### 7.5.12 Why `explain_prescription` is not a tool
 
