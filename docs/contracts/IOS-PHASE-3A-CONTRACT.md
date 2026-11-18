@@ -15,7 +15,10 @@ reads that series and nothing else; a day with no night has no HRV input and nev
 daytime reading. The raw newest-sample series is still imported unchanged as the audit record.
 New surface: table `hrv_recovery` (migration 0071) and
 `POST /api/ios/v1/healthkit/hrv-recovery` (dated, idempotent by `sample_id`). The readiness
-sample route keeps its 48-hour rule. RHR, bodyweight, weights and score semantics are unchanged.
+sample route keeps its 48-hour rule. A manual HRV entered before 2026-11-18 measured the old
+definition and does not override the recovery series; a manual HRV recorded from that cutover on
+is a recovery value and keeps its usual precedence. RHR, bodyweight, weights and score semantics
+are unchanged.
 
 **Scope:** fixes the exact server surface, canonical readiness merge, data model, client surface,
 permissions, concurrency, tests, acceptance and rollback for Phase 3A only: opt-in, read-only
