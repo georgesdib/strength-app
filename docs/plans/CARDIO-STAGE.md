@@ -5,15 +5,16 @@ HealthKit ingestion, cardio analytics and the monitoring dashboards. Component i
 documentation remains in its owning repository.
 
 **Status:** **completed 2026-11-18.** C0–C6d and C2 are deployed on the main server at release
-1.6.0; C7's code and documentation are in; device testing is owner-validated. Deferred items are
-listed in §14, not left implicit. The measured audit is
+1.6.0; C7's code and documentation are in; device testing is owner-validated, with METs, effort and a
+fresh VO₂max unverified because no such upload occurred (C7, LIM-68). §14 lists what was not
+delivered, including the retired impulse (A2/A3), not left implicit. The measured audit is
 [CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md). Originally
 implemented: C1 to C7 are gated on the C1 decision record, and no runtime behaviour, API, schema,
 dependency, contract or training rule changes until a workstream is implemented and tested.
 
 **Roadmap workstream:** [ROADMAP §4.13a](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md)
-(v1.6, cardio depth). This plan delivers its A0/A1 evidence and defers A2/A3 — see
-[DEC-CARDIO-08](#dec-cardio-08--413a-a2a3-is-deferred-not-superseded) and §11.
+(v1.6, cardio depth). This plan delivered its A0/A1 evidence; A2/A3 were deferred and then retired —
+see [DEC-CARDIO-08](#dec-cardio-08--413a-a2a3-were-deferred-then-retired) and §11.
 
 **Owner:** the athlete. Every decision in §4 was taken 2026-11-17.
 
@@ -213,14 +214,15 @@ append-only.
 **Consequences.** One hint query and one flag. No second reconciliation engine, and no path that
 deletes the athlete's own entry.
 
-### DEC-CARDIO-08 — §4.13a A2/A3 is deferred, not superseded
+### DEC-CARDIO-08 — §4.13a A2/A3 were deferred, then retired
 
-**Decision.** This stage delivers the §4.13a A0 (data audit) and A1 (capture completion) evidence.
-Impulse (A2) and shadow load (A3) are deferred to v1.6 proper, because the impulse is computable only
-after this stage's data exists. `ROADMAP.md` §4.13a keeps its approved scope; v1.6 stays open.
+**Decision.** This stage delivered the §4.13a A0 (data audit) and A1 (capture completion) evidence.
+Impulse (A2) and shadow load (A3) were deferred to v1.6 proper at the time. The owner **retired** them
+as product direction on 2026-11-18 (`DEC-LONGEVITY-03`), so they are no longer a v1.6.x deliverable and
+`ROADMAP.md` §4.13a is amended to match; the 2026-11-16 deferral stands only as history.
 
-**Consequences.** No "supersedes" claim is made over an approved document. The backend roadmap needs
-one status line added (see §12).
+**Consequences.** The retirement is recorded in `ROADMAP.md` §4.13a and in the longevity plan; this
+decision stands as the record of the earlier deferral (see §12).
 
 ### DEC-CARDIO-09 — Workout uniqueness is the HealthKit object UUID, not device-scoped
 
@@ -713,23 +715,23 @@ verified backup and one restore drill before the first such migration.
 - **O-1** What the export actually contains (metadata, dense HR, `AverageMETs`, VO₂max coverage) —
   answered by C0, and it can invalidate C5's tier order.
 - **O-2** HR retention resolution, chosen against the audited volume rather than in advance.
-- **O-3** Whether staging receives upload endpoints or a file import; deferred until C0 shows whether
-  the export path is sufficient for history and only incremental sync needs the app.
-- **O-4** Whether historical exact links are recoverable from existing idempotency receipts; verified,
-  never assumed.
+- **O-3** *Closed.* History is a one-time file import and the app carries only incremental sync; no
+  staging upload endpoint was added (C1 policy §7).
+- **O-4** *Closed.* C0 answered it: the export carries the identifier on only 27 workouts and the
+  idempotency receipts are pruned, so historical exact links are not recoverable (`DEC-CARDIO-11`).
 - **O-5** *Closed.* Apple exercise minutes exist for 71 k records but only from 2021, so they are a
   cross-check on post-2021 totals and not a history-long baseline.
 - **O-6** *Closed.* The method is the cascade in `DEC-CARDIO-05`; nothing is deferred to C5.
 
 ## 12. Accompanying edits
 
-Landed 2026-11-17 on task branches. Not merged into `development` and not pushed; nothing is committed
-to `main`.
+Landed 2026-11-17 on task branches and since merged: deployed at backend 1.6.0 and released through
+1.7.1.
 
 | Repository | Change | Commits |
 |---|---|---|
 | Portfolio | This plan, the plan-index entry and the documentation registration | `5e473cf`, `efc3e0c`, `6909d1b` |
-| Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here, A2/A3 stay v1.6, v1.6 stays open | `9ac0a67`, `9a9a39e` |
+| Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here; A2/A3 were later retired (`DEC-LONGEVITY-03`) | `9ac0a67`, `9a9a39e` |
 | iOS | `docs/README.md` index pointer, `docs/HEALTHKIT.md` (current read/write scope and privacy limits), and the widened `NSHealthShareUsageDescription` | `a2e84e6`, `359baf4`, `2c644d6`, `ded27d4` |
 
 Links to this plan point at the portfolio `development` branch: `main` carries release pins and lags
@@ -754,11 +756,11 @@ lives, so none of them looks like an oversight later.
 | Golden-number analytics fixtures | outstanding | plan §C7 |
 | METs and `srpe` on a *new* upload | unobserved; owner-accepted | LIM-68 |
 | Manual cardio entry | retired, not deferred | `DEC-CARDIO-19`, LIM-66 |
-| Cardio impulse / shadow load (§4.13a A2–A3) | remains the backend v1.6.x deliverable | ROADMAP §4.13a |
+| Cardio impulse / shadow load (§4.13a A2–A3) | **retired 2026-11-18**, not deferred: no TRIMP, sRPE impulse, ACWR or unified fatigue score ships | `DEC-LONGEVITY-03`; ROADMAP §4.13a |
 
-**Release numbering caveat.** 1.6.0 ships this stage while the roadmap's v1.6 milestone also names
-the impulse model, which did not ship. The roadmap and changelog both say so; the next backend
-release carries the impulse work.
+**Release numbering caveat.** 1.6.0 shipped this stage while the roadmap's v1.6 milestone still named
+the impulse model. The impulse did not ship and will not: it was retired on 2026-11-18
+(`DEC-LONGEVITY-03`), and the roadmap no longer carries it as pending work.
 
 ## 13. Related
 

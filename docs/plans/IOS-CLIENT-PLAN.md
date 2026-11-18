@@ -65,7 +65,7 @@ Form ratings and the post-session review use existing server review/form contrac
 
 ### Explicitly not a first-release prerequisite
 
-HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B), manual cardio, advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
+HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) remains deferred; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
 
 ## 2. Architectural invariants
 
@@ -586,7 +586,7 @@ sRPE precedence and no prescription/rubric changes.
 | Existing unauthenticated HTTP API | Add an authenticated versioned facade before iPhone mutations; do not retrofit/break existing web/CLI routes in this task. |
 | Plan staleness or concurrent web use | Server validates at start and on mutation; return a clear conflict. Client refreshes and asks the owner, never silently overwrites. |
 | Partial or missing readiness | Show the server's status and warnings; no Swift score and no missing-as-zero behavior. |
-| Session RPE source | Manual remains first choice. Future Apple effort is source-labelled, only associated after confirmation, and usable only when no manual value exists. Current storage needs additive provenance. |
+| Session RPE source | **Decided:** sRPE is always entered by hand (`DEC-SRPE-01`); the HealthKit effort value is derived *from* sRPE, never the reverse, so no provenance column is added. An Apple-supplied effort would need its own decision. |
 | Rubric use | Reuse server's current review payload and rubric version. Marks are human optional feedback; do not implement scoring or calibration logic in Swift. |
 | HealthKit scope | HRV/RHR/bodyweight first; all other types later by explicit scope. No sleep/sleep score in this plan. |
 | PCC privacy and availability | Specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7.3; disabled by default, user-invoked, context preview/consent, no health data by default, no core dependency, no automatic fallback from on-device. |
@@ -594,8 +594,8 @@ sRPE precedence and no prescription/rubric changes.
 
 ## 11. Status and next task
 
-Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7–R10 reliability work are complete; R11 was
-dropped as unnecessary. Phase 2 delivered
+Phases 0–2, Phase 3A, Phase 4, and the R1–R5/R7–R10 reliability work are complete; R11 was dropped
+on 2026-11-14 and reinstated on 2026-11-17 for phone-owned sessions (§R11). Phase 2 delivered
 the online strength workflow (readiness write, server-issued prescription, start by issued-plan id,
 active workout, add set, complete/abandon, session RPE, optional form ratings, history/progress,
 manual VBT and idempotency receipts) under

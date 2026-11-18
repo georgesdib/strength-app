@@ -4,6 +4,11 @@
 # another branch; this catches that before the commit. Deliberate removals: ALLOW_HEADING_REMOVAL=1.
 set -euo pipefail
 
+if [ -n "${ALLOW_HEADING_REMOVAL:-}" ]; then
+  echo "heading-removal check skipped (ALLOW_HEADING_REMOVAL is set)"
+  exit 0
+fi
+
 files=$(git diff --name-only HEAD -- '*.md' || true)
 if [ -z "$files" ]; then
   echo "no markdown changes"
