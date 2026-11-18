@@ -4,8 +4,9 @@
 HealthKit ingestion, cardio analytics and the monitoring dashboards. Component implementation
 documentation remains in its owning repository.
 
-**Status:** proposed 2026-11-17. C0 (the measured audit) is complete — see
-[CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md), which corrected several decisions in this plan. Nothing else is
+**Status:** implemented 2026-11-17, hardened the same day — C0 to C6d and C2 are deployed on the main
+server, C7's code and documentation changes are in, and the measured audit is
+[CARDIO-C0-AUDIT.md](CARDIO-C0-AUDIT.md). Originally
 implemented: C1 to C7 are gated on the C1 decision record, and no runtime behaviour, API, schema,
 dependency, contract or training rule changes until a workstream is implemented and tested.
 
@@ -621,6 +622,14 @@ last successful sync and coverage. Detailed charts stay on the web.
 each metric; neither computes a metric locally.
 
 ### C7 — Hardening and release
+
+**Status:** code and documentation done 2026-11-17; device verification of METs, effort and a fresh
+VO₂max remains outstanding. Delivered: per-item tolerance with explicit `rejected` counts on both
+activity routes; a server-side rejection of pre-cutoff workouts (defence in depth against the
+duplication that forced the `0066` rebuild); `410` on the retired route instead of a bare `404`;
+the kind index dropped after `EXPLAIN QUERY PLAN` showed it chosen for the per-workout lookup and then
+filtering 590k rows (`0070`); and the limitation entries for no-manual-entry, undetected deletions and
+unproven Apple metadata. Test additions were explicitly out of scope for this pass.
 
 Backfill and resume; incremental sync; duplicate prevention under re-pair and multi-device upload;
 deletion and reappearance events; linking including ambiguity; HR integrity, ordering and association
