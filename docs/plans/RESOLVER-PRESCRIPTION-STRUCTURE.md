@@ -1,7 +1,7 @@
 # Resolver prescription structure and programme context
 
-**Status:** proposed 2026-11-19 (revised after owner review); not implemented. Work packages
-and release trains are in §6; none has started.
+**Status:** proposed 2026-11-19 (revised after owner review); WP0 complete, WP1–WP8 not
+started. Work packages and release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -426,11 +426,14 @@ overlap; the server foundation precedes every client step.
 
 ### 6.1 Work packages
 
-- **WP0 — decisions and fixtures.** Approve the role-quality class boundaries, family membership
-  and recency window in versioned config with domain reasons; confirm the intelligence method
-  names; add synthetic fixtures (legacy two-group role plan, three-group plan, straight-set plan
-  performed as top-set/back-off, RIR-6 import row, deload and taper days); create the ROADMAP
-  tracking entry. **Exit:** config approved, fixtures committed, no real data.
+- **WP0 — decisions and fixtures (done 2026-11-19).** Approve the role-quality class boundaries,
+  family membership and recency window in versioned config with domain reasons; confirm the
+  intelligence method names; add synthetic fixtures (legacy two-group role plan, three-group
+  plan, straight-set plan performed as top-set/back-off, RIR-6 import row, deload and taper
+  days); create the ROADMAP tracking entry. **Exit:** config approved, fixtures committed, no real
+  data. **Evidence:** `config/resolver-role-quality.v1.yaml`,
+  `tests/fixtures/resolver_structure/`, `tests/test_resolver_role_quality_config.py`,
+  `DEC-RESOLVER-21`, ROADMAP §4.37.
 - **WP1a — server ordered groups.** `group_index`, serializers omit role, internal build-time role
   retained, validation 1..N, warm-up from the heaviest group, set-weighted intensity, persistence,
   legacy rows read by order. **Exit:** payload fixtures, legacy-read test, intensity and warm-up
