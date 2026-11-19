@@ -20,6 +20,8 @@ scores it, and the winner is persisted with provenance. The remaining problems a
 - the plan can be edited mid-session, which blurs planned and performed and forces structure
   rules for every edit path;
 - the evaluator has only an additive penalty score and no programme-aware diagnostics;
+- ranking has no positive programme-fit term, so a maximal week can select work that does not
+  support the week's intent;
 - actual data cannot describe planned versus performed structure without a manually entered
   set role;
 - the candidate shortlist is biased by catalogue order;
@@ -56,10 +58,11 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D9 | The watch does not originate substitutions. It renders the phone-authored execution view and logs sets against it. |
 | D10 | The watch is offline-capable only while the phone is online. There is no pending-session shell and no start without a reachable phone or server. |
 | D11 | Set-role input is removed from every logging surface. Legacy role columns and values remain unread history. |
-| D12 | The programme header is computed on the server and reused by Today and intelligence facts; it labels trained week and calendar deload week separately. |
+| D12 | The programme header is a server-computed reporting model reused by Today and intelligence facts; it labels trained week and calendar deload week separately and is not an evaluator input. |
 | D13 | Evaluation is a deterministic hierarchy, not a composite score, and reuses the existing intensity, exposure, volume and tie-break definitions. |
 | D14 | Candidate ordering is slot-role aware, deterministic and measured before any beam or cap change. |
 | D15 | This plan supersedes the "no default programme change" conclusion of the top-set evidence review and the R8 plan-edit surface; both documents are amended with it. |
+| D16 | Programme context reaches evaluation through the applied build and its notes, never through the header. One programme-fit level ranks assignments by the week's intent, after feasibility, intent and volume bands, and only with measured evidence. |
 
 ## 4. Current state
 
@@ -227,6 +230,8 @@ Rules:
   the real date.
 - The header is computed without loading the full rule context or history: profile anchor,
   trained-week query, effective settings and deload decisions.
+- The header is a reporting model and is not passed into resolver evaluation. Applied context
+  reaches each candidate through the evaluation inputs and the built prescription's notes.
 - `GET /api/ios/v1/today` gains the additive header; the top-level `date` is not duplicated.
 - The same structure is one fact block in the existing programme-context intelligence resource,
   with the existing method names, and is available to nudge, weekly-summary and chat dossiers.
@@ -244,10 +249,25 @@ still chooses one assignment; hard feasibility always precedes every soft level.
 3. **Volume-band consistency** — inside the configured tolerance is neutral; undershoot and
    overshoot are separate signals using the existing budget targets, tolerance and the
    per-pattern band helper. Intentional deload and taper reduction is exempt.
-4. **Training-quality diagnostics** — the ordered group structure, set-weighted intensity profile
-   and heavy-exposure count. Descriptive in this phase: it does not decide the winner.
-5. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
-6. **Deterministic tie-break** — the existing resolver tie-break, then stable assignment order.
+4. **Programme fit** — rank assignments by the applied week's intent, using the built
+   prescription's notes and the existing bands. The build already contains progression, continuity,
+   readiness, DUP, deload and competition effects; the level reads their outcome and does not
+   re-derive them. The direction is context-specific and lexicographic:
+   - maximal or strength main week: prefer an assignment whose essential main lift has a
+     trustworthy e1RM and produces the scheme's heavy working sets; an unknown or low-confidence
+     load ranks below a known heavy exposure;
+   - volume or accessory week: neutral on heavy exposure; level 3 already decides the volume
+     band;
+   - competition peak or taper: prefer known, familiar, lower-fatigue variants; no new stimulus;
+   - deload or a safety-driven readiness fallback: neutral;
+   - missing e1RM or missing bands: neutral, never a guess.
+   The level ranks equivalent movements; it does not invent intensity, and it never overrides
+   safety, intent or the volume band.
+5. **Training-quality diagnostics** — the ordered group structure, set-weighted intensity profile
+   and heavy-exposure count. Descriptive: they explain the fit level and the prescription but do
+   not add another ranking term.
+6. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
+7. **Deterministic tie-break** — the existing resolver tie-break, then stable assignment order.
    History continuity is not re-added here; it already lives in candidate ordering, and adding it
    again would double-count.
 
@@ -255,11 +275,15 @@ Implementation notes:
 
 - the lexicographic vector is recorded in the snapshot; any scalar kept for the beam is derived
   from that vector, not defined separately;
+- programme fit reads the applied context from the built prescription's notes (`undulation`,
+  `deload`, `top_set`); the programme header is not an input;
 - the intensity profile uses the relative-intensity bands from `features/monitoring.py`, the
   set-weighted group intensity from §5.2, and reports missing e1RM as unknown;
 - heavy exposure reuses `features/exposure.py` and `features/high_intensity_exposure.py`; no new
   band definitions;
 - the fingerprint version is bumped when structure intent and the selected structure enter it;
+- programme fit is enabled only after the fixed-history comparison shows it does not trade
+  safety, volume band or session time for intensity; the comparison is recorded in the snapshot;
 - no composite score field is introduced.
 
 ### 5.6 Actual data and sequence analysis
@@ -355,8 +379,9 @@ The slices ship together with the apps; there are no compatibility gates or dual
    week definitions and the deload status rules.
 4. **Actual data.** Add order-based matching, substitution attribution and the sequence
    descriptors; stop accepting or writing roles; keep legacy role columns unread.
-5. **Evaluation.** Add the hierarchy, the intensity profile and the volume band classification;
-   keep hard feasibility first and remove the symmetric volume error.
+5. **Evaluation.** Add the hierarchy, the programme-fit level, the intensity profile and the
+   volume band classification; keep hard feasibility first and remove the symmetric volume error.
+   Programme fit is enabled only with the fixed-history comparison.
 6. **Candidate ordering.** Add the deterministic shortlist ordering and measure it on a fixed
    history before and after.
 7. **Gateway (later).** Plan push, relayed start and sync, waiting states and the
@@ -376,6 +401,11 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - Today shows trained week and deload calendar week separately, DUP only when enabled and
   anchored, the correct deload status and a competition countdown only for a future date.
 - The same header facts reach the intelligence facts without LLM calculation.
+- Programme fit is context-specific: a maximal or strength week prefers the candidate with a
+  trustworthy heavy main-lift exposure over an otherwise comparable candidate; a volume week, a
+  deload and a missing e1RM are neutral; a taper prefers the lower-fatigue familiar candidate.
+- The programme header is not an evaluator input: the evaluator reads the applied context from
+  the build and its notes.
 
 **Safety and invariants**
 
@@ -383,6 +413,7 @@ The slices ship together with the apps; there are no compatibility gates or dual
   executability checks are unchanged.
 - The engine remains the only source of loads, reps, RIR, warm-ups, structure and deload.
 - No named phases, per-muscle targets, composite score or role inference is introduced.
+- Programme fit never outranks hard feasibility, requested intent or volume-band consistency.
 - Raw actual sets are never rewritten; working-set volume and e1RM are unchanged.
 
 **Actual data**
@@ -397,6 +428,8 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - A single-structure build per intent: no dual evaluation, no resolver budget increase.
 - Today and the programme header stay within the existing read latency target; the header does
   not load history.
+- Programme fit uses the single build per assignment; it does not add evaluations or a second
+  resolver pass.
 - Candidate ordering is measured before any beam or cap change.
 
 **Evidence**
@@ -414,6 +447,8 @@ The slices ship together with the apps; there are no compatibility gates or dual
 | A stale watch renders a structured plan as its back-off load | No compatibility is claimed; apps and server ship together, and the gateway phase keeps the direct path. |
 | WatchConnectivity delivery is delayed or the phone is suspended | Waiting state with timeout and retry; the WatchConnectivity spike runs first; the direct watch path remains. |
 | Programme header drifts from engine context | One server-side helper, one source of week definitions, reused by Today and intelligence facts. |
+| Programme fit trades safety, volume or time for intensity | It ranks after feasibility, intent and volume band; neutral when e1RM or bands are unknown; enabled only with the fixed-history comparison. |
+| The header becomes a second source of applied context | Reporting only; evaluation reads the build inputs and the built prescription's notes. |
 | Sequence descriptors become a role taxonomy | Descriptive only, post-workout, no inference, no metric rewrites. |
 | Candidate ordering changes search results | Deterministic rules, explicit thresholds, measured before and after. |
 | Substitution events arrive after the sets | The performed set is self-describing and is the durable attribution; the event is a view hint. |
@@ -422,6 +457,7 @@ The slices ship together with the apps; there are no compatibility gates or dual
 ## 9. Out of scope
 
 - Named phase model or automatic phase transitions; periodisation engine; resolver V2.
+- Using the programme header as an evaluator input.
 - Per-muscle volume targets; composite strength-stimulus score.
 - Plan editing after start.
 - Generalised actual set-role inference; manual role entry.
