@@ -50,24 +50,21 @@ When a change requires Xcode, simulator, iPhone, or Apple Watch testing:
 - Do not update portfolio submodule pointers during ordinary implementation.
 - Do not edit deployed files or alter main-server configuration as a substitute for a reviewed source change.
 
-## Deployment paths (verified 2026-11-17)
+## Deployment paths
 
-The service runs from a checkout at `/home/dsh/strength-app/strength-training-app` with its
-virtualenv at `.venv/` inside it — **not** `/home/dsh/strength-training-app/`, which appears in
-older unit comments and does not exist. Working directories, unit `ExecStart` lines and any
-`systemctl` troubleshooting must use the real path or fail with `status=203/EXEC`.
+Host-specific checkout, virtualenv, database and unit paths are recorded in the private backend
+quirks (`strength-training-app/private/BUILD-TEST-QUIRKS.md`) on the host that performs the
+deployment. Do not copy them into a public document. Read them there and export `APP_ROOT` before
+running deployment commands.
 
-| Item | Value |
-|---|---|
-| Portfolio checkout | `/home/dsh/strength-app` |
-| Backend checkout | `/home/dsh/strength-app/strength-training-app` |
-| Virtualenv | `/home/dsh/strength-app/strength-training-app/.venv/bin/python` |
-| Database | `/home/dsh/strength-app/strength-training-app/data/coach.db` |
-| Web unit | `strength-coach-web.service` (port 8000, home LAN only) |
-| Cardio linker | `strength-cardio-link.timer`, every 10 min, `SuccessExitStatus=1` |
-
-Run git and `systemctl` as `dsh` (`runuser -u dsh --`): the checkout is owned by that user, and git
-refuses it as `root` with "dubious ownership".
+- Run git and `systemctl` as the service user (`runuser -u <service-user> --`): the checkout is
+  owned by that user and git refuses it as `root` with "dubious ownership".
+- Use the real checkout path in every unit, `WorkingDirectory` and `ExecStart`; a stale path
+  fails with `status=203/EXEC`. The repo `deploy/` units must match the installed units.
+- The web unit is `strength-coach-web.service` (port 8000, home LAN only); the cardio linker is
+  `strength-cardio-link.timer`.
+- Read-only inspection is always allowed. Pulling code, restarting services, editing units or data
+  requires the owner's explicit approval.
 
 ## Completion report
 
