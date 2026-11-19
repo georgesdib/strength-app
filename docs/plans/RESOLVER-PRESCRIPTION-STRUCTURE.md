@@ -65,9 +65,10 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D14 | Candidate ordering is slot-role aware, deterministic and measured before any beam or cap change. |
 | D15 | This plan supersedes the R8 plan-edit surface and updates the top-set evidence review's mode reference; the review's no-default-change conclusion and the opt-in default are retained. |
 | D16 | Programme context reaches evaluation through the applied build and its notes, never through the header. |
-| D17 | Main, secondary and accessory assignments are ranked by deterministic role-quality classes (specificity, continuity, exposure adequacy, suitability, complementarity, redundancy, coverage, stimulus-to-fatigue). One owner per signal, volume as a gate, no composite, and only with measured evidence. |
+| D17 | Main, secondary and accessory assignments are ranked by deterministic role-quality classes (specificity, exposure adequacy, suitability, complementarity, redundancy, coverage, stimulus-to-fatigue). One owner per signal, volume as a gate, no composite, and only with measured evidence. |
 | D18 | RIR 6 is the warm-up sentinel by definition: every warm-up is logged at RIR 6, an RIR-6 row is never working volume, and a stored working flag that disagrees is a data-quality anomaly. An import must not map a working set to RIR 6. |
 | D19 | Derived actual structure is a separate analysis layer over the recorded sequence: segmented classes with ordinal confidence and named evidence, separate from planned matching, never written to raw sets, and with no training-policy effect until a separate decision. |
+| D20 | Repetition and variation are owned by the pre-build dwell layer: the cap, the deterministic exploration draw and a bounded factor ordering, after required-pattern coverage and within the slot's structural class. Role quality does not re-score dwell counts or last used. |
 
 ## 4. Current state
 
@@ -267,12 +268,13 @@ feasibility precedes every soft level; there is no composite score.
    band is the deload- and taper-adjusted band, so intentional reduction is not a gate failure.
 3. **Role-specific training quality** — lexicographic per role, using deterministic classes. The
    applied build already applies load-level progression, continuity, readiness, DUP, deload and
-   competition effects; the level reads their outcome and does not re-score them. Its continuity
-   class is exercise-level (dwell and last used, e1RM recency), not a second load adjustment.
+   competition effects; the level reads their outcome and does not re-score them. Repetition and
+   variation are owned by the pre-build dwell layer (§5.7); the level does not re-score dwell
+   counts or last used.
 
    | Role | Ranking criteria | Source |
    |---|---|---|
-   | Main | Specificity class (same lift, same family, same pattern, comparable pattern); continuity (dwell and last used, e1RM recency); heavy-exposure adequacy (band plus e1RM confidence, not a point estimate); technical suitability (ratings, technique throttle, form) | taxonomy and lift family, dwell counts, e1RM age and quality, lift readiness, form assessment, suitability |
+   | Main | Specificity class (same lift, same family, same pattern, comparable pattern); heavy-exposure adequacy (band plus e1RM confidence and age, not a point estimate); technical suitability (ratings, technique throttle, form) | taxonomy and lift family, e1RM age and quality, lift readiness, form assessment, suitability |
    | Secondary (support) | Complementarity with the chosen main lift's pattern and primary muscles; usefulness to the volume band; redundancy and fatigue cost | taxonomy patterns and primary muscles, volume ledger, existing redundancy penalty, spinal and fatigue, selection tax |
    | Accessory | Coverage of otherwise uncovered patterns and muscles (counts, not doses); productive volume per unit time; stimulus-to-fatigue | taxonomy, volume ledger, selection tax, time estimate |
 
@@ -281,21 +283,19 @@ feasibility precedes every soft level; there is no composite score.
    excluded from quality ranking because their intent is fixed by the quality stop.
 
    Eligibility filters (injury, can_do, will_do, feels_bad, pattern) are pass/fail and never
-   quality points; the suitability class ranks only candidates that passed. The dwell target
-   remains a generator eligibility cap while continuity is a ranking class here, so the same
-   count is not used for both.
+   quality points; the suitability class ranks only candidates that passed. The dwell cap and the
+   exploration draw are pre-build controls (§5.7); role quality does not re-score them.
 4. **Volume adequacy and distribution** — only within the band: closeness to target, pattern
    balance, and no pattern left badly short. The symmetric volume error is removed.
 5. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
 6. **Deterministic tie-break** — the existing resolver tie-break, then stable assignment order.
-   History continuity is not re-added here; it is owned by role quality and must not also order
-   the pool.
+   Repetition is not re-added here; it is owned by the pre-build dwell layer (§5.7).
 
 Implementation notes:
 
-- one owner per signal: the resolver pool is ordered structurally (pattern coverage, family,
-  catalogue) and the evaluator owns specificity, continuity, redundancy and suitability; injury,
-  can_do and suitability vetoes remain eligibility filters, not quality points;
+- one owner per signal: the dwell layer owns repetition and variation and orders the pool;
+  the evaluator owns specificity, exposure, redundancy and suitability; injury, can_do and
+  suitability vetoes remain eligibility filters, not quality points;
 - each criterion is recorded as a small deterministic class in the snapshot, per finalist; any
   scalar kept for the beam is derived from the lexicographic vector, not defined separately;
 - role quality reads the applied context from the built prescription's notes (`undulation`,
@@ -371,18 +371,41 @@ Derived actual structure:
 
 ### 5.7 Candidate diversity
 
-Retain the bounded beam and full evaluation. The candidate cap stays at its current width until a
-measured change justifies otherwise.
+Retain the bounded beam and full evaluation. Candidate selection has two owners: the pre-build
+dwell layer decides which exercise enters the search; the evaluator decides which completed
+prescription wins. The candidate cap stays at its current width until a measured change justifies
+otherwise.
 
-- The generator orders each slot's pool deterministically before the beam cap: candidates required
-  for movement-pattern coverage first, then the slot's structural family, then catalogue order as
-  the final tie-break. History, continuity, readiness and suitability are owned by role quality
-  (D17) and must not also order the pool.
-- The beam already reserves required-pattern candidates when it truncates; that behaviour is kept.
-- Pool order is the beam's rank cost, so reordering changes the search trajectory, not only the
-  shortlist. The change is measured on a fixed history before and after.
-- Structural family membership is an explicit config rule, not a judgement call; no history or
-  recency threshold is added to the pool.
+**Dwell layer (pre-build).**
+
+- The cap is unchanged: `_apply_dwell_exclusion` drops candidates at or above
+  `resolver.dwell.target`; when every candidate is at the cap, the pool is kept with a warning.
+- The exploration draw is the rotation: with probability `resolver.dwell.probability`, the slot's
+  last choice is removed from (or demoted to the end of) its eligible list, using the existing
+  deterministic draw keyed on `(date, session type, slot id)`, so a preview and the saved
+  prescription agree. The last choice comes from the same history mapping the generator used; if
+  it is absent from the pool, the draw has no effect.
+- The factor `f(c) = 1 - exp(-c / tau)` is a bounded preference. It orders candidates only within
+  a structural class; it never crosses required-pattern coverage and never overrides eligibility
+  or the cap. A pure factor sort is rejected because `f` saturates quickly: it would let any used
+  lift beat any never-used lift regardless of readiness, fatigue or spinal cost.
+- Precedence: required-pattern coverage first, then the draw, then the factor within the slot's
+  structural family, then catalogue order. Coverage must survive the draw so the only candidate
+  for a required pattern cannot be removed. The beam still reserves required-pattern candidates
+  when it truncates.
+- The dwell layer owns repetition and variation. Role quality does not score dwell counts or last
+  used, so there is no second continuity signal.
+- The template supplies the slot identity, session type and slot order used by the draw and the
+  last-choice lookup; it is otherwise unchanged.
+
+**Structural ordering.** Family membership and catalogue order remain the deterministic
+tie-breaks; family membership is explicit config, not a judgement call.
+
+**Measurement.** Compare cap-only, cap plus draw, and cap plus draw plus bounded factor on a fixed
+history, with a pure-factor variant only as a rejected reference. Report how often the chosen
+exercise changes and whether the volume band, session time, spinal cost, warnings and adherence
+change. A variant that trades safety or the volume band for stickiness is rejected. Pool order is
+the beam's rank cost, so reordering changes the search trajectory, not only the shortlist.
 
 ### 5.8 Phone gateway and offline watch execution (later slice)
 
@@ -463,13 +486,23 @@ overlap; the server foundation precedes every client step.
   substitution attribution; RIR-6 invariant and import rejection; segmented derived structure with
   ordinal confidence; remove the leftover role branches. **Depends on:** WP1b. **Exit:** the
   180×4 @RIR 1 + 160×5 @RIR 3 ×3 example, missing/extra/ambiguous cases, raw metrics untouched.
-- **WP6 — evaluator.** Role-quality classes in config; six-level hierarchy with the volume gate;
-  intensity profile; snapshot vector; fingerprint bump; fixed-history A/B with owner review of
-  straight, top-set, substitution and divergent sessions. Enable only if it does not trade safety,
-  band or time. **Depends on:** WP1a and WP0. **Exit:** measured comparison and p50/p95 recorded.
-- **WP7 — candidate ordering.** Structural shortlist ordering; measure diversity and outcome change
-  before and after; no beam or cap widening without evidence. **Depends on:** WP6. **Exit:** a
-  later-catalogue candidate is not excluded by position, measurements recorded.
+- **WP6 — evaluator.** Role-quality classes in config (no last-used continuity); six-level
+  hierarchy with the volume gate; intensity profile; snapshot vector; fingerprint bump;
+  fixed-history A/B with owner review of straight, top-set, substitution and divergent sessions.
+  Enable only if it does not trade safety, band or time. **Depends on:** WP1a and WP0. **Exit:**
+  measured comparison and p50/p95 recorded.
+- **WP7a — resolver dwell completion.** Wire the cap, the deterministic exploration draw and the
+  bounded factor ordering into the resolver's pre-build ordering, with the last-choice lookup and
+  the template slot identity. Coverage precedes the draw; the draw must not remove the only
+  candidate for a required pattern; the factor orders only within a structural class. Tests cover
+  draw determinism, the all-at-cap fallback, a missing last choice, and coverage preservation.
+  **Depends on:** WP1a and WP0; can run in parallel with WP6. **Exit:** production resolver applies
+  the full dwell layer; unit tests pass.
+- **WP7b — structural ordering and measurement.** Family and catalogue ordering; fixed-history
+  comparison of cap-only, cap plus draw, and cap plus draw plus bounded factor; a pure-factor
+  variant only as a rejected reference; no beam or cap widening without evidence. **Depends on:**
+  WP7a; measure separately from WP6. **Exit:** a later-catalogue candidate is not excluded by
+  position; selection changes and outcome metrics recorded.
 - **WP8 — gateway (later).** WatchConnectivity spike first; plan push; relayed start and sync with
   the watch token; waiting and timeout states; receipt deduplication; device acceptance. The direct
   watch path remains primary. **Depends on:** WP2. **Exit:** watch starts and syncs with the server
@@ -481,8 +514,9 @@ overlap; the server foundation precedes every client step.
 - **Release A — structure and context:** WP1a, WP1b, WP2, WP3, WP4. This is the only coordinated
   cutover, because the plan-edit routes and the request schema change. Finish or abandon in-flight
   workouts first; apply migration `0058`; no dual protocol and no capability negotiation.
-- **Release B — actual data and evaluation:** WP5, WP6, WP7. Server-only; no client change. WP6 and
-  WP7 ship only with their fixed-history comparisons and owner review.
+- **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
+  WP6 and WP7a can run in parallel; WP6 and WP7b ship only with their fixed-history comparisons and
+  owner review, measured separately.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B.
 
@@ -490,9 +524,10 @@ overlap; the server foundation precedes every client step.
 
 Every package runs its narrowest backend tests and `ruff check` for the changed area, and a
 migration test on a database copy when schema changes. Client packages run the narrowest Swift
-tests plus the web UI checks. WP6 and WP7 add the fixed-history comparison, owner review and
-p50/p95; WP8 adds the WatchConnectivity spike and a physical-device run. No package claims
-completion from code presence; the backend ROADMAP records status only with that evidence.
+tests plus the web UI checks. WP7a adds the dwell unit tests (draw determinism, cap fallback,
+coverage preservation). WP6 and WP7b add the fixed-history comparison, owner review and p50/p95,
+measured separately; WP8 adds the WatchConnectivity spike and a physical-device run. No package
+claims completion from code presence; the backend ROADMAP records status only with that evidence.
 
 ## 7. Acceptance
 
@@ -510,10 +545,13 @@ completion from code presence; the backend ROADMAP records status only with that
 - Today shows trained week and deload calendar week separately, DUP only when enabled and
   anchored, the correct deload status and a competition countdown only for a future date.
 - The same header facts reach the intelligence facts without LLM calculation.
-- Role quality is role-specific: a main-lift candidate with better specificity, continuity or
-  suitability beats an otherwise comparable candidate; a secondary candidate that complements the
-  main lift and adds less redundancy wins; an accessory that covers an uncovered pattern at lower
-  fatigue wins; missing data is neutral.
+- Role quality is role-specific: a main-lift candidate with better specificity, exposure
+  adequacy or suitability beats an otherwise comparable candidate; a secondary candidate that
+  complements the main lift and adds less redundancy wins; an accessory that covers an uncovered
+  pattern at lower fatigue wins; missing data is neutral.
+- Dwell rotation is live in the resolver: the cap, the deterministic draw and the bounded factor
+  order the pool; the all-at-cap fallback keeps it; the draw never removes the only candidate for
+  a required pattern; role quality does not score dwell or last used.
 - The volume band is a gate: a candidate outside it ranks below every inside-band candidate, and
   inside-band candidates are decided by role quality, not by set-count closeness.
 - The programme header is not an evaluator input: the evaluator reads the applied context from
@@ -528,7 +566,8 @@ completion from code presence; the backend ROADMAP records status only with that
   API, or manual role entry is introduced; the engine's build-time internal tag is never
   serialized.
 - Role quality never outranks hard feasibility, programme intent or the volume gate.
-- Each signal affects the result once: history and continuity order the evaluator, not the pool.
+- Each signal affects the result once: the dwell layer orders the pool; role quality does not
+  re-score repetition or last used.
 - Raw actual sets are never rewritten; working-set volume and e1RM are unchanged.
 
 **Actual data**
@@ -552,7 +591,7 @@ completion from code presence; the backend ROADMAP records status only with that
   not load history.
 - Role quality uses the single build per assignment; it does not add evaluations or a second
   resolver pass.
-- Candidate ordering is measured before any beam or cap change.
+- Candidate ordering and each dwell variant are measured before any beam or cap change.
 
 **Evidence**
 
@@ -571,8 +610,10 @@ completion from code presence; the backend ROADMAP records status only with that
 | Programme header drifts from engine context | One server-side helper, one source of week definitions, reused by Today and intelligence facts. |
 | Role quality trades safety, volume or time for specificity | It ranks after feasibility, intent and the volume gate; neutral when data is missing; enabled only with the fixed-history comparison. |
 | Role criteria become a second scoring engine | Fixed role table, deterministic classes, one owner per signal, no weighted total. |
-| A signal is counted twice (pool order and role quality) | History and continuity order the evaluator only; the pool stays structural. |
-| Role quality freezes exercise variety | Continuity is one class among several, not a bonus; the existing dwell policy still bounds repetition; measured. |
+| Dwell and role quality double-count repetition | Role quality does not score dwell or last used; the dwell layer owns repetition. |
+| A pure dwell factor overrides readiness, fatigue or spinal cost | The factor orders only within a structural class, after required-pattern coverage; a pure sort is a rejected reference. |
+| The exploration draw removes the only candidate for a required pattern | Coverage precedes the draw, and the beam still reserves required-pattern candidates when it truncates. |
+| Wiring the dwell layer changes production selection | Fixed-history comparison of cap-only, cap plus draw, and cap plus draw plus factor; no beam or cap widening; owner review. |
 | The header becomes a second source of applied context | Reporting only; evaluation reads the build inputs and the built prescription's notes. |
 | Derived structure becomes a role taxonomy | Segmented description with ordinal confidence; never stored on raw sets; no metric or policy effect. |
 | The RIR-6 convention is broken by an import or manual edit | The invariant is checked; conflicts are reported as anomalies; an import may not manufacture RIR 6 for a working set. |
@@ -599,15 +640,16 @@ completion from code presence; the backend ROADMAP records status only with that
 - Backend implementation status and phase completion belong in the backend
   [ROADMAP.md](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
 - Backend decisions, including the tri-state and its default, the frozen plan, the substitution
-  model, the ordered groups and the role-quality hierarchy, are recorded in
+  model, the ordered groups, the role-quality hierarchy and the dwell ownership of repetition, are
+  recorded in
   [DECISIONS.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md).
   New entries supersede the plan-edit decisions (`DEC-IOS-04`, `DEC-IOS-08`, `DEC-IOS-09`).
 - Backend references updated with the implementation: `RESOLVER-ALGORITHM.md`,
-  `RESOLVER-MAIN-LIFTS-VS-ACCESSORIES.md`, `TOP-SET-BACKOFF-EVIDENCE.md` (mode reference and
-  opt-in default retained), `API.md` (today, workouts, add-set, execution, removed plan routes),
-  `DATA-MODEL.md` (annotation columns and legacy columns), `DATA-QUALITY.md` (RIR-6 and import
-  semantics), `WEB-UI.md` (plan editing and role picker removed), `USER-GUIDE.md` and
-  `ROADMAP.md`.
+  `RESOLVER-MAIN-LIFTS-VS-ACCESSORIES.md`, `DWELL-AND-ROTATION.md` (resolver wiring status and
+  bounded ordering), `TOP-SET-BACKOFF-EVIDENCE.md` (mode reference and opt-in default retained),
+  `API.md` (today, workouts, add-set, execution, removed plan routes), `DATA-MODEL.md` (annotation
+  columns and legacy columns), `DATA-QUALITY.md` (RIR-6 and import semantics), `WEB-UI.md` (plan
+  editing and role picker removed), `USER-GUIDE.md` and `ROADMAP.md`.
 - Shared contracts and plans updated before implementation: R7 (plan payload, tri-state override,
   execution view, today header), R8 (plan edits retired; closed record preserved with a
   superseding note), watch (D3, D12, §10 revision/conflict rules, §21 relay now planned, execution
