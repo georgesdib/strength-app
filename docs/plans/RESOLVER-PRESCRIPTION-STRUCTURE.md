@@ -1,6 +1,7 @@
 # Resolver prescription structure and programme context
 
-**Status:** proposed 2026-11-19 (revised after owner review); not implemented.
+**Status:** proposed 2026-11-19 (revised after owner review); not implemented. Work packages
+and release trains are in §6; none has started.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -420,28 +421,75 @@ start. That is the accepted limitation of D10.
 
 ## 6. Implementation order
 
-The slices ship together with the apps; there are no compatibility gates or dual protocols.
+The work runs as nine packages in three release trains. Only the packages named as parallel may
+overlap; the server foundation precedes every client step.
 
-1. **Groups and frozen plan.** Add ordered groups end to end, fix warm-up and intensity from
-   groups, validate 1..N, render and prefill groups on iPhone, Watch and web, remove plan editing
-   and role pickers, and add the substitution/addition execution view with the one additive
-   annotation column on `workout_set` and `clean_set`; `plan_modified_json` becomes legacy-only.
-2. **Top-set intent.** Add the tri-state with default `off`, the per-request override, legacy
-   normalisation, structure status and reason codes; amend the evidence review and record the
-   decision.
-3. **Programme header.** Add the header to Today and the intelligence fact block with the two
-   week definitions and the deload status rules.
-4. **Actual data.** Add order-based matching, substitution attribution, the RIR-6 warm-up
-   invariant with its import boundary, and the segmented derived-structure layer; stop accepting
-   or writing roles; keep legacy role columns read-only and out of matching and decisions.
-5. **Evaluation.** Add the role-aware hierarchy, the role-quality criteria, the intensity profile
-   and the volume gate and distribution; keep hard feasibility first and remove the symmetric
-   volume error. Class boundaries and family membership live in versioned config with domain
-   reasons and owner approval; role quality is enabled only with the fixed-history comparison.
-6. **Candidate ordering.** Add the deterministic shortlist ordering and measure it on a fixed
-   history before and after.
-7. **Gateway (later).** Plan push, relayed start and sync, waiting states and the
-   WatchConnectivity spike.
+### 6.1 Work packages
+
+- **WP0 — decisions and fixtures.** Approve the role-quality class boundaries, family membership
+  and recency window in versioned config with domain reasons; confirm the intelligence method
+  names; add synthetic fixtures (legacy two-group role plan, three-group plan, straight-set plan
+  performed as top-set/back-off, RIR-6 import row, deload and taper days); create the ROADMAP
+  tracking entry. **Exit:** config approved, fixtures committed, no real data.
+- **WP1a — server ordered groups.** `group_index`, serializers omit role, internal build-time role
+  retained, validation 1..N, warm-up from the heaviest group, set-weighted intensity, persistence,
+  legacy rows read by order. **Exit:** payload fixtures, legacy-read test, intensity and warm-up
+  tests.
+- **WP1b — server frozen plan.** Remove the five plan-edit routes and core services; `plan_revision`
+  becomes identity only; add substitution/addition events on `workout_event` with an execution
+  watermark; migration `0058` adds `substitutes_plan_item_index` to `workout_set` and
+  `clean_set`; execution view in `GET .../execution`; retire `plan_item_mismatch` for new sets;
+  stop writing `set_role` and the role inputs. **Depends on:** WP1a. **Exit:** no mutation route,
+  duplicate-replay and execution-view tests, migration applied to a database copy.
+- **WP2 — clients.** iPhone, Watch and web decode ordered groups, render one row per group
+  (including the synthetic three-group fixture), prefill by order and remove the plan-edit menus
+  and role picker. Web prefill becomes group-aware before the picker is deleted. The watch renders
+  the phone-authored execution view and merges by watermark; it never originates a substitution.
+  **Depends on:** WP1a. **Exit:** two-group display and prefill on phone and watch, substitution
+  appears on the watch, no plan-edit UI.
+- **WP3 — tri-state intent.** Settings/registry tri-state with default `off`, per-request
+  `top_set_intent`, legacy `ask→off` / `on→required`, frozen `{status, reason_code, reason}`,
+  preferred fallback and required unsatisfied, client picker mapping; remove the boolean.
+  **Depends on:** WP1a. **Exit:** off/preferred/required tests, deload `not_applicable`, required
+  fallback `unsatisfied`, closed iOS request schema.
+- **WP4 — programme header.** One server helper; Today payload; the intelligence facts and
+  registered methods; nudges, weekly review and chat facts; client decode and display; trained
+  week and deload calendar week labelled separately. **Depends on:** WP0. **Exit:** Today and
+  intelligence parity, no-history derivation, read-latency target.
+- **WP5 — actual data.** Order matcher shared by adherence, VBT and structure analysis;
+  substitution attribution; RIR-6 invariant and import rejection; segmented derived structure with
+  ordinal confidence; remove the leftover role branches. **Depends on:** WP1b. **Exit:** the
+  180×4 @RIR 1 + 160×5 @RIR 3 ×3 example, missing/extra/ambiguous cases, raw metrics untouched.
+- **WP6 — evaluator.** Role-quality classes in config; six-level hierarchy with the volume gate;
+  intensity profile; snapshot vector; fingerprint bump; fixed-history A/B with owner review of
+  straight, top-set, substitution and divergent sessions. Enable only if it does not trade safety,
+  band or time. **Depends on:** WP1a and WP0. **Exit:** measured comparison and p50/p95 recorded.
+- **WP7 — candidate ordering.** Structural shortlist ordering; measure diversity and outcome change
+  before and after; no beam or cap widening without evidence. **Depends on:** WP6. **Exit:** a
+  later-catalogue candidate is not excluded by position, measurements recorded.
+- **WP8 — gateway (later).** WatchConnectivity spike first; plan push; relayed start and sync with
+  the watch token; waiting and timeout states; receipt deduplication; device acceptance. The direct
+  watch path remains primary. **Depends on:** WP2. **Exit:** watch starts and syncs with the server
+  unreachable but the phone reachable; no duplicates; offline-from-both remains a documented
+  limitation.
+
+### 6.2 Release trains
+
+- **Release A — structure and context:** WP1a, WP1b, WP2, WP3, WP4. This is the only coordinated
+  cutover, because the plan-edit routes and the request schema change. Finish or abandon in-flight
+  workouts first; apply migration `0058`; no dual protocol and no capability negotiation.
+- **Release B — actual data and evaluation:** WP5, WP6, WP7. Server-only; no client change. WP6 and
+  WP7 ship only with their fixed-history comparisons and owner review.
+- **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
+  Release B.
+
+### 6.3 Verification per package
+
+Every package runs its narrowest backend tests and `ruff check` for the changed area, and a
+migration test on a database copy when schema changes. Client packages run the narrowest Swift
+tests plus the web UI checks. WP6 and WP7 add the fixed-history comparison, owner review and
+p50/p95; WP8 adds the WatchConnectivity spike and a physical-device run. No package claims
+completion from code presence; the backend ROADMAP records status only with that evidence.
 
 ## 7. Acceptance
 
