@@ -525,6 +525,12 @@ reactive state, reasons), `volume_budget` (target, exemptions, completed, projec
 
 **Deterministic.** Yes.
 
+**2026-11-19 target amendment.** The programme facts reuse the server programme header. `cycle`
+is joined by `trained_week` and `competition` (date, days until, window); the facts are produced by
+`rules.context.trained_week_index`, `prescribe.undulation.for_week` and
+`prescribe.top_set.competition_window`, registered as methods. The model may explain them; it may
+not compute or alter them.
+
 **Limitations (mandatory).** "No stored training block exists; this is a reporting window derived
 from the current settings profile and the rolling programme forecast (DEC-PROGRAMME-01,
 DEC-W7-01)."

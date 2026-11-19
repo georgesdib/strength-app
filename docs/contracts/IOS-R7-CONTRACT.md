@@ -7,6 +7,23 @@
 start-transaction prescription are on `development`. §17 records where the implementation differs
 from the plan below; everything else here is current behaviour.
 
+## 2026-11-19 amendment — tri-state intent, frozen plan and execution view
+
+The [resolver prescription structure plan](../plans/RESOLVER-PRESCRIPTION-STRUCTURE.md) changes this
+contract as follows.
+
+- The request `settings` object accepts an optional `top_set_intent` of `off`, `preferred` or
+  `required`; omitted means the settings profile, whose default is `off`. It replaces the boolean
+  `top_set`. `preferred` accepts a straight-set fallback with a reason; `required` marks an
+  unexpected fallback as unsatisfied.
+- A plan is frozen at start. Plan editing is removed; substitutions and additions are append-only
+  execution events on the workout, and `substitutes_plan_item_index` annotates the performed set.
+- The plan payload carries ordered `set_groups` with no role field; the client renders the ordered
+  list. A straight-set item has an empty list.
+- `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is unchanged.
+- `plan_revision` is plan identity only and never changes after start; the execution watermark
+  orders view updates.
+
 **Why R7 exists.** Phase 2 issues a prescription by calling `build_prescription` synchronously
 inside the request handler ([server.py](https://github.com/georgesdib/strength-training-app/blob/development/strength_coach/web/server.py) `_ios_prescription`).
 With Settings → Resolver enabled the build takes **35–46 s** on the ODROID-C4

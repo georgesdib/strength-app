@@ -1092,6 +1092,11 @@ exercise, remove one, move one, and change a set count. It supersedes the Phase 
 edits, exercise swap, set-count change". Move was added on 2026-11-17 with a solved load on add
 (`DEC-IOS-08`, `DEC-IOS-09`).
 
+> **Superseded in part 2026-11-19.** Plan editing is retired by the
+> [resolver prescription structure plan](RESOLVER-PRESCRIPTION-STRUCTURE.md). Plans are frozen at
+> start; a substitution or addition is an execution event on the workout, not a plan edit. The
+> closed record below is preserved for history.
+
 - Every edit runs through the existing `workout.py` services (`swap_exercise`, `add_exercise`,
   `remove_exercise`, `change_sets`, `move_exercise`); they rewrite `plan_modified_json` and append
   `workout_event` rows. The issued plan JSON is never modified, so prescribed and performed stay

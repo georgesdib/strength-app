@@ -9,12 +9,33 @@ Decisions locked 2026-11-09; design remediation 2026-11-09. The extraction autho
 migration; no migration is created by this design task. Target platforms: **iOS 27.0** and
 **watchOS 27.0**.
 
+## 2026-11-19 amendment — frozen plan and execution substitutions
+
+The [resolver prescription structure plan](../plans/RESOLVER-PRESCRIPTION-STRUCTURE.md) changes this
+contract as follows; where they differ, this block wins.
+
+- Plan editing is removed. A plan is frozen at start; the phone may declare **execution
+  substitutions and additions** on the workout (never sets, never plan content), pushed over
+  WatchConnectivity and stored as append-only events.
+- `plan_revision` is plan identity only and never changes after start. Execution-view updates are
+  ordered by an execution watermark returned by `GET .../execution`; the watch applies a payload
+  only when that watermark is at least its local one and keeps unconfirmed WatchConnectivity
+  events.
+- §10.4 `plan_item_mismatch` is retired for new clients: an annotated substitution set is
+  accepted; the legacy off-plan fallback remains for replayed old plans.
+- Plan fetch and start may be performed by the phone with the watch token when the watch cannot
+  reach the server; the watch's direct path remains primary when online. Start still requires the
+  phone or the server.
+- §21's phone relay is now planned for a later slice, with the watch-token handoff,
+  per-operation acknowledgement and receipt deduplication described there.
+- `substitutes_plan_item_index` is added to the set payload; an added exercise is an off-plan set.
+
 ## 1. Purpose
 
 The watch fetches the server-issued plan, starts the workout, logs sets and rest, shows heart
 rate, finishes with sRPE, and writes exactly one HealthKit strength workout. The phone keeps
-readiness, prescription requests and plan edits, and shows a read-only mirror while the watch owns
-the session.
+readiness, prescription requests and execution substitutions/additions, and shows a read-only
+mirror while the watch owns the session.
 
 ## 2. Scope
 
@@ -24,8 +45,9 @@ the session.
   the target device may start it.
 - The watch is pinned to the home server: the phone hands over `homeBaseURL` and a monotonic
   `configVersion`, never the phone's currently active Away route.
-- Plan fetch and start from the watch, within the existing issued-plan rules. Start is the only
-  online gate in v1; everything after it is offline-first.
+- Plan fetch and start from the watch, or by the phone with the watch token in gateway mode,
+  within the existing issued-plan rules. Start is the only online gate in v1; everything after it
+  is offline-first.
 - Set logging with optional mean and per-rep velocity (only when the plan supplies a velocity
   target), rest timer, form rating and finish with sRPE and productivity on the watch.
 - Execution telemetry (rest and set events with their original `occurred_at`) so the server
@@ -37,7 +59,8 @@ the session.
   heart rate, active energy and the effort rating derived from sRPE.
 - Plan-revision propagation so a substitution made on the phone reaches the watch without
   disturbing a set in progress.
-- A phone mirror mode for a watch-owned session: plan edits allowed, set/form/velocity logging
+- A phone mirror mode for a watch-owned session: execution substitutions/additions allowed,
+  set/form/velocity logging
   blocked and a take-over action available.
 - Active-session Set, Session and Plan destinations, with refresh and reconnect reconciliation,
   idle-warning visibility during execution, and explicit completed/abandoned-elsewhere messaging.
@@ -67,7 +90,7 @@ section 21. The watch performs no Home/Away switching and never follows the phon
 |---|---|
 | D1 | The watch is its own server device (`kind = watch`), with its own token and independent revocation. |
 | D2 | Plan fetch and start require connectivity; logging and finish work offline and replay. |
-| D3 | During a watch session the watch is the only set writer. The phone may edit the plan and mirrors state, but cannot log sets. |
+| D3 | During a watch session the watch is the only set writer. The phone may declare execution substitutions/additions and mirrors state, but cannot log sets or edit the plan. |
 | D4 | iOS and watchOS share a `StrengthCore` Swift package; views stay per-platform. |
 | D5 | `issued_plan_ttl_seconds` becomes 14400 (4h). The same-server-date rule is unchanged, so a plan still cannot cross midnight. |
 | D6 | Idle warning at 3h without activity; automatic abandonment at 24h. Sets are preserved. |
@@ -76,7 +99,7 @@ section 21. The watch performs no Home/Away switching and never follows the phon
 | D9 | Deployment targets: iOS 27.0 and watchOS 27.0; the package declares both. |
 | D10 | A watch session requires an `HKWorkoutSession`. Exactly one HealthKit workout is saved per session, keyed by a stable external UUID; a session with no saved workout is possible only on an unrecoverable HealthKit failure and is reported. |
 | D11 | Credential handoff is state, not events: one `updateApplicationContext` payload with a server-issued epoch and an acknowledgement. No queued event copying of tokens. |
-| D12 | Plan conflicts never overwrite: the watch applies only equal-or-newer revisions, and a replayed set whose plan item changed is preserved as an off-plan set rather than dropped. |
+| D12 | Execution-view updates never overwrite: the watch applies only a watermark at least as new as its own, and a replayed set from a legacy plan edit is preserved as an off-plan set rather than dropped. |
 | D13 | A plan has an `execution_target` (`phone` or `watch`); the server rejects a start from the other kind with `409 wrong_execution_target`. |
 | D14 | The watch is pinned to `homeBaseURL`; config changes carry a monotonic `configVersion` and apply only between sessions with an empty outbox. No Home/Away switching. |
 | D15 | Offline-first after start: sets, forms, telemetry, finish and HealthKit are local-first; the network is opportunistic and partially flushed. |

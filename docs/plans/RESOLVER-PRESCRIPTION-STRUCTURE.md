@@ -51,18 +51,18 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D1 | No named phases, no periodisation engine, no full resolver rewrite. Improve the existing pipeline. |
 | D2 | No per-muscle volume targets and no composite strength-stimulus score. |
 | D3 | A prescription item carries an ordered list of planned set groups. The wire accepts 1..N; the engine emits the existing top-set + back-off structure (one or two groups). |
-| D4 | Groups are identified by order. No role field is required, stored or inferred. Straight sets are emitted as an empty list; a single full-item group is accepted on read. |
-| D5 | Top-set intent is one tri-state: `off`, `preferred`, `required`. It lives in the settings profile with an optional per-request override. Default `required`; legacy `ask` reads as `off`, legacy `on` as `required`. |
-| D6 | `preferred` builds the structured prescription when the lift is eligible and unblocked, otherwise straight sets with a reason. `required` does the same but marks an unexpected blocker as unsatisfied. Neither evaluates two structures. |
+| D4 | Groups are identified by order on the wire, in persistence and in the API. No role is stored or inferred there; the engine keeps a build-time internal role only. Straight sets are emitted as an empty list; a single full-item group is accepted on read. |
+| D5 | Top-set intent is one tri-state: `off`, `preferred`, `required`. It lives in the settings profile with an optional per-request override. Default `off`; legacy `ask` reads as `off`, legacy `on` as `required`. |
+| D6 | `preferred` asks for the structured prescription and accepts a straight-set fallback with a reason; `required` asks for it and marks an unexpected fallback as unsatisfied. The distinction is whether fallback is acceptable, not a comparison of two builds. |
 | D7 | The plan is immutable once started. Plan editing is removed; there is no plan swap, add, remove, reorder or set-count edit. |
 | D8 | Substitution and addition are execution concepts, not plan edits: an append-only execution event plus a per-set attribution field. The performed set is the durable record. |
 | D9 | The watch does not originate substitutions. It renders the phone-authored execution view and logs sets against it. |
 | D10 | The watch is offline-capable only while the phone is online. There is no pending-session shell and no start without a reachable phone or server. |
-| D11 | Set-role input is removed from every logging surface. Legacy role columns and values remain unread history. |
+| D11 | Set-role input is removed from every logging surface. Legacy role columns and values remain read-only provenance and are not used for matching or decisions. |
 | D12 | The programme header is a server-computed reporting model reused by Today and intelligence facts; it labels trained week and calendar deload week separately and is not an evaluator input. |
 | D13 | Evaluation is a deterministic, role-aware hierarchy, not a composite score, and reuses the existing intensity, exposure, volume, suitability and tie-break definitions. |
 | D14 | Candidate ordering is slot-role aware, deterministic and measured before any beam or cap change. |
-| D15 | This plan supersedes the "no default programme change" conclusion of the top-set evidence review and the R8 plan-edit surface; both documents are amended with it. |
+| D15 | This plan supersedes the R8 plan-edit surface and updates the top-set evidence review's mode reference; the review's no-default-change conclusion and the opt-in default are retained. |
 | D16 | Programme context reaches evaluation through the applied build and its notes, never through the header. |
 | D17 | Main, secondary and accessory assignments are ranked by deterministic role-quality classes (specificity, continuity, exposure adequacy, suitability, complementarity, redundancy, coverage, stimulus-to-fatigue). One owner per signal, volume as a gate, no composite, and only with measured evidence. |
 | D18 | RIR 6 is the warm-up sentinel by definition: every warm-up is logged at RIR 6, an RIR-6 row is never working volume, and a stored working flag that disagrees is a data-quality anomaly. An import must not map a working set to RIR 6. |
@@ -94,7 +94,10 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 
 A plan is a preview until it is started. Before start, changing parameters means issuing a new
 plan request (the R7 supersede path); that is not a plan edit. After start the plan is frozen:
-no route mutates `plan_json`, and `plan_revision` stops being a plan-edit counter.
+no route mutates `plan_json`, and `plan_revision` is plan identity only, never a plan-edit
+counter. The execution watermark orders view updates. `plan_item_mismatch` is retired for new
+clients (an annotated substitution is accepted); the legacy off-plan fallback remains for old
+replayed sets.
 
 What the athlete does differently is execution state, not plan state:
 
@@ -141,8 +144,10 @@ Invariants:
 - the sum of group sets equals `item.sets`;
 - every group has a usable load, rep range and RIR where applicable;
 - an empty list is straight sets; a single group with the full set count is also accepted;
-- no role is stored or required; the wire accepts 1..N groups and the engine emits only the
-  top-set + back-off structure (D3);
+- no role is stored or required on the wire; the wire accepts 1..N groups and the engine emits
+  only the top-set + back-off structure (D3). The engine's internal build-time tag is not part of
+  the contract: serializers, persistence, clients and analysis never see it; straight sets and
+  legacy rows are read by order;
 - the engine decides groups; the resolver never invents group loads;
 - a display label may be derived for presentation, never for analysis.
 
@@ -158,8 +163,10 @@ Derived rules:
 - deload and technique throttle scale every group and preserve the sum invariant;
 - the item-level VBT target describes the working (back-off) sets; a structured item does not
   display that target for the top set in this phase, and per-group VBT targets are not added;
-- validation accepts 1..N groups, enforces the sum invariant and requires numeric loads; role
-  is ignored. Legacy rows with roles are read by list order.
+- validation accepts 1..N groups, enforces the sum invariant and requires numeric loads; a
+  persisted or wire role is ignored. Legacy rows that carry one are read by list order. The
+  internal build-time tag is used only while the engine constructs the structure; warm-up uses
+  the heaviest group.
 
 Plan-edit resize rules are deleted with the edit paths (D7), so no structure rule has to survive
 an edit.
@@ -167,7 +174,7 @@ an edit.
 ### 5.3 Top-set intent
 
 One tri-state, resolved as: per-request override, else the settings-profile value, else the
-registry default `required`.
+registry default `off`.
 
 | Value | Behaviour |
 |---|---|
@@ -187,8 +194,10 @@ the resolver builds one structure per intent, so resolver cost is unchanged and 
 `preferred` dual-build budget is withdrawn.
 
 Legacy profile values are normalised once when settings load: `ask` reads as `off`, `on` as
-`required`. Profiles that never stored a value take the new default; this is accepted and
-recorded as a programme change (D15).
+`required`. Profiles that never stored a value take the default `off`, which preserves the
+previous effective behaviour; no programme change is implied. The tri-state is about acceptable
+outcome, not structure optimisation: `preferred` permits a straight-set fallback, `required` does
+not.
 
 ### 5.4 Programme header
 
@@ -237,9 +246,11 @@ Rules:
 - The header is a reporting model and is not passed into resolver evaluation. Applied context
   reaches each candidate through the evaluation inputs and the built prescription's notes.
 - `GET /api/ios/v1/today` gains the additive header; the top-level `date` is not duplicated.
-- The same structure is one fact block in the existing programme-context intelligence resource,
-  with the existing method names, and is available to nudge, weekly-summary and chat dossiers.
-  The LLM may explain it; it may not compute or alter it.
+- The facts are added to the existing programme-context intelligence resource (`dup`,
+  `competition`, `trained_week`) with registered methods (`undulation.for_week`,
+  `top_set.competition_window`, `rules.context.trained_week_index`) in the intelligence method
+  registry and module list, and are available to nudge, weekly-summary and chat dossiers. The LLM
+  may explain them; it may not compute or alter them.
 
 ### 5.5 Evaluation hierarchy
 
@@ -267,6 +278,11 @@ feasibility precedes every soft level; there is no composite score.
    Within a role, order the criteria as listed; across roles, order role priority first (main,
    then secondary, then accessory). Missing data is neutral, never a guess, and power slots are
    excluded from quality ranking because their intent is fixed by the quality stop.
+
+   Eligibility filters (injury, can_do, will_do, feels_bad, pattern) are pass/fail and never
+   quality points; the suitability class ranks only candidates that passed. The dwell target
+   remains a generator eligibility cap while continuity is a ranking class here, so the same
+   count is not used for both.
 4. **Volume adequacy and distribution** — only within the band: closeness to target, pattern
    balance, and no pattern left badly short. The symmetric volume error is removed.
 5. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
@@ -289,6 +305,8 @@ Implementation notes:
 - the fingerprint version is bumped when structure intent and the selected structure enter it;
 - role quality is enabled only after the fixed-history comparison shows it does not trade safety,
   the volume gate or session time for specificity; the comparison is recorded in the snapshot;
+- class boundaries, family membership and any recency window are versioned config with domain
+  reasons and need owner approval before implementation;
 - no composite score, no per-muscle dose and no second scoring engine.
 
 ### 5.6 Actual data and derived structure
@@ -327,7 +345,8 @@ Matching:
 - load, reps and RIR, plus any group annotation;
 - one matcher shared by adherence, VBT and the structure analysis, reporting `matched`,
   `missing`, `extra`, `ambiguous` or `unknown` per planned group, with load tolerance (one
-  rounding increment), rep range and RIR tolerance;
+  rounding increment), rep range and RIR tolerance. The substitution annotation is stored on
+  `workout_set` and copied to `clean_set` during materialisation;
 - no top set is inferred because the plan had one. A substituted set is matched through
   `substitutes_plan_item_index`; an addition is extra work.
 
@@ -372,9 +391,9 @@ shell, no offline start without a reachable phone, and no new server lifecycle s
 - **Plan delivery.** The phone reads the watch-targeted plan (a plan is readable by its requester
   or its execution target) and pushes the full plan payload to the watch over
   WatchConnectivity. The watch caches it as its session snapshot.
-- **Start.** The phone performs the start with the watch token, so the server sees the watch as
-  the execution device and the existing ownership, target, expiry and consumption checks run
-  unchanged. The watch does not call the server.
+- **Start.** The phone fetches the watch-targeted plan and performs the start with the watch
+  token, so the server sees the watch as the execution device and the existing ownership, target,
+  expiry and consumption checks run unchanged. The watch does not call the server.
 - **Sync.** The phone relays the watch's queued set, event and finish bodies with the watch token
   and their original operation ids, so `(device_id, operation_id)` receipts deduplicate and a
   later direct retry cannot duplicate. The watch keeps operations pending until the phone
@@ -387,6 +406,9 @@ shell, no offline start without a reachable phone, and no new server lifecycle s
 - **Reliability.** WatchConnectivity delivery is queued and may be delayed; the phone may be
   suspended and must be launched or woken to run the relay. The watch shows a waiting state with
   a timeout and retry, and the contract's WatchConnectivity spike runs before this slice.
+- **Prefill.** A substitution or addition prefill is server-solved (`resolve_replacement`). When
+  the phone cannot reach the server, the event carries no prefill and the athlete enters the load
+  as actual data; the client never computes it.
 - **Security.** The watch token is handed over per session over WatchConnectivity and is not
   persisted at rest on the phone; the phone can revoke it. Relayed operations are recorded with
   both device identities.
@@ -403,18 +425,19 @@ The slices ship together with the apps; there are no compatibility gates or dual
 1. **Groups and frozen plan.** Add ordered groups end to end, fix warm-up and intensity from
    groups, validate 1..N, render and prefill groups on iPhone, Watch and web, remove plan editing
    and role pickers, and add the substitution/addition execution view with the one additive
-   `workout_set` annotation column; `plan_modified_json` becomes legacy-only.
-2. **Top-set intent.** Add the tri-state, profile default and per-request override, legacy
+   annotation column on `workout_set` and `clean_set`; `plan_modified_json` becomes legacy-only.
+2. **Top-set intent.** Add the tri-state with default `off`, the per-request override, legacy
    normalisation, structure status and reason codes; amend the evidence review and record the
    decision.
 3. **Programme header.** Add the header to Today and the intelligence fact block with the two
    week definitions and the deload status rules.
 4. **Actual data.** Add order-based matching, substitution attribution, the RIR-6 warm-up
    invariant with its import boundary, and the segmented derived-structure layer; stop accepting
-   or writing roles; keep legacy role columns unread.
+   or writing roles; keep legacy role columns read-only and out of matching and decisions.
 5. **Evaluation.** Add the role-aware hierarchy, the role-quality criteria, the intensity profile
    and the volume gate and distribution; keep hard feasibility first and remove the symmetric
-   volume error. Role quality is enabled only with the fixed-history comparison.
+   volume error. Class boundaries and family membership live in versioned config with domain
+   reasons and owner approval; role quality is enabled only with the fixed-history comparison.
 6. **Candidate ordering.** Add the deterministic shortlist ordering and measure it on a fixed
    history before and after.
 7. **Gateway (later).** Plan push, relayed start and sync, waiting states and the
@@ -427,8 +450,10 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - A top-set plan displays and prefills two different target rows on iPhone and Watch; a synthetic
   three-group fixture displays three and is not collapsed to the item-level load.
 - `off`, `preferred` and `required` take distinct, tested paths; `required` with an unexpected
-  blocker returns a startable plan marked `unsatisfied` with a reason; a deload is
-  `not_applicable`, not unsatisfied.
+  blocker returns a startable plan marked `unsatisfied` with a reason; `preferred` falls back with
+  `fallback` and its reason; a deload is `not_applicable`, not unsatisfied.
+- The default is `off`, so existing effective behaviour is preserved; only an explicit
+  `preferred` or `required` requests a top set.
 - The plan cannot be edited after start; a substitution or addition appears in the watch view and
   is attributed on the performed sets; no plan route mutates the plan.
 - Today shows trained week and deload calendar week separately, DUP only when enabled and
@@ -448,8 +473,9 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - Hard feasibility, assignment preservation, spinal, constraint, injury, unknown and
   executability checks are unchanged.
 - The engine remains the only source of loads, reps, RIR, warm-ups, structure and deload.
-- No named phases, per-muscle targets, composite score, stored set role or manual role entry is
-  introduced.
+- No named phases, per-muscle targets, composite score, set role in the payload, persistence or
+  API, or manual role entry is introduced; the engine's build-time internal tag is never
+  serialized.
 - Role quality never outranks hard feasibility, programme intent or the volume gate.
 - Each signal affects the result once: history and continuity order the evaluator, not the pool.
 - Raw actual sets are never rewritten; working-set volume and e1RM are unchanged.
@@ -481,14 +507,14 @@ The slices ship together with the apps; there are no compatibility gates or dual
 
 - Fixture tests are necessary but not sufficient. Run the current and proposed paths over a fixed
   copy of representative history and have the owner review straight-set, top-set, substitution
-  and divergent workouts before the default and the hierarchy are relied on.
+  and divergent workouts before the opt-in intents and the hierarchy are relied on.
 - The backend roadmap and this plan record status only with that evidence.
 
 ## 8. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Default `required` changes the programme | Recorded in the decision log; the evidence review is amended; the previous behaviour remains available with `off`. |
+| Profiles that stored `on` now read as `required` and will flag unexpected fallbacks | Documented compatibility mapping; the evidence review and the plan record it; `off` remains available. |
 | A stale watch renders a structured plan as its back-off load | No compatibility is claimed; apps and server ship together, and the gateway phase keeps the direct path. |
 | WatchConnectivity delivery is delayed or the phone is suspended | Waiting state with timeout and retry; the WatchConnectivity spike runs first; the direct watch path remains. |
 | Programme header drifts from engine context | One server-side helper, one source of week definitions, reused by Today and intelligence facts. |
@@ -521,16 +547,22 @@ The slices ship together with the apps; there are no compatibility gates or dual
 
 - Backend implementation status and phase completion belong in the backend
   [ROADMAP.md](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
-- Backend decisions, including the tri-state, the frozen plan, the substitution model and the
-  default change, are recorded in
+- Backend decisions, including the tri-state and its default, the frozen plan, the substitution
+  model, the ordered groups and the role-quality hierarchy, are recorded in
   [DECISIONS.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md).
+  New entries supersede the plan-edit decisions (`DEC-IOS-04`, `DEC-IOS-08`, `DEC-IOS-09`).
 - Backend references updated with the implementation: `RESOLVER-ALGORITHM.md`,
-  `RESOLVER-MAIN-LIFTS-VS-ACCESSORIES.md`, `TOP-SET-BACKOFF-EVIDENCE.md` (supersede the default
-  conclusion), `API.md` (today, workouts, add-set, execution, plan), `DATA-MODEL.md` (the
-  annotation column) and `ROADMAP.md`.
-- Shared contracts updated before implementation: R7 (plan payload, tri-state override, execution
-  view), R8 (plan edits superseded), watch (§10 revision/conflict rules, §21 relay deferral now
-  planned, execution view) and the contract index.
+  `RESOLVER-MAIN-LIFTS-VS-ACCESSORIES.md`, `TOP-SET-BACKOFF-EVIDENCE.md` (mode reference and
+  opt-in default retained), `API.md` (today, workouts, add-set, execution, removed plan routes),
+  `DATA-MODEL.md` (annotation columns and legacy columns), `DATA-QUALITY.md` (RIR-6 and import
+  semantics), `WEB-UI.md` (plan editing and role picker removed), `USER-GUIDE.md` and
+  `ROADMAP.md`.
+- Shared contracts and plans updated before implementation: R7 (plan payload, tri-state override,
+  execution view, today header), R8 (plan edits retired; closed record preserved with a
+  superseding note), watch (D3, D12, §10 revision/conflict rules, §21 relay now planned, execution
+  view, phone start), the [iOS client plan](IOS-CLIENT-PLAN.md) (R8 note), the
+  [training-intelligence contract](../contracts/TRAINING-INTELLIGENCE-CONTRACT.md) (new fact
+  methods) and the contract index.
 - iPhone and Watch implementation, build and physical-device acceptance remain in the client
   repository.
 - This plan is the canonical cross-repository statement; status changes only with evidence.
@@ -540,8 +572,9 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - Server, iPhone and Watch ship together; no dual protocol, no capability negotiation.
 - Finish or abandon in-flight workouts before the cutover; a plan started under the old shape is
   read by list order and is never edited.
-- One additive migration: a nullable `substitutes_plan_item_index` on `workout_set` (and the
-  clean-set materialisation if it carries attribution). No destructive change, no backfill.
-- Plan-edit routes and role inputs are removed in the same cutover; legacy columns stay unread.
-- Profiles without an explicit intent take the new `required` default; explicit `ask` reads as
-  `off` and `on` as `required`.
+- One additive migration: a nullable `substitutes_plan_item_index` on `workout_set` and on
+  `clean_set`, copied during materialisation. No destructive change, no backfill.
+- Plan-edit routes and role inputs are removed in the same cutover; legacy role columns stay
+  read-only provenance and are not used for matching or decisions.
+- Profiles without an explicit intent take the default `off`, preserving the previous effective
+  behaviour; explicit `ask` reads as `off` and `on` as `required`.
