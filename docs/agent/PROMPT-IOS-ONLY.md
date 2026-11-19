@@ -14,6 +14,7 @@ Do not inspect or modify `strength-training-app/` unless explicitly instructed.
 5. Return a concise plan before editing.
 6. For migrations, API/schema contracts, security-sensitive changes or architectural
    refactors, wait for approval before editing. Otherwise proceed after the plan.
+7. The iOS repo lives under `strength-app/StrengthApp`.
 
 ## Plan format
 
