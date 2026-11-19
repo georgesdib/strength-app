@@ -24,7 +24,7 @@ scores it, and the winner is persisted with provenance. The remaining problems a
 - ranking has no positive role-specific training-quality term, so a maximal week can select work
   that does not support the week's intent;
 - actual data cannot describe planned versus performed structure without a manually entered
-  set role;
+  set role, and the load-shape descriptors do not identify a top-set/back-off pattern;
 - the candidate shortlist is biased by catalogue order;
 - Today does not expose DUP, deload or competition context.
 
@@ -65,6 +65,8 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D15 | This plan supersedes the "no default programme change" conclusion of the top-set evidence review and the R8 plan-edit surface; both documents are amended with it. |
 | D16 | Programme context reaches evaluation through the applied build and its notes, never through the header. |
 | D17 | Main, secondary and accessory assignments are ranked by deterministic role-quality classes (specificity, continuity, exposure adequacy, suitability, complementarity, redundancy, coverage, stimulus-to-fatigue). One owner per signal, volume as a gate, no composite, and only with measured evidence. |
+| D18 | RIR 6 is the warm-up sentinel by definition: every warm-up is logged at RIR 6, an RIR-6 row is never working volume, and a stored working flag that disagrees is a data-quality anomaly. An import must not map a working set to RIR 6. |
+| D19 | Derived actual structure is a separate analysis layer over the recorded sequence: segmented classes with ordinal confidence and named evidence, separate from planned matching, never written to raw sets, and with no training-policy effect until a separate decision. |
 
 ## 4. Current state
 
@@ -289,37 +291,63 @@ Implementation notes:
   the volume gate or session time for specificity; the comparison is recorded in the snapshot;
 - no composite score, no per-muscle dose and no second scoring engine.
 
-### 5.6 Actual data and sequence analysis
+### 5.6 Actual data and derived structure
 
 The athlete records exercise, actual load, reps or seconds, RIR/RPE where available, velocity
-where available, and optional feedback. No role is requested, stored or inferred.
+where available, and optional feedback. No set role is stored on a raw set or solicited from the
+athlete. Four layers stay separate:
 
-Classification and matching use:
+1. **planned groups** — what the programme prescribed;
+2. **raw performed sets** — what the athlete recorded;
+3. **planned-versus-performed matching** — which recorded set corresponds to which planned group,
+   or is extra or missing;
+4. **derived actual structure** — what the recorded sequence looks like on its own.
+
+Warm-ups:
+
+- RIR 6 is the warm-up sentinel by definition, and every warm-up is logged at RIR 6. An RIR-6 row
+  is a warm-up, is never working volume, and is excluded from planned-group matching and from
+  derived working structure; the planned ramp is used only to label its rung. No heuristic may
+  override this.
+- The planned ramp labels which rung an RIR-6 row matched. An RIR-6 row that matches no planned
+  rung is still a warm-up (unplanned preparation).
+- A missing RIR is not a warm-up. It is unknown warm-up status, counted as working volume by the
+  existing conservative rule, and the analysis reports reduced confidence.
+- The stored working-set flag must equal `rir != 6`. A disagreement is a data-quality anomaly; it
+  is surfaced, never resolved by a second classification rule.
+- An imported row must not manufacture RIR 6 for a working set. The current RPE mapping turns
+  RPE 4 into RIR 6, so an import row whose source means a working set is rejected with a field
+  error naming the field, and an ambiguous source is flagged for review. Imported warm-ups must
+  be explicit.
+
+Matching:
 
 - ordered actual sets (`set_index`, `created_at` which carries the client's performed time);
 - the frozen plan's ordered groups and the item identity;
 - load, reps and RIR, plus any group annotation;
-- warm-up rows, identified by RIR 6 or the stored working-set flag, which are excluded from
-  group matching.
+- one matcher shared by adherence, VBT and the structure analysis, reporting `matched`,
+  `missing`, `extra`, `ambiguous` or `unknown` per planned group, with load tolerance (one
+  rounding increment), rep range and RIR tolerance;
+- no top set is inferred because the plan had one. A substituted set is matched through
+  `substitutes_plan_item_index`; an addition is extra work.
 
-One matcher is shared by adherence, VBT and the sequence analysis. For each planned group it
-reports `matched`, `missing`, `extra`, `ambiguous` or `unknown`, using load tolerance (one
-rounding increment), rep range and RIR tolerance. It never infers a top set because the plan had
-one. A substituted set is matched to the planned slot through `substitutes_plan_item_index`; an
-addition is extra work.
+Derived actual structure:
 
-The server may derive a descriptive actual sequence:
-
-- `constant`, `ascending`, `descending`, `ascending_then_descending`, `multiple_heavy`,
-  `irregular`, or `insufficient_data`;
-- loads within one rounding increment count as equal;
-- `multiple_heavy` means two or more working sets at or above the existing heavy intensity band,
-  or at RIR 1 or lower when e1RM is unavailable; when neither is available the descriptor is
-  `unknown`;
-- fewer than two working sets with usable loads is `insufficient_data`.
-
-These are post-workout descriptions. They never rewrite raw sets, working-set volume, e1RM or
-fatigue metrics, and they are not a role taxonomy.
+- the full recorded sequence is segmented. RIR-6 rows form **preparatory progression** segments
+  (labelled as matched or unplanned preparation) and are excluded from working metrics. The
+  remaining segments are classified as **heavy working exposure**, **top-set-like effort**,
+  **back-off sequence**, **straight working sets**, **multiple heavy exposures**, or
+  **ambiguous/insufficient data**;
+- each segment carries an ordinal confidence (`high`, `medium`, `low`, `unknown`), its
+  boundaries, and the evidence used: relative load, reps, RIR/RPE, and planned context;
+- loads within one rounding increment count as equal; a missing load or RIR lowers confidence;
+  when the evidence cannot support a class the segment is `unknown`;
+- the load-shape descriptors (`constant`, `ascending`, `descending`,
+  `ascending_then_descending`, `irregular`, `insufficient_data`) remain a compact summary of the
+  working loads, subordinate to the structure layer and not a competing classification;
+- derived structure is post-workout description only. It never rewrites raw sets, the working-set
+  flag, working-set volume, e1RM or fatigue metrics, and it has no training-policy effect until a
+  separate decision says so. Reporting, history and adherence explanation are its consumers.
 
 ### 5.7 Candidate diversity
 
@@ -381,8 +409,9 @@ The slices ship together with the apps; there are no compatibility gates or dual
    decision.
 3. **Programme header.** Add the header to Today and the intelligence fact block with the two
    week definitions and the deload status rules.
-4. **Actual data.** Add order-based matching, substitution attribution and the sequence
-   descriptors; stop accepting or writing roles; keep legacy role columns unread.
+4. **Actual data.** Add order-based matching, substitution attribution, the RIR-6 warm-up
+   invariant with its import boundary, and the segmented derived-structure layer; stop accepting
+   or writing roles; keep legacy role columns unread.
 5. **Evaluation.** Add the role-aware hierarchy, the role-quality criteria, the intensity profile
    and the volume gate and distribution; keep hard feasibility first and remove the symmetric
    volume error. Role quality is enabled only with the fixed-history comparison.
@@ -419,7 +448,8 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - Hard feasibility, assignment preservation, spinal, constraint, injury, unknown and
   executability checks are unchanged.
 - The engine remains the only source of loads, reps, RIR, warm-ups, structure and deload.
-- No named phases, per-muscle targets, composite score or set-role inference is introduced.
+- No named phases, per-muscle targets, composite score, stored set role or manual role entry is
+  introduced.
 - Role quality never outranks hard feasibility, programme intent or the volume gate.
 - Each signal affects the result once: history and continuity order the evaluator, not the pool.
 - Raw actual sets are never rewritten; working-set volume and e1RM are unchanged.
@@ -428,8 +458,15 @@ The slices ship together with the apps; there are no compatibility gates or dual
 
 - A skipped planned group is missing, not performed; extra work stays visible; a substitution is
   attributed to its planned slot; ambiguous data remains unknown.
-- Missing RIR or e1RM yields unknown or limited output, never a guess.
-- Warm-up rows are excluded from group matching.
+- Missing RIR or e1RM limits the analysis to unknown or reduced confidence, never a guess.
+- Warm-ups are exactly the RIR-6 rows: excluded from working volume, matching and derived working
+  structure; a stored working flag that disagrees is reported as an anomaly; a missing RIR is
+  unknown, not a warm-up; an import cannot turn a working set into RIR 6.
+- Derived structure identifies a top-set-like exposure plus back-off sequence from the recorded
+  loads, reps and RIR even when the plan prescribed straight sets, with an ordinal confidence; a
+  straight-set plan performed as 180×4 @RIR 1 then 160×5 @RIR 3 ×3 is not merely "descending".
+- Derived structure never changes raw sets, working-set volume, e1RM or fatigue metrics and has no
+  training-policy effect.
 
 **Performance**
 
@@ -460,7 +497,8 @@ The slices ship together with the apps; there are no compatibility gates or dual
 | A signal is counted twice (pool order and role quality) | History and continuity order the evaluator only; the pool stays structural. |
 | Role quality freezes exercise variety | Continuity is one class among several, not a bonus; the existing dwell policy still bounds repetition; measured. |
 | The header becomes a second source of applied context | Reporting only; evaluation reads the build inputs and the built prescription's notes. |
-| Sequence descriptors become a role taxonomy | Descriptive only, post-workout, no inference, no metric rewrites. |
+| Derived structure becomes a role taxonomy | Segmented description with ordinal confidence; never stored on raw sets; no metric or policy effect. |
+| The RIR-6 convention is broken by an import or manual edit | The invariant is checked; conflicts are reported as anomalies; an import may not manufacture RIR 6 for a working set. |
 | Candidate ordering changes search results | Deterministic rules, explicit thresholds, measured before and after. |
 | Substitution events arrive after the sets | The performed set is self-describing and is the durable attribution; the event is a view hint. |
 | Legacy plans with role-based groups | Read by list order; no rewrite, no dual write path. |
@@ -472,7 +510,8 @@ The slices ship together with the apps; there are no compatibility gates or dual
   scoring engine.
 - Per-muscle volume targets; composite strength-stimulus score.
 - Plan editing after start.
-- Generalised actual set-role inference; manual role entry.
+- Storing an inferred set role on raw sets; manual role entry; training-policy use of derived
+  structure without a separate decision.
 - Watch-originated substitutions or additions.
 - Pending-session shell or a start with neither device online.
 - LLM-calculated programme context.
