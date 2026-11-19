@@ -19,9 +19,10 @@ scores it, and the winner is persisted with provenance. The remaining problems a
   intent degrades silently;
 - the plan can be edited mid-session, which blurs planned and performed and forces structure
   rules for every edit path;
-- the evaluator has only an additive penalty score and no programme-aware diagnostics;
-- ranking has no positive programme-fit term, so a maximal week can select work that does not
-  support the week's intent;
+- the evaluator has only an additive penalty score and no role-aware or programme-aware
+  diagnostics;
+- ranking has no positive role-specific training-quality term, so a maximal week can select work
+  that does not support the week's intent;
 - actual data cannot describe planned versus performed structure without a manually entered
   set role;
 - the candidate shortlist is biased by catalogue order;
@@ -59,10 +60,11 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D10 | The watch is offline-capable only while the phone is online. There is no pending-session shell and no start without a reachable phone or server. |
 | D11 | Set-role input is removed from every logging surface. Legacy role columns and values remain unread history. |
 | D12 | The programme header is a server-computed reporting model reused by Today and intelligence facts; it labels trained week and calendar deload week separately and is not an evaluator input. |
-| D13 | Evaluation is a deterministic hierarchy, not a composite score, and reuses the existing intensity, exposure, volume and tie-break definitions. |
+| D13 | Evaluation is a deterministic, role-aware hierarchy, not a composite score, and reuses the existing intensity, exposure, volume, suitability and tie-break definitions. |
 | D14 | Candidate ordering is slot-role aware, deterministic and measured before any beam or cap change. |
 | D15 | This plan supersedes the "no default programme change" conclusion of the top-set evidence review and the R8 plan-edit surface; both documents are amended with it. |
-| D16 | Programme context reaches evaluation through the applied build and its notes, never through the header. One programme-fit level ranks assignments by the week's intent, after feasibility, intent and volume bands, and only with measured evidence. |
+| D16 | Programme context reaches evaluation through the applied build and its notes, never through the header. |
+| D17 | Main, secondary and accessory assignments are ranked by deterministic role-quality classes (specificity, continuity, exposure adequacy, suitability, complementarity, redundancy, coverage, stimulus-to-fatigue). One owner per signal, volume as a gate, no composite, and only with measured evidence. |
 
 ## 4. Current state
 
@@ -239,52 +241,53 @@ Rules:
 
 ### 5.5 Evaluation hierarchy
 
-Replace the additive score as the primary ordering with a deterministic hierarchy. The beam
-still chooses one assignment; hard feasibility always precedes every soft level.
+Replace the additive score with a deterministic, role-aware hierarchy. One assignment wins; hard
+feasibility precedes every soft level; there is no composite score.
 
 1. **Hard feasibility and safety** — executable, no validation or constraint issues, spinal cap,
    exact assignment preservation, required movement patterns.
-2. **Requested intent** — a `required` plan whose structure was blocked unexpectedly ranks below
-   one that applied it; `not_applicable` and `fallback` are neutral.
-3. **Volume-band consistency** — inside the configured tolerance is neutral; undershoot and
-   overshoot are separate signals using the existing budget targets, tolerance and the
-   per-pattern band helper. Intentional deload and taper reduction is exempt.
-4. **Programme fit** — rank assignments by the applied week's intent, using the built
-   prescription's notes and the existing bands. The build already contains progression, continuity,
-   readiness, DUP, deload and competition effects; the level reads their outcome and does not
-   re-derive them. The direction is context-specific and lexicographic:
-   - maximal or strength main week: prefer an assignment whose essential main lift has a
-     trustworthy e1RM and produces the scheme's heavy working sets; an unknown or low-confidence
-     load ranks below a known heavy exposure;
-   - volume or accessory week: neutral on heavy exposure; level 3 already decides the volume
-     band;
-   - competition peak or taper: prefer known, familiar, lower-fatigue variants; no new stimulus;
-   - deload or a safety-driven readiness fallback: neutral;
-   - missing e1RM or missing bands: neutral, never a guess.
-   The level ranks equivalent movements; it does not invent intensity, and it never overrides
-   safety, intent or the volume band.
-5. **Training-quality diagnostics** — the ordered group structure, set-weighted intensity profile
-   and heavy-exposure count. Descriptive: they explain the fit level and the prescription but do
-   not add another ranking term.
-6. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
-7. **Deterministic tie-break** — the existing resolver tie-break, then stable assignment order.
-   History continuity is not re-added here; it already lives in candidate ordering, and adding it
-   again would double-count.
+2. **Programme consistency and non-negotiable intent** — a `required` plan whose structure was
+   blocked unexpectedly ranks below one that applied it; deload, taper and competition
+   restrictions are honoured; the volume band is a gate, so a candidate outside the adjusted
+   tolerance ranks below every inside-band candidate and an inside-band candidate is neutral. The
+   band is the deload- and taper-adjusted band, so intentional reduction is not a gate failure.
+3. **Role-specific training quality** — lexicographic per role, using deterministic classes. The
+   applied build already applies load-level progression, continuity, readiness, DUP, deload and
+   competition effects; the level reads their outcome and does not re-score them. Its continuity
+   class is exercise-level (dwell and last used, e1RM recency), not a second load adjustment.
+
+   | Role | Ranking criteria | Source |
+   |---|---|---|
+   | Main | Specificity class (same lift, same family, same pattern, comparable pattern); continuity (dwell and last used, e1RM recency); heavy-exposure adequacy (band plus e1RM confidence, not a point estimate); technical suitability (ratings, technique throttle, form) | taxonomy and lift family, dwell counts, e1RM age and quality, lift readiness, form assessment, suitability |
+   | Secondary (support) | Complementarity with the chosen main lift's pattern and primary muscles; usefulness to the volume band; redundancy and fatigue cost | taxonomy patterns and primary muscles, volume ledger, existing redundancy penalty, spinal and fatigue, selection tax |
+   | Accessory | Coverage of otherwise uncovered patterns and muscles (counts, not doses); productive volume per unit time; stimulus-to-fatigue | taxonomy, volume ledger, selection tax, time estimate |
+
+   Within a role, order the criteria as listed; across roles, order role priority first (main,
+   then secondary, then accessory). Missing data is neutral, never a guess, and power slots are
+   excluded from quality ranking because their intent is fixed by the quality stop.
+4. **Volume adequacy and distribution** — only within the band: closeness to target, pattern
+   balance, and no pattern left badly short. The symmetric volume error is removed.
+5. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
+6. **Deterministic tie-break** — the existing resolver tie-break, then stable assignment order.
+   History continuity is not re-added here; it is owned by role quality and must not also order
+   the pool.
 
 Implementation notes:
 
-- the lexicographic vector is recorded in the snapshot; any scalar kept for the beam is derived
-  from that vector, not defined separately;
-- programme fit reads the applied context from the built prescription's notes (`undulation`,
+- one owner per signal: the resolver pool is ordered structurally (pattern coverage, family,
+  catalogue) and the evaluator owns specificity, continuity, redundancy and suitability; injury,
+  can_do and suitability vetoes remain eligibility filters, not quality points;
+- each criterion is recorded as a small deterministic class in the snapshot, per finalist; any
+  scalar kept for the beam is derived from the lexicographic vector, not defined separately;
+- role quality reads the applied context from the built prescription's notes (`undulation`,
   `deload`, `top_set`); the programme header is not an input;
-- the intensity profile uses the relative-intensity bands from `features/monitoring.py`, the
-  set-weighted group intensity from §5.2, and reports missing e1RM as unknown;
-- heavy exposure reuses `features/exposure.py` and `features/high_intensity_exposure.py`; no new
-  band definitions;
+- heavy-exposure adequacy reuses the relative-intensity bands from `features/monitoring.py`, the
+  set-weighted group intensity from §5.2, and `features/exposure.py` /
+  `features/high_intensity_exposure.py`; no new bands, and precise %e1RM is not optimised;
 - the fingerprint version is bumped when structure intent and the selected structure enter it;
-- programme fit is enabled only after the fixed-history comparison shows it does not trade
-  safety, volume band or session time for intensity; the comparison is recorded in the snapshot;
-- no composite score field is introduced.
+- role quality is enabled only after the fixed-history comparison shows it does not trade safety,
+  the volume gate or session time for specificity; the comparison is recorded in the snapshot;
+- no composite score, no per-muscle dose and no second scoring engine.
 
 ### 5.6 Actual data and sequence analysis
 
@@ -324,13 +327,14 @@ Retain the bounded beam and full evaluation. The candidate cap stays at its curr
 measured change justifies otherwise.
 
 - The generator orders each slot's pool deterministically before the beam cap: candidates required
-  for movement-pattern coverage first, then the slot's main-lift or accessory family, then
-  candidates with recent or recorded history, then the catalogue order as the final tie-break.
+  for movement-pattern coverage first, then the slot's structural family, then catalogue order as
+  the final tie-break. History, continuity, readiness and suitability are owned by role quality
+  (D17) and must not also order the pool.
 - The beam already reserves required-pattern candidates when it truncates; that behaviour is kept.
 - Pool order is the beam's rank cost, so reordering changes the search trajectory, not only the
   shortlist. The change is measured on a fixed history before and after.
-- "Historically relevant" and "recent" are explicit config thresholds, not judgement calls, and
-  need owner approval before use.
+- Structural family membership is an explicit config rule, not a judgement call; no history or
+  recency threshold is added to the pool.
 
 ### 5.8 Phone gateway and offline watch execution (later slice)
 
@@ -379,9 +383,9 @@ The slices ship together with the apps; there are no compatibility gates or dual
    week definitions and the deload status rules.
 4. **Actual data.** Add order-based matching, substitution attribution and the sequence
    descriptors; stop accepting or writing roles; keep legacy role columns unread.
-5. **Evaluation.** Add the hierarchy, the programme-fit level, the intensity profile and the
-   volume band classification; keep hard feasibility first and remove the symmetric volume error.
-   Programme fit is enabled only with the fixed-history comparison.
+5. **Evaluation.** Add the role-aware hierarchy, the role-quality criteria, the intensity profile
+   and the volume gate and distribution; keep hard feasibility first and remove the symmetric
+   volume error. Role quality is enabled only with the fixed-history comparison.
 6. **Candidate ordering.** Add the deterministic shortlist ordering and measure it on a fixed
    history before and after.
 7. **Gateway (later).** Plan push, relayed start and sync, waiting states and the
@@ -401,9 +405,12 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - Today shows trained week and deload calendar week separately, DUP only when enabled and
   anchored, the correct deload status and a competition countdown only for a future date.
 - The same header facts reach the intelligence facts without LLM calculation.
-- Programme fit is context-specific: a maximal or strength week prefers the candidate with a
-  trustworthy heavy main-lift exposure over an otherwise comparable candidate; a volume week, a
-  deload and a missing e1RM are neutral; a taper prefers the lower-fatigue familiar candidate.
+- Role quality is role-specific: a main-lift candidate with better specificity, continuity or
+  suitability beats an otherwise comparable candidate; a secondary candidate that complements the
+  main lift and adds less redundancy wins; an accessory that covers an uncovered pattern at lower
+  fatigue wins; missing data is neutral.
+- The volume band is a gate: a candidate outside it ranks below every inside-band candidate, and
+  inside-band candidates are decided by role quality, not by set-count closeness.
 - The programme header is not an evaluator input: the evaluator reads the applied context from
   the build and its notes.
 
@@ -412,8 +419,9 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - Hard feasibility, assignment preservation, spinal, constraint, injury, unknown and
   executability checks are unchanged.
 - The engine remains the only source of loads, reps, RIR, warm-ups, structure and deload.
-- No named phases, per-muscle targets, composite score or role inference is introduced.
-- Programme fit never outranks hard feasibility, requested intent or volume-band consistency.
+- No named phases, per-muscle targets, composite score or set-role inference is introduced.
+- Role quality never outranks hard feasibility, programme intent or the volume gate.
+- Each signal affects the result once: history and continuity order the evaluator, not the pool.
 - Raw actual sets are never rewritten; working-set volume and e1RM are unchanged.
 
 **Actual data**
@@ -428,7 +436,7 @@ The slices ship together with the apps; there are no compatibility gates or dual
 - A single-structure build per intent: no dual evaluation, no resolver budget increase.
 - Today and the programme header stay within the existing read latency target; the header does
   not load history.
-- Programme fit uses the single build per assignment; it does not add evaluations or a second
+- Role quality uses the single build per assignment; it does not add evaluations or a second
   resolver pass.
 - Candidate ordering is measured before any beam or cap change.
 
@@ -447,7 +455,10 @@ The slices ship together with the apps; there are no compatibility gates or dual
 | A stale watch renders a structured plan as its back-off load | No compatibility is claimed; apps and server ship together, and the gateway phase keeps the direct path. |
 | WatchConnectivity delivery is delayed or the phone is suspended | Waiting state with timeout and retry; the WatchConnectivity spike runs first; the direct watch path remains. |
 | Programme header drifts from engine context | One server-side helper, one source of week definitions, reused by Today and intelligence facts. |
-| Programme fit trades safety, volume or time for intensity | It ranks after feasibility, intent and volume band; neutral when e1RM or bands are unknown; enabled only with the fixed-history comparison. |
+| Role quality trades safety, volume or time for specificity | It ranks after feasibility, intent and the volume gate; neutral when data is missing; enabled only with the fixed-history comparison. |
+| Role criteria become a second scoring engine | Fixed role table, deterministic classes, one owner per signal, no weighted total. |
+| A signal is counted twice (pool order and role quality) | History and continuity order the evaluator only; the pool stays structural. |
+| Role quality freezes exercise variety | Continuity is one class among several, not a bonus; the existing dwell policy still bounds repetition; measured. |
 | The header becomes a second source of applied context | Reporting only; evaluation reads the build inputs and the built prescription's notes. |
 | Sequence descriptors become a role taxonomy | Descriptive only, post-workout, no inference, no metric rewrites. |
 | Candidate ordering changes search results | Deterministic rules, explicit thresholds, measured before and after. |
@@ -457,7 +468,8 @@ The slices ship together with the apps; there are no compatibility gates or dual
 ## 9. Out of scope
 
 - Named phase model or automatic phase transitions; periodisation engine; resolver V2.
-- Using the programme header as an evaluator input.
+- Using the programme header as an evaluator input; a weighted composite role score or a second
+  scoring engine.
 - Per-muscle volume targets; composite strength-stimulus score.
 - Plan editing after start.
 - Generalised actual set-role inference; manual role entry.
