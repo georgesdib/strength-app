@@ -3,7 +3,7 @@
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
 latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP5–WP7a complete (WP6 A/B owner-accepted); WP7b implemented awaiting review; WP8–WP9 not started. Work packages and
+and is not tagged, merged to `main` or deployed; WP5–WP7b complete; WP8 in progress (WatchConnectivity spike built, physical run pending); WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -565,7 +565,7 @@ overlap; the server foundation precedes every client step.
   the beam's structural reserve. The factor changes the beam's rank cost, not the evaluator's
   winner. **Depends on:** WP1a and WP0; can run in parallel with WP6. **Evidence:**
   `tests/test_generator.py`, `docs/DWELL-AND-ROTATION.md`, `DEC-RESOLVER-29`.
-- **WP7b — structural ordering and measurement (implemented 2026-11-20; owner review pending).**
+- **WP7b — structural ordering and measurement (done 2026-11-20; owner accepted the comparison).**
   Family and catalogue ordering; fixed-history comparison of cap-only, cap plus draw, and cap
   plus draw plus bounded factor; a pure-factor variant only as a rejected reference; no beam or
   cap widening without evidence. **Done so far:** the synthetic squat comparison moves the later
@@ -573,13 +573,15 @@ overlap; the server foundation precedes every client step.
   selects `ssb_squat`; every variant stays feasible, inside the band, with zero time overrun. The
   pure-factor order is recorded as rejected. **Depends on:** WP7a; measured separately from WP6.
   **Exit:** a later-catalogue candidate is not excluded by position; selection changes and outcome
-  metrics recorded; owner review. **Evidence:** `tests/test_generator.py`,
+  metrics recorded; owner review complete. **Evidence:** `tests/test_generator.py`,
   `tests/test_dwell_ab.py`, `python -m strength_coach.prescribe.dwell_ab`.
-- **WP8 — gateway (later).** WatchConnectivity spike first; plan push; relayed start and sync with
-  the watch token; waiting and timeout states; receipt deduplication; device acceptance. The direct
-  watch path remains primary. **Depends on:** WP2. **Exit:** watch starts and syncs with the server
-  unreachable but the phone reachable; no duplicates; offline-from-both remains a documented
-  limitation.
+- **WP8 — gateway (in progress 2026-11-20).** WatchConnectivity spike first; plan push; relayed
+  start and sync with the watch token; waiting and timeout states; receipt deduplication; device
+  acceptance. The direct watch path remains primary. **Done so far:** a reachable-watch round-trip
+  test button and reply path on both apps; iPhone development build installed; the physical Watch
+  was unavailable for installation, so the spike run is pending. **Depends on:** WP2. **Exit:**
+  watch starts and syncs with the server unreachable but the phone reachable; no duplicates;
+  offline-from-both remains a documented limitation.
 
 - **WP9 — documentation and algorithm reference (final closeout).** Publish one canonical
   reference for the resolver algorithm and workout selection: the end-to-end pipeline, the formulas
@@ -601,9 +603,8 @@ overlap; the server foundation precedes every client step.
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
   **Status:** integrated on `development` 2026-11-20; not tagged, merged to `main` or deployed.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
-  **Status:** WP5, WP6 and WP7a complete 2026-11-20; WP6's four-case A/B was owner-accepted;
-  WP7b is implemented and awaiting owner review of its fixed-history comparison. WP6 and WP7a ran
-  in parallel; WP7b ships only with its own comparison and owner review.
+  **Status:** WP5–WP7b complete 2026-11-20; both the evaluator A/B and the dwell ordering
+  comparison were owner-accepted. Release B is complete on `development`.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B.
 - **Release D — documentation closeout:** WP9. Each package updates its own docs; Release D
