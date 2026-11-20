@@ -3,7 +3,7 @@
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
 latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP5 and WP7a complete; WP6 implemented and awaiting owner A/B review; WP7b–WP9 not started. Work packages and
+and is not tagged, merged to `main` or deployed; WP5–WP7a complete (WP6 A/B owner-accepted); WP7b implemented awaiting review; WP8–WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -546,15 +546,16 @@ overlap; the server foundation precedes every client step.
   metrics untouched. **Evidence:** `tests/test_derived_structure.py`,
   `tests/test_actual_structure_adherence.py`, `tests/test_adherence.py`,
   `tests/test_vbt_analysis.py`, `tests/test_order_matching.py`; `DEC-RESOLVER-27`.
-- **WP6 — evaluator (implemented 2026-11-20; owner A/B review pending).** Role-quality classes in
+- **WP6 — evaluator (done 2026-11-20; owner accepted all four A/B cases).** Role-quality classes in
   config (no last-used continuity); six-level hierarchy with the volume gate; intensity profile;
   snapshot vector; fingerprint bump; fixed-history A/B with owner review of straight, top-set,
   substitution and divergent sessions. Enable only if it does not trade safety, band or time.
   **Done so far:** lexicographic quality snapshot and beam key; response-only snapshot; fingerprint
-  `prescription-input-v4`; A/B on the synthetic squat history changes the winner from
-  `competition_squat` to `ssb_squat` with the same band, time and warning gate. **Depends on:**
-  WP1a and WP0. **Exit:** measured comparison and p50/p95 recorded; the remaining owner review and
-  the top-set/substitution/divergent cases are still open. **Evidence:**
+  `prescription-input-v4`; the four-case synthetic A/B (straight, top-set, substitution,
+  divergent) changes the winner from `competition_squat` to `ssb_squat` in three cases, keeps
+  the substitution unchanged, and keeps every case inside the band with zero time overrun. The
+  owner accepted all four cases on 2026-11-20. **Depends on:** WP1a and WP0. **Exit:** measured
+  comparison and p50/p95 recorded; owner review complete. **Evidence:**
   `tests/test_role_quality.py`, `tests/test_evaluator_ab.py`, `tests/test_evaluator_ab_report.py`,
   `python -m strength_coach.prescribe.evaluator_ab`, `DEC-RESOLVER-30`.
 - **WP7a — resolver dwell completion (done 2026-11-20).** The cap, deterministic draw and bounded
@@ -564,11 +565,16 @@ overlap; the server foundation precedes every client step.
   the beam's structural reserve. The factor changes the beam's rank cost, not the evaluator's
   winner. **Depends on:** WP1a and WP0; can run in parallel with WP6. **Evidence:**
   `tests/test_generator.py`, `docs/DWELL-AND-ROTATION.md`, `DEC-RESOLVER-29`.
-- **WP7b — structural ordering and measurement.** Family and catalogue ordering; fixed-history
-  comparison of cap-only, cap plus draw, and cap plus draw plus bounded factor; a pure-factor
-  variant only as a rejected reference; no beam or cap widening without evidence. **Depends on:**
-  WP7a; measure separately from WP6. **Exit:** a later-catalogue candidate is not excluded by
-  position; selection changes and outcome metrics recorded.
+- **WP7b — structural ordering and measurement (implemented 2026-11-20; owner review pending).**
+  Family and catalogue ordering; fixed-history comparison of cap-only, cap plus draw, and cap
+  plus draw plus bounded factor; a pure-factor variant only as a rejected reference; no beam or
+  cap widening without evidence. **Done so far:** the synthetic squat comparison moves the later
+  `competition_squat` ahead of `ssb_squat` in the draw and full orders while the evaluator still
+  selects `ssb_squat`; every variant stays feasible, inside the band, with zero time overrun. The
+  pure-factor order is recorded as rejected. **Depends on:** WP7a; measured separately from WP6.
+  **Exit:** a later-catalogue candidate is not excluded by position; selection changes and outcome
+  metrics recorded; owner review. **Evidence:** `tests/test_generator.py`,
+  `tests/test_dwell_ab.py`, `python -m strength_coach.prescribe.dwell_ab`.
 - **WP8 — gateway (later).** WatchConnectivity spike first; plan push; relayed start and sync with
   the watch token; waiting and timeout states; receipt deduplication; device acceptance. The direct
   watch path remains primary. **Depends on:** WP2. **Exit:** watch starts and syncs with the server
@@ -595,9 +601,9 @@ overlap; the server foundation precedes every client step.
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
   **Status:** integrated on `development` 2026-11-20; not tagged, merged to `main` or deployed.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
-  **Status:** WP5 and WP7a complete 2026-11-20; WP6 implemented and awaiting owner A/B review;
-  WP7b is not started. WP6 and WP7a ran in parallel; WP6 and WP7b ship only with their
-  fixed-history comparisons and owner review, measured separately.
+  **Status:** WP5, WP6 and WP7a complete 2026-11-20; WP6's four-case A/B was owner-accepted;
+  WP7b is implemented and awaiting owner review of its fixed-history comparison. WP6 and WP7a ran
+  in parallel; WP7b ships only with its own comparison and owner review.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B.
 - **Release D — documentation closeout:** WP9. Each package updates its own docs; Release D
