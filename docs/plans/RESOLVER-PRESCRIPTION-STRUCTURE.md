@@ -3,7 +3,7 @@
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
 latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP5 complete; WP6–WP9 not started. Work packages and
+and is not tagged, merged to `main` or deployed; WP5 and WP7a complete; WP6 implemented and awaiting owner A/B review; WP7b–WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -546,18 +546,23 @@ overlap; the server foundation precedes every client step.
   metrics untouched. **Evidence:** `tests/test_derived_structure.py`,
   `tests/test_actual_structure_adherence.py`, `tests/test_adherence.py`,
   `tests/test_vbt_analysis.py`, `tests/test_order_matching.py`; `DEC-RESOLVER-27`.
-- **WP6 — evaluator.** Role-quality classes in config (no last-used continuity); six-level
-  hierarchy with the volume gate; intensity profile; snapshot vector; fingerprint bump;
-  fixed-history A/B with owner review of straight, top-set, substitution and divergent sessions.
-  Enable only if it does not trade safety, band or time. **Depends on:** WP1a and WP0. **Exit:**
-  measured comparison and p50/p95 recorded.
-- **WP7a — resolver dwell completion.** Wire the cap, the deterministic exploration draw and the
-  bounded factor ordering into the resolver's pre-build ordering, with the last-choice lookup and
-  the template slot identity. Coverage precedes the draw; the draw must not remove the only
-  candidate for a required pattern; the factor orders only within a structural class. Tests cover
-  draw determinism, the all-at-cap fallback, a missing last choice, and coverage preservation.
-  **Depends on:** WP1a and WP0; can run in parallel with WP6. **Exit:** production resolver applies
-  the full dwell layer; unit tests pass.
+- **WP6 — evaluator (implemented 2026-11-20; owner A/B review pending).** Role-quality classes in
+  config (no last-used continuity); six-level hierarchy with the volume gate; intensity profile;
+  snapshot vector; fingerprint bump; fixed-history A/B with owner review of straight, top-set,
+  substitution and divergent sessions. Enable only if it does not trade safety, band or time.
+  **Done so far:** lexicographic quality snapshot and beam key; response-only snapshot; fingerprint
+  `prescription-input-v4`; A/B on the synthetic squat history changes the winner from
+  `competition_squat` to `ssb_squat` with the same band, time and warning gate. **Depends on:**
+  WP1a and WP0. **Exit:** measured comparison and p50/p95 recorded; the remaining owner review and
+  the top-set/substitution/divergent cases are still open. **Evidence:**
+  `tests/test_role_quality.py`, `tests/test_evaluator_ab.py`, `DEC-RESOLVER-30`.
+- **WP7a — resolver dwell completion (done 2026-11-20).** The cap, deterministic draw and bounded
+  factor now order the production `candidate_pools`. The draw demotes the last choice within its
+  structural pattern class instead of removing it; the last-choice key is the most recent working
+  date per exercise, stable across shaped templates; all-at-cap keeps the pool; coverage remains
+  the beam's structural reserve. The factor changes the beam's rank cost, not the evaluator's
+  winner. **Depends on:** WP1a and WP0; can run in parallel with WP6. **Evidence:**
+  `tests/test_generator.py`, `docs/DWELL-AND-ROTATION.md`, `DEC-RESOLVER-29`.
 - **WP7b — structural ordering and measurement.** Family and catalogue ordering; fixed-history
   comparison of cap-only, cap plus draw, and cap plus draw plus bounded factor; a pure-factor
   variant only as a rejected reference; no beam or cap widening without evidence. **Depends on:**
@@ -589,9 +594,9 @@ overlap; the server foundation precedes every client step.
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
   **Status:** integrated on `development` 2026-11-20; not tagged, merged to `main` or deployed.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
-  **Status:** WP5 complete 2026-11-20; WP6, WP7a and WP7b are not started.
-  WP6 and WP7a can run in parallel; WP6 and WP7b ship only with their fixed-history comparisons and
-  owner review, measured separately.
+  **Status:** WP5 and WP7a complete 2026-11-20; WP6 implemented and awaiting owner A/B review;
+  WP7b is not started. WP6 and WP7a ran in parallel; WP6 and WP7b ship only with their
+  fixed-history comparisons and owner review, measured separately.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B.
 - **Release D — documentation closeout:** WP9. Each package updates its own docs; Release D
