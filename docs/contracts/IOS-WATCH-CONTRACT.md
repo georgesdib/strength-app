@@ -646,9 +646,10 @@ message is involved; the phone discovers the session on its next foreground refr
 | `POST /api/ios/v1/prescriptions` | Accepts `execution_target` (`phone` or `watch`); for `watch` resolves the phone's active watch into `target_device_id` and returns `409 watch_not_paired` when there is none. Absent means `phone` for older clients. |
 | `GET /api/ios/v1/plans/current` | Returns `execution_target`; matches the requester or the target so the watch can see a phone-requested plan. |
 | `POST /api/ios/v1/workouts` | Rejects a start unless the caller is the target and its kind matches, with `409 wrong_execution_target`; sets `owner_device_id`, `plan_revision = 0` and `last_activity_at`; response includes them. |
-| `GET /api/ios/v1/workouts/{id}/execution` | Adds `owner_device_id`, `plan_revision`, `last_activity_at`, `stale`. |
-| Existing set/form/finish routes | Owner check (`409 not_owner`); a set whose plan item changed returns `409 plan_item_mismatch` with the current item. |
-| Existing plan-edit routes | Increment `plan_revision`; response returns it. |
+| `GET /api/ios/v1/workouts/{id}/execution` | Adds `owner_device_id`, `plan_revision`, `last_activity_at`, `stale`, the frozen `plan`, and the `execution` block `{workout_id, watermark, substitutions, additions}`. |
+| `POST /api/ios/v1/workouts/{id}/execution` | New, phone token only (`403 not_phone` from a watch): appends one `substitution` or `addition`; the server solves the prefill or records `prefilled_load_kg: null` with `prefill_reason`, and the response is the same `execution` block. Idempotent by the body `event_id`. |
+| Existing set/form/finish routes | Owner check (`409 not_owner`); a set may carry `substitutes_plan_item_index`. A stale `plan_item_index` is kept as extra work instead of returning `409 plan_item_mismatch`, which is retired for new clients. |
+| Plan-edit routes | Removed. All five R8 routes return `404`; a substitution or addition is the only mid-session change. |
 | `POST /api/ios/v1/workouts/{id}/takeover` | New. Transfers ownership and appends an event. |
 | Existing abandon route | Allowed by any device; records the device. |
 

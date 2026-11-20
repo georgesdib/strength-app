@@ -24,6 +24,13 @@ contract as follows.
 - `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is unchanged.
 - `plan_revision` is plan identity only and never changes after start; the execution watermark
   orders view updates.
+- `POST /api/ios/v1/workouts/<id>/execution` (phone token only) appends one substitution or
+  addition; `GET .../execution` returns `execution: {workout_id, watermark, substitutions,
+  additions}` additively. The watermark is the latest change event identity and only moves
+  forward, so a watch applies a payload only when it is at least as new as its own.
+- A set may carry `substitutes_plan_item_index`; a substitution stores the same slot in
+  `plan_item_index` and the annotation. A stale `plan_item_index` is preserved as extra work and
+  `409 plan_item_mismatch` is retired. A client never sends a prefill load.
 
 **Why R7 exists.** Phase 2 issues a prescription by calling `build_prescription` synchronously
 inside the request handler ([server.py](https://github.com/georgesdib/strength-training-app/blob/development/strength_coach/web/server.py) `_ios_prescription`).

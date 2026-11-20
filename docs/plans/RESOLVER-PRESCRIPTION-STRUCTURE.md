@@ -1,7 +1,7 @@
 # Resolver prescription structure and programme context
 
-**Status:** proposed 2026-11-19 (revised after owner review); WP0 and WP1a complete, WP1b–WP8
-not started. Work packages and release trains are in §6.
+**Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete,
+WP2–WP8 not started. Work packages and release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -79,11 +79,11 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
   main lift, and sets the item-level `load_kg` to the back-off load.
 - The plan payload carries ordered `set_groups` (`group_index`, no role), but the shared Swift
   `PrescriptionItem` does not decode it, so iPhone and Watch show the back-off load only.
-- `validate_plan_set_groups` accepts 1..N ordered groups and ignores a legacy role; plan editing
-  paths still resize groups; there are five core plan-edit functions and matching web/iOS routes.
-- `set_role` is an optional input in the web logging path and is used to choose a group target
-  in `workout.py`, `adherence.py` and `features/vbt_analysis.py`. The iOS add-set schema does
-  not accept it.
+- `validate_plan_set_groups` accepts 1..N ordered groups and ignores a legacy role; the five
+  core plan-edit functions and their web/iOS routes are deleted and a plan is frozen at start.
+- `set_role` is no longer an input on any logging surface; the stored column is legacy
+  provenance that `adherence.py` and `features/vbt_analysis.py` still explain, and the web role
+  picker is removed.
 - `GET /api/ios/v1/today` returns date, readiness, score, active workout and plan state, but
   not trained week, DUP, deload or competition.
 - The watch start gate requires a successful server call; the phone relay is explicitly
@@ -464,12 +464,14 @@ overlap; the server foundation precedes every client step.
   `tests/test_top_set_storage.py`, `tests/test_web.py`, `tests/test_resolver_wiring.py`;
   the stored intensity is the set-weighted mean and the weekly spinal projection keeps the
   pre-structure value until its own measured comparison.
-- **WP1b — server frozen plan.** Remove the five plan-edit routes and core services; `plan_revision`
-  becomes identity only; add substitution/addition events on `workout_event` with an execution
-  watermark; migration `0058` adds `substitutes_plan_item_index` to `workout_set` and
-  `clean_set`; execution view in `GET .../execution`; retire `plan_item_mismatch` for new sets;
-  stop writing `set_role` and the role inputs. **Depends on:** WP1a. **Exit:** no mutation route,
-  duplicate-replay and execution-view tests, migration applied to a database copy.
+- **WP1b — server frozen plan (done 2026-11-20).** Remove the five plan-edit routes and core
+  services; `plan_revision` becomes identity only; add substitution/addition events on
+  `workout_event` with an execution watermark; migration `0073` adds
+  `substitutes_plan_item_index` to `workout_set` and `clean_set`; execution view in
+  `GET .../execution`; retire `plan_item_mismatch` for new sets; stop writing `set_role` and the
+  role inputs. **Evidence:** `tests/test_execution_changes.py`, `tests/test_migration_0073.py`,
+  `tests/test_ios_workflow.py`, `tests/test_ios_watch_ownership.py`, `tests/test_workout.py`;
+  `DEC-RESOLVER-23`.
 - **WP2 — clients.** iPhone, Watch and web decode ordered groups, render one row per group
   (including the synthetic three-group fixture), prefill by order and remove the plan-edit menus
   and role picker. Web prefill becomes group-aware before the picker is deleted. The watch renders
@@ -516,7 +518,7 @@ overlap; the server foundation precedes every client step.
 
 - **Release A — structure and context:** WP1a, WP1b, WP2, WP3, WP4. This is the only coordinated
   cutover, because the plan-edit routes and the request schema change. Finish or abandon in-flight
-  workouts first; apply migration `0058`; no dual protocol and no capability negotiation.
+  workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
   WP6 and WP7a can run in parallel; WP6 and WP7b ship only with their fixed-history comparisons and
   owner review, measured separately.
@@ -668,8 +670,9 @@ claims completion from code presence; the backend ROADMAP records status only wi
 - Server, iPhone and Watch ship together; no dual protocol, no capability negotiation.
 - Finish or abandon in-flight workouts before the cutover; a plan started under the old shape is
   read by list order and is never edited.
-- One additive migration: a nullable `substitutes_plan_item_index` on `workout_set` and on
-  `clean_set`, copied during materialisation. No destructive change, no backfill.
+- One additive migration `0073`: a nullable `substitutes_plan_item_index` on `workout_set` and
+  on `clean_set`, copied during materialisation, plus one unique index on the client change
+  identity in `workout_event`. No destructive change, no backfill.
 - Plan-edit routes and role inputs are removed in the same cutover; legacy role columns stay
   read-only provenance and are not used for matching or decisions.
 - Profiles without an explicit intent take the default `off`, preserving the previous effective

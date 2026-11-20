@@ -7,10 +7,11 @@ catalogue, five plan-edit routes, shared service guards, iPhone menus, web confl
 tests are on `development`. The 2026-11-17 amendment solves the load for an added exercise and
 adds a move/reorder operation (`DEC-IOS-08`, `DEC-IOS-09`). No migration is required.
 
-> **Superseded in part 2026-11-19.** The plan-edit routes and client menus in this contract are
-> retired by the [resolver prescription structure plan](../plans/RESOLVER-PRESCRIPTION-STRUCTURE.md).
-> Plans are frozen at start; substitutions and additions are execution events, not plan edits. The
-> closed record below is preserved for history and must not be implemented.
+> **Superseded in part 2026-11-19; server routes removed 2026-11-20.** The plan-edit routes and
+> client menus in this contract are retired by the [resolver prescription structure plan](../plans/RESOLVER-PRESCRIPTION-STRUCTURE.md).
+> Plans are frozen at start; substitutions and additions are execution events, not plan edits.
+> The backend now returns `404` for all five routes, and `DEC-RESOLVER-23` records the removal.
+> The closed record below is preserved for history and must not be implemented.
 
 **Why R8 exists.** The Phase 2 contract deliberately excluded plan editing: "No plan edits, exercise
 swap, set-count change, set update/remove, or load/reps overrides. Those remain web/CLI"
