@@ -508,8 +508,8 @@ overlap; the server foundation precedes every client step.
   group by cumulative working sets, renders substitutions and additions, and merges the
   execution view by watermark (`StrengthApp` `resolver-structure-wp2`); verified with
   `scripts/ci.sh`, the watch simulator smoke run and the live phone UI acceptance test on
-  2026-11-20. **Outstanding:** the iPhone and Watch plan surfaces still show the item-level
-  target instead of one row per group, and the client branch is not merged.
+  2026-11-20. **Outstanding:** a visual run of a real top-set plan and of a watch substitution
+  is still pending, and the client branch is not merged.
   **Depends on:** WP1a. **Exit:** two-group display and prefill on phone and watch, substitution
   appears on the watch, no plan-edit UI.
 - **WP3 — tri-state intent.** Settings/registry tri-state with default `off`, per-request
