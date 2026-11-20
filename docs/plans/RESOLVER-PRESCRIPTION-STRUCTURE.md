@@ -575,13 +575,14 @@ overlap; the server foundation precedes every client step.
   **Exit:** a later-catalogue candidate is not excluded by position; selection changes and outcome
   metrics recorded; owner review complete. **Evidence:** `tests/test_generator.py`,
   `tests/test_dwell_ab.py`, `python -m strength_coach.prescribe.dwell_ab`.
-- **WP8 — gateway (in progress 2026-11-20).** WatchConnectivity spike first; plan push; relayed
-  start and sync with the watch token; waiting and timeout states; receipt deduplication; device
-  acceptance. The direct watch path remains primary. **Done so far:** a reachable-watch round-trip
-  test button and reply path on both apps; iPhone development build installed; the physical Watch
-  was unavailable for installation, so the spike run is pending. **Depends on:** WP2. **Exit:**
-  watch starts and syncs with the server unreachable but the phone reachable; no duplicates;
-  offline-from-both remains a documented limitation.
+- **WP8 — gateway (implemented 2026-11-20; physical acceptance pending).** The phone relay is
+  implemented with the watch token, original operation ids, direct-first fallback, per-operation
+  acknowledgement and waiting/timeout states; plan push already carries the frozen plan and
+  execution view. The owner skipped the separate spike; the iPhone development build is installed
+  but the physical Watch was unavailable for the relay run. **Depends on:** WP2. **Exit:** watch
+  starts and syncs with the server unreachable but the phone reachable; no duplicates;
+  offline-from-both remains a documented limitation. **Evidence:** `WatchRelayModels.swift`,
+  `WatchRelayTests`, `WatchRelayGatewayTests`, `docs/WATCH-GATEWAY.md`.
 
 - **WP9 — documentation and algorithm reference (final closeout).** Publish one canonical
   reference for the resolver algorithm and workout selection: the end-to-end pipeline, the formulas

@@ -828,12 +828,14 @@ with `{shell_id, issued_plan_id, intended_device_id, start_expires_at}`, let the
 against it offline with a client `started_at`, and convert it to a workout on sync. Needs a new
 state/table, expiry cleanup, target/conflict rules and a client-timestamp policy.
 
-**Phone relay — “Send to iPhone”.** The phone replays the watch's exact queued bodies using the
-watch token over WatchConnectivity, so the server sees the same `device_id` and
-`(device_id, operation_id)` receipts dedupe; ownership and provenance stay with the watch. Needs
-the token handoff, a relay envelope, per-operation acknowledgement and a partial-relay recovery
-path, and cannot be relied on while the watch app is suspended. Takeover is not a substitute: its
-receipts are phone-device-scoped, so a later watch retry could duplicate.
+**Phone relay — implemented in WP8 (2026-11-20).** The phone replays the watch's exact queued
+bodies using the watch token over WatchConnectivity, so the server sees the same `device_id` and
+`(device_id, operation_id)` receipts dedupe; ownership and provenance stay with the watch.
+Implemented: the relay envelope, per-operation acknowledgement, direct-first fallback, watch
+token in the encrypted request, and waiting/timeout when the phone is unreachable. It cannot be
+relied on while the watch app is suspended. Takeover is not a substitute: its receipts are
+phone-device-scoped, so a later watch retry could duplicate. See
+`StrengthApp/docs/WATCH-GATEWAY.md`. Physical acceptance is pending.
 
 **iOS post-workout correction.** The server already corrects a completed session from History →
 Edit session, including mean and per-rep VBT overrides, with an append-only audit. The iOS client
@@ -849,7 +851,9 @@ Apple Intelligence. Each needs a separate decision.
 ## 22. Validation spikes before implementation
 
 These are technical proofs, not open design decisions; they run before the corresponding work
-package and do not change the decisions above.
+package and do not change the decisions above. The owner skipped the separate WP8 spike on
+2026-11-20; the documented `sendMessage` relay is implemented directly, with physical acceptance
+still required.
 
 1. **WatchConnectivity (before 6.2):** measure `updateApplicationContext` delivery when the
    counterpart is backgrounded, killed and relaunched; confirm the epoch/ack loop converges, that
