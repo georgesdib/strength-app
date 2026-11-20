@@ -555,7 +555,8 @@ overlap; the server foundation precedes every client step.
   `competition_squat` to `ssb_squat` with the same band, time and warning gate. **Depends on:**
   WP1a and WP0. **Exit:** measured comparison and p50/p95 recorded; the remaining owner review and
   the top-set/substitution/divergent cases are still open. **Evidence:**
-  `tests/test_role_quality.py`, `tests/test_evaluator_ab.py`, `DEC-RESOLVER-30`.
+  `tests/test_role_quality.py`, `tests/test_evaluator_ab.py`, `tests/test_evaluator_ab_report.py`,
+  `python -m strength_coach.prescribe.evaluator_ab`, `DEC-RESOLVER-30`.
 - **WP7a — resolver dwell completion (done 2026-11-20).** The cap, deterministic draw and bounded
   factor now order the production `candidate_pools`. The draw demotes the last choice within its
   structural pattern class instead of removing it; the last-choice key is the most recent working
