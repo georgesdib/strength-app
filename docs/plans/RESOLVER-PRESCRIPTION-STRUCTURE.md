@@ -1,9 +1,9 @@
 # Resolver prescription structure and programme context
 
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
-WP2 complete (owner-confirmed visual acceptance 2026-11-20; client branch unmerged); WP3
-complete; WP4 implemented (the real-data latency check is deferred by the owner); WP5–WP9 not
-started. Work packages and
+WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
+latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
+and is not tagged, merged to `main` or deployed; WP5–WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -510,7 +510,8 @@ overlap; the server foundation precedes every client step.
   execution view by watermark (`StrengthApp` `resolver-structure-wp2`); verified with
   `scripts/ci.sh`, the watch simulator smoke run and the live phone UI acceptance test on
   2026-11-20. **Owner acceptance:** confirmed the visual two-group display and watch
-  substitution on 2026-11-20. **Outstanding:** the client branch is not merged.
+  substitution on 2026-11-20. **Merged:** the client branch is merged into `development`
+  (2026-11-20).
   **Depends on:** WP1a. **Exit:** two-group display and prefill on phone and watch, substitution
   appears on the watch, no plan-edit UI.
 - **WP3 — tri-state intent (done 2026-11-20).** Settings/registry tri-state with default `off`,
@@ -576,6 +577,7 @@ overlap; the server foundation precedes every client step.
 - **Release A — structure and context:** WP1a, WP1b, WP2, WP3, WP4. This is the only coordinated
   cutover, because the plan-edit routes and the request schema change. Finish or abandon in-flight
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
+  **Status:** integrated on `development` 2026-11-20; not tagged, merged to `main` or deployed.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
   WP6 and WP7a can run in parallel; WP6 and WP7b ship only with their fixed-history comparisons and
   owner review, measured separately.
