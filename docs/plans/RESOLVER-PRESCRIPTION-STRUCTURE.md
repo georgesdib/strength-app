@@ -3,7 +3,7 @@
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
 latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP5–WP9 not started. Work packages and
+and is not tagged, merged to `main` or deployed; WP5 complete; WP6–WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -335,12 +335,11 @@ Warm-ups:
   rung is still a warm-up (unplanned preparation).
 - A missing RIR is not a warm-up. It is unknown warm-up status, counted as working volume by the
   existing conservative rule, and the analysis reports reduced confidence.
-- The stored working-set flag must equal `rir != 6`. A disagreement is a data-quality anomaly; it
-  is surfaced, never resolved by a second classification rule.
-- An imported row must not manufacture RIR 6 for a working set. The current RPE mapping turns
-  RPE 4 into RIR 6, so an import row whose source means a working set is rejected with a field
-  error naming the field, and an ambiguous source is flagged for review. Imported warm-ups must
-  be explicit.
+- The stored working-set flag is expected to equal `rir != 6`. A disagreement is visible as a
+  data-quality note; RIR 6 wins and the row is a warm-up.
+- RIR 6 is never rejected on import. The current RPE mapping that turns RPE 4 into RIR 6
+  therefore imports a warm-up, which is the sentinel's definition (owner clarification
+  2026-11-20).
 
 Matching:
 
@@ -532,10 +531,13 @@ overlap; the server foundation precedes every client step.
   `tests/test_intelligence_weekly.py`, `tests/test_web.py`, `tests/test_ios_workflow.py`,
   `StrengthAppTests/Phase2ClientTests`; `DEC-RESOLVER-25`, `DEC-RESOLVER-26`. The real-data
   p50 measurement is deferred by the owner.
-- **WP5 — actual data.** Order matcher shared by adherence, VBT and structure analysis;
-  substitution attribution; RIR-6 invariant and import rejection; segmented derived structure with
-  ordinal confidence; remove the leftover role branches. **Depends on:** WP1b. **Exit:** the
-  180×4 @RIR 1 + 160×5 @RIR 3 ×3 example, missing/extra/ambiguous cases, raw metrics untouched.
+- **WP5 — actual data (done 2026-11-20).** Order matcher shared by adherence, VBT and structure
+  analysis; substitution attribution; the RIR-6 warm-up invariant; config-backed segmented
+  derived structure with ordinal confidence; role branches removed from matching. **Depends on:**
+  WP1b. **Exit:** the 180×4 @RIR 1 + 160×5 @RIR 3 ×3 example, missing/extra/ambiguous cases, raw
+  metrics untouched. **Evidence:** `tests/test_derived_structure.py`,
+  `tests/test_actual_structure_adherence.py`, `tests/test_adherence.py`,
+  `tests/test_vbt_analysis.py`, `tests/test_order_matching.py`; `DEC-RESOLVER-27`.
 - **WP6 — evaluator.** Role-quality classes in config (no last-used continuity); six-level
   hierarchy with the volume gate; intensity profile; snapshot vector; fingerprint bump;
   fixed-history A/B with owner review of straight, top-set, substitution and divergent sessions.
@@ -579,6 +581,7 @@ overlap; the server foundation precedes every client step.
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
   **Status:** integrated on `development` 2026-11-20; not tagged, merged to `main` or deployed.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
+  **Status:** WP5 complete 2026-11-20; WP6, WP7a and WP7b are not started.
   WP6 and WP7a can run in parallel; WP6 and WP7b ship only with their fixed-history comparisons and
   owner review, measured separately.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
