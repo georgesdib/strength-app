@@ -523,12 +523,14 @@ overlap; the server foundation precedes every client step.
   `tests/test_ios_workflow.py`, `tests/test_evaluator.py`, `tests/test_resolver_wiring.py`;
   `DEC-RESOLVER-24`.
 - **WP4 — programme header (implemented 2026-11-20; latency check deferred).** One server
-  helper; Today payload; the intelligence facts and registered methods; weekly review and chat
-  facts; iPhone and web display; trained week and deload calendar week labelled separately.
+  helper; Today payload; the intelligence facts and registered methods; the AFC-4 nudge,
+  weekly review and chat facts; iPhone and web display; trained week and deload calendar week
+  labelled separately.
   **Depends on:** WP0. **Exit:** Today and intelligence parity, no-history derivation, read-latency
-  target. **Evidence:** `tests/test_programme_header.py`, `tests/test_intelligence_weekly.py`,
-  `tests/test_web.py`, `tests/test_ios_workflow.py`, `StrengthAppTests/Phase2ClientTests`;
-  `DEC-RESOLVER-25`. The real-data p50 measurement is deferred by the owner.
+  target. **Evidence:** `tests/test_programme_header.py`, `tests/test_nudges.py`,
+  `tests/test_intelligence_weekly.py`, `tests/test_web.py`, `tests/test_ios_workflow.py`,
+  `StrengthAppTests/Phase2ClientTests`; `DEC-RESOLVER-25`, `DEC-RESOLVER-26`. The real-data
+  p50 measurement is deferred by the owner.
 - **WP5 — actual data.** Order matcher shared by adherence, VBT and structure analysis;
   substitution attribution; RIR-6 invariant and import rejection; segmented derived structure with
   ordinal confidence; remove the leftover role branches. **Depends on:** WP1b. **Exit:** the
