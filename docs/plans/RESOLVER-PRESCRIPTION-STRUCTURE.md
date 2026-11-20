@@ -1,7 +1,7 @@
 # Resolver prescription structure and programme context
 
-**Status:** proposed 2026-11-19 (revised after owner review); WP0 complete, WP1–WP8 not
-started. Work packages and release trains are in §6.
+**Status:** proposed 2026-11-19 (revised after owner review); WP0 and WP1a complete, WP1b–WP8
+not started. Work packages and release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -77,10 +77,10 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
   RIR, readiness, continuity, deload, volume, spinal exposure, top sets, warm-ups and validation.
 - `prescribe/top_set.py` produces one top set plus one back-off group for the session primary
   main lift, and sets the item-level `load_kg` to the back-off load.
-- The plan payload already contains `set_groups` (roles `top_set`/`back_off`), but the shared
-  Swift `PrescriptionItem` does not decode it, so iPhone and Watch show the back-off load only.
-- `validate_plan_set_groups` requires a unique role, rejects any other shape, and plan editing
-  paths resize groups; there are five core plan-edit functions and matching web/iOS routes.
+- The plan payload carries ordered `set_groups` (`group_index`, no role), but the shared Swift
+  `PrescriptionItem` does not decode it, so iPhone and Watch show the back-off load only.
+- `validate_plan_set_groups` accepts 1..N ordered groups and ignores a legacy role; plan editing
+  paths still resize groups; there are five core plan-edit functions and matching web/iOS routes.
 - `set_role` is an optional input in the web logging path and is used to choose a group target
   in `workout.py`, `adherence.py` and `features/vbt_analysis.py`. The iOS add-set schema does
   not accept it.
@@ -457,10 +457,13 @@ overlap; the server foundation precedes every client step.
   data. **Evidence:** `config/resolver-role-quality.v1.yaml`,
   `tests/fixtures/resolver_structure/`, `tests/test_resolver_role_quality_config.py`,
   `DEC-RESOLVER-21`, ROADMAP §4.37.
-- **WP1a — server ordered groups.** `group_index`, serializers omit role, internal build-time role
-  retained, validation 1..N, warm-up from the heaviest group, set-weighted intensity, persistence,
-  legacy rows read by order. **Exit:** payload fixtures, legacy-read test, intensity and warm-up
-  tests.
+- **WP1a — server ordered groups (done 2026-11-19).** `group_index`, serializers omit role,
+  internal build-time role retained, validation 1..N, warm-up from the heaviest group,
+  set-weighted intensity, persistence, legacy rows read by order. **Evidence:**
+  `tests/test_ordered_set_groups.py`, `tests/test_top_set_engine.py`,
+  `tests/test_top_set_storage.py`, `tests/test_web.py`, `tests/test_resolver_wiring.py`;
+  the stored intensity is the set-weighted mean and the weekly spinal projection keeps the
+  pre-structure value until its own measured comparison.
 - **WP1b — server frozen plan.** Remove the five plan-edit routes and core services; `plan_revision`
   becomes identity only; add substitution/addition events on `workout_event` with an execution
   watermark; migration `0058` adds `substitutes_plan_item_index` to `workout_set` and

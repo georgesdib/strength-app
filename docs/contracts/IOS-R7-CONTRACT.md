@@ -18,8 +18,9 @@ contract as follows.
   unexpected fallback as unsatisfied.
 - A plan is frozen at start. Plan editing is removed; substitutions and additions are append-only
   execution events on the workout, and `substitutes_plan_item_index` annotates the performed set.
-- The plan payload carries ordered `set_groups` with no role field; the client renders the ordered
-  list. A straight-set item has an empty list.
+- The plan payload carries ordered `set_groups` with `group_index` (the list position),
+  `sets`, `load_kg`, `reps_low`, `reps_high` and `rir_target`. No role and no back-off ratio is
+  sent; the client renders the list in order. A straight-set item has an empty list.
 - `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is unchanged.
 - `plan_revision` is plan identity only and never changes after start; the execution watermark
   orders view updates.
