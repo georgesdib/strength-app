@@ -1,7 +1,7 @@
 # Resolver prescription structure and programme context
 
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete,
-WP2–WP8 not started. Work packages and release trains are in §6.
+WP2–WP9 not started. Work packages and release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -407,6 +407,31 @@ exercise changes and whether the volume band, session time, spinal cost, warning
 change. A variant that trades safety or the volume band for stickiness is rejected. Pool order is
 the beam's rank cost, so reordering changes the search trajectory, not only the shortlist.
 
+### 5.7.1 Minimum session and accessory-only
+
+`minimum_session.build_resolver_shape` runs before the resolver and is not changed by this
+plan: it chooses the surviving slots, clamps main sets to the floor and accessory sets to the cap.
+The resolver fills those slots only and never adds or removes a slot or a set.
+
+- Role quality applies only to roles present. With `include_main` the retained essential slots
+  are main and secondary; accessory-only has accessory criteria only and no main specificity or
+  exposure criteria.
+- A session without an eligible main lift records top-set status `not_applicable` by design,
+  including under `required`; it is never `unsatisfied`.
+- The weekly volume band is not a valid gate for these modes: both intentionally undershoot it.
+  The gate is `not_applicable` (or is replaced by the shaped session's own target), and the
+  level-4 distribution is neutral rather than undershoot or overshoot.
+- For a minimum session the target minutes is a level-2 programme constraint, not a level-5
+  tie-break. A candidate that would push the shaped session over target ranks below one that fits.
+- The dwell cap, draw and bounded factor still apply per shaped slot, but the draw's last-choice
+  key must be stable across shaped templates (pattern and role, or the exercise's own last used),
+  not slot order, because the shape varies with target minutes and history.
+- Structural ordering uses the shape's retained required patterns; accessory-only has none, so it
+  reserves no coverage.
+- Acceptance cases: a 30-minute accessory-only session (shape, accessory quality, top set
+  `not_applicable`, gate neutral); a 45-minute session with the main lift (main quality, time
+  target); `required` on accessory-only; and a candidate that would exceed the target.
+
 ### 5.8 Phone gateway and offline watch execution (later slice)
 
 The watch is offline-capable only while the phone is online (D10). There is no pending-session
@@ -513,6 +538,19 @@ overlap; the server foundation precedes every client step.
   unreachable but the phone reachable; no duplicates; offline-from-both remains a documented
   limitation.
 
+- **WP9 — documentation and algorithm reference (final closeout).** Publish one canonical
+  reference for the resolver algorithm and workout selection: the end-to-end pipeline, the formulas
+  (dwell factor, draw and cap; volume projection and band; role-quality class vector and
+  hierarchy; top-set load, RIR and back-off; warm-up; minimum-session time estimate; fingerprint
+  and snapshot), a code map with links to the exact files and functions, and worked examples for
+  straight sets, top set, deload, taper, minimum session, accessory-only, substitution and derived
+  structure. Update every affected document; archive or add superseding pointers to old documents;
+  remove links to superseded documents from `AGENTS.md`, the docs index, agent prompts and the
+  manifest so agents load only the canonical set; run the docs manifest, consistency, link and
+  heading checks. **Depends on:** WP1–WP8. **Exit:** a new reader can trace template → pool → beam
+  → winner from the formulas and examples alone; every example is mirrored by a test or fixture;
+  no stale canonical links remain; docs checks pass.
+
 ### 6.2 Release trains
 
 - **Release A — structure and context:** WP1a, WP1b, WP2, WP3, WP4. This is the only coordinated
@@ -523,6 +561,9 @@ overlap; the server foundation precedes every client step.
   owner review, measured separately.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B.
+- **Release D — documentation closeout:** WP9. Each package updates its own docs; Release D
+  publishes the consolidated algorithm reference, retires superseded documents and audits the
+  agent and manifest links.
 
 ### 6.3 Verification per package
 
@@ -530,8 +571,10 @@ Every package runs its narrowest backend tests and `ruff check` for the changed 
 migration test on a database copy when schema changes. Client packages run the narrowest Swift
 tests plus the web UI checks. WP7a adds the dwell unit tests (draw determinism, cap fallback,
 coverage preservation). WP6 and WP7b add the fixed-history comparison, owner review and p50/p95,
-measured separately; WP8 adds the WatchConnectivity spike and a physical-device run. No package
-claims completion from code presence; the backend ROADMAP records status only with that evidence.
+measured separately; WP8 adds the WatchConnectivity spike and a physical-device run. WP9 runs the
+docs manifest, consistency, link and heading checks and requires every worked example to be
+mirrored by a test or fixture. No package claims completion from code presence; the backend
+ROADMAP records status only with that evidence.
 
 ## 7. Acceptance
 
@@ -597,6 +640,16 @@ claims completion from code presence; the backend ROADMAP records status only wi
   resolver pass.
 - Candidate ordering and each dwell variant are measured before any beam or cap change.
 
+**Documentation**
+
+- One canonical reference covers the pipeline, the formulas, a code map with file and function
+  links, and worked examples for straight sets, top set, deload, taper, minimum session,
+  accessory-only, substitution and derived structure.
+- Every formula and example is mirrored by code or a fixture; links resolve; the docs manifest,
+  consistency, link and heading checks pass.
+- Superseded documents carry a pointer or are archived, and `AGENTS.md`, the docs index, agent
+  prompts and the manifest link only the canonical set.
+
 **Evidence**
 
 - Fixture tests are necessary but not sufficient. Run the current and proposed paths over a fixed
@@ -622,6 +675,8 @@ claims completion from code presence; the backend ROADMAP records status only wi
 | Derived structure becomes a role taxonomy | Segmented description with ordinal confidence; never stored on raw sets; no metric or policy effect. |
 | The RIR-6 convention is broken by an import or manual edit | The invariant is checked; conflicts are reported as anomalies; an import may not manufacture RIR 6 for a working set. |
 | Candidate ordering changes search results | Deterministic rules, explicit thresholds, measured before and after. |
+| Documentation drifts from the shipped algorithm | WP9 rewrites the canonical reference from the shipped code; every worked example is mirrored by a test or fixture; docs checks run in CI. |
+| Superseded documents stay linked by agents | WP9 audits `AGENTS.md`, the docs index, prompts and the manifest, archives or points retired documents, and keeps only the canonical set in agent entry points. |
 | Substitution events arrive after the sets | The performed set is self-describing and is the durable attribution; the event is a view hint. |
 | Legacy plans with role-based groups | Read by list order; no rewrite, no dual write path. |
 
@@ -654,6 +709,11 @@ claims completion from code presence; the backend ROADMAP records status only wi
   `API.md` (today, workouts, add-set, execution, removed plan routes), `DATA-MODEL.md` (annotation
   columns and legacy columns), `DATA-QUALITY.md` (RIR-6 and import semantics), `WEB-UI.md` (plan
   editing and role picker removed), `USER-GUIDE.md` and `ROADMAP.md`.
+- The canonical algorithm and selection reference is `RESOLVER-ALGORITHM.md`, rewritten in WP9
+  with the formulas, code map and worked examples. `DWELL-AND-ROTATION.md` remains the dwell detail
+  linked from it; superseded forward plans are archived or reduced to pointers. `AGENTS.md`, the
+  docs index, agent prompts and the manifest link only the canonical set, so an agent does not
+  load retired documents.
 - Shared contracts and plans updated before implementation: R7 (plan payload, tri-state override,
   execution view, today header), R8 (plan edits retired; closed record preserved with a
   superseding note), watch (D3, D12, §10 revision/conflict rules, §21 relay now planned, execution
