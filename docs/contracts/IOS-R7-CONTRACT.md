@@ -41,6 +41,16 @@ contract as follows.
 - A set may carry `substitutes_plan_item_index`; a substitution stores the same slot in
   `plan_item_index` and the annotation. A stale `plan_item_index` is preserved as extra work and
   `409 plan_item_mismatch` is retired. A client never sends a prefill load.
+- A substitution is accepted only before any set is attributed to the plan slot. Once a set
+  exists for the slot the request is rejected; the athlete continues the original item or logs
+  extra work. The replacement never takes over a partly completed slot.
+- A set's identity is `(exercise_id, set_index)`, so the next index is allocated per performed
+  exercise, not per plan slot. Reusing an index with a different payload is rejected instead of
+  being treated as an idempotent retry.
+- An execution client-event id is idempotent only for the same canonical request; a concurrent
+  insertion with different content is rejected.
+- Execution prefill may be null. The client keeps a null load null and never falls back to the
+  original exercise's prescribed load; the athlete enters the unknown load as actual data.
 
 **Why R7 exists.** Phase 2 issues a prescription by calling `build_prescription` synchronously
 inside the request handler ([server.py](https://github.com/georgesdib/strength-training-app/blob/development/strength_coach/web/server.py) `_ios_prescription`).

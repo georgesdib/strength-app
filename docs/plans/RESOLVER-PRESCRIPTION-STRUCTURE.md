@@ -458,14 +458,22 @@ shell, no offline start without a reachable phone, and no new server lifecycle s
 - **Reliability.** WatchConnectivity delivery is queued and may be delayed; the phone may be
   suspended and must be launched or woken to run the relay. The watch shows a waiting state with
   a timeout and retry, and the contract's WatchConnectivity spike runs before this slice.
-- **Prefill.** A substitution or addition prefill is server-solved (`resolve_replacement`). When
-  the phone cannot reach the server, the event carries no prefill and the athlete enters the load
-  as actual data; the client never computes it.
+- **Prefill.** A substitution or addition prefill is server-solved (`resolve_replacement`). The
+  execution row is the client's authoritative target for load, reps and RIR, so the phone and
+  watch prefill the logging controls from it. A null prefill stays null and is never replaced by
+  the original exercise's load. When the phone cannot reach the server, the event carries no
+  prefill and the athlete enters the load as actual data; the client never computes it.
 - **Security.** The watch token is handed over per session over WatchConnectivity and is not
   persisted at rest on the phone; the phone can revoke it. Relayed operations are recorded with
   both device identities.
 - **No watch-originated substitutions** (D9). The watch renders and logs the phone-authored
   execution view; the phone is the only author of substitutions and additions.
+- **Late substitution.** A substitution is accepted only before any set is attributed to the
+  plan slot. After that it is rejected; the athlete continues the original item or logs extra
+  work, and the replacement never inherits a partly completed slot.
+- **Set identity.** A performed set is identified by `(exercise_id, set_index)`. The next index is
+  allocated per performed exercise, not per plan slot, and an index reuse with a different
+  payload is rejected rather than treated as an idempotent retry.
 
 If neither device can reach the server and the watch cannot reach the phone, the session cannot
 start. That is the accepted limitation of D10.
