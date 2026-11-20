@@ -2,7 +2,8 @@
 
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2 in progress (web landed on the backend branch; iPhone/Watch implemented on an unmerged
-client branch and verified on a MacBook simulator); WP3 complete; WP4–WP9 not started. Work packages and
+client branch and verified on a MacBook simulator); WP3 complete; WP4 implemented (the real-data
+latency check is deferred by the owner); WP5–WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -521,10 +522,13 @@ overlap; the server foundation precedes every client step.
   `tests/test_top_set.py`, `tests/test_settings_profile.py`, `tests/test_web.py`,
   `tests/test_ios_workflow.py`, `tests/test_evaluator.py`, `tests/test_resolver_wiring.py`;
   `DEC-RESOLVER-24`.
-- **WP4 — programme header.** One server helper; Today payload; the intelligence facts and
-  registered methods; nudges, weekly review and chat facts; client decode and display; trained
-  week and deload calendar week labelled separately. **Depends on:** WP0. **Exit:** Today and
-  intelligence parity, no-history derivation, read-latency target.
+- **WP4 — programme header (implemented 2026-11-20; latency check deferred).** One server
+  helper; Today payload; the intelligence facts and registered methods; weekly review and chat
+  facts; iPhone and web display; trained week and deload calendar week labelled separately.
+  **Depends on:** WP0. **Exit:** Today and intelligence parity, no-history derivation, read-latency
+  target. **Evidence:** `tests/test_programme_header.py`, `tests/test_intelligence_weekly.py`,
+  `tests/test_web.py`, `tests/test_ios_workflow.py`, `StrengthAppTests/Phase2ClientTests`;
+  `DEC-RESOLVER-25`. The real-data p50 measurement is deferred by the owner.
 - **WP5 — actual data.** Order matcher shared by adherence, VBT and structure analysis;
   substitution attribution; RIR-6 invariant and import rejection; segmented derived structure with
   ordinal confidence; remove the leftover role branches. **Depends on:** WP1b. **Exit:** the

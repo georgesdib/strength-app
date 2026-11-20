@@ -26,7 +26,12 @@ contract as follows.
 - The plan payload carries ordered `set_groups` with `group_index` (the list position),
   `sets`, `load_kg`, `reps_low`, `reps_high` and `rir_target`. No role and no back-off ratio is
   sent; the client renders the list in order. A straight-set item has an empty list.
-- `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is unchanged.
+- `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is
+  unchanged. The header is `{trained_week, dup?, deload, competition?}`: `trained_week` is
+  null without a block anchor; `dup` is present only with undulation enabled and an anchor;
+  `deload` carries `{calendar_week, status, trigger, reason}`; `competition` carries
+  `{date, days_until, window}` and omits `days_until` for a past date. The web
+  `/api/overview` dashboard carries the same block.
 - `plan_revision` is plan identity only and never changes after start; the execution watermark
   orders view updates.
 - `POST /api/ios/v1/workouts/<id>/execution` (phone token only) appends one substitution or
