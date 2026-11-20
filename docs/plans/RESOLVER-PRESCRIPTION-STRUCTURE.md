@@ -1,7 +1,9 @@
 # Resolver prescription structure and programme context
 
-**Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete,
-WP2–WP9 not started. Work packages and release trains are in §6.
+**Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
+WP2 in progress (web landed on the backend branch; iPhone/Watch implemented on an unmerged
+client branch and verified on a MacBook simulator); WP3–WP9 not started. Work packages and
+release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -497,9 +499,17 @@ overlap; the server foundation precedes every client step.
   role inputs. **Evidence:** `tests/test_execution_changes.py`, `tests/test_migration_0073.py`,
   `tests/test_ios_workflow.py`, `tests/test_ios_watch_ownership.py`, `tests/test_workout.py`;
   `DEC-RESOLVER-23`.
-- **WP2 — clients.** iPhone, Watch and web decode ordered groups, render one row per group,
-  prefill by order and remove the plan-edit menus and role picker. Web prefill becomes group-aware before the picker is deleted. The watch renders
-  the phone-authored execution view and merges by watermark; it never originates a substitution.
+- **WP2 — clients (in progress 2026-11-20).** iPhone, Watch and web decode ordered groups,
+  render one row per group, prefill by order and remove the plan-edit menus and role picker.
+  Web prefill becomes group-aware before the picker is deleted. The watch renders the
+  phone-authored execution view and merges by watermark; it never originates a substitution.
+  **Done so far:** the web workout view is read-only and renders one unlabelled row per planned
+  group in order (backend `7680ffb`); the iPhone/Watch branch decodes groups, prefills the next
+  group by cumulative working sets, renders substitutions and additions, and merges the
+  execution view by watermark (`StrengthApp` `resolver-structure-wp2`); verified with
+  `scripts/ci.sh`, the watch simulator smoke run and the live phone UI acceptance test on
+  2026-11-20. **Outstanding:** the iPhone and Watch plan surfaces still show the item-level
+  target instead of one row per group, and the client branch is not merged.
   **Depends on:** WP1a. **Exit:** two-group display and prefill on phone and watch, substitution
   appears on the watch, no plan-edit UI.
 - **WP3 — tri-state intent.** Settings/registry tri-state with default `off`, per-request
