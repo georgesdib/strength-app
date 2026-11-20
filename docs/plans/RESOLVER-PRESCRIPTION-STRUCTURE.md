@@ -2,7 +2,7 @@
 
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2 in progress (web landed on the backend branch; iPhone/Watch implemented on an unmerged
-client branch and verified on a MacBook simulator); WP3–WP9 not started. Work packages and
+client branch and verified on a MacBook simulator); WP3 complete; WP4–WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -512,11 +512,15 @@ overlap; the server foundation precedes every client step.
   is still pending, and the client branch is not merged.
   **Depends on:** WP1a. **Exit:** two-group display and prefill on phone and watch, substitution
   appears on the watch, no plan-edit UI.
-- **WP3 — tri-state intent.** Settings/registry tri-state with default `off`, per-request
-  `top_set_intent`, legacy `ask→off` / `on→required`, frozen `{status, reason_code, reason}`,
-  preferred fallback and required unsatisfied, client picker mapping; remove the boolean.
-  **Depends on:** WP1a. **Exit:** off/preferred/required tests, deload `not_applicable`, required
-  fallback `unsatisfied`, closed iOS request schema.
+- **WP3 — tri-state intent (done 2026-11-20).** Settings/registry tri-state with default `off`,
+  per-request `top_set_intent`, legacy `ask→off` / `on→required` normalised on load, frozen
+  `{status, reason_code, reason}` with the applied loads, preferred fallback and required
+  unsatisfied, client picker mapping; the boolean is removed. **Depends on:** WP1a.
+  **Exit:** off/preferred/required tests, deload `not_applicable`, required fallback
+  `unsatisfied`, closed iOS request schema. **Evidence:** `tests/test_top_set_engine.py`,
+  `tests/test_top_set.py`, `tests/test_settings_profile.py`, `tests/test_web.py`,
+  `tests/test_ios_workflow.py`, `tests/test_evaluator.py`, `tests/test_resolver_wiring.py`;
+  `DEC-RESOLVER-24`.
 - **WP4 — programme header.** One server helper; Today payload; the intelligence facts and
   registered methods; nudges, weekly review and chat facts; client decode and display; trained
   week and deload calendar week labelled separately. **Depends on:** WP0. **Exit:** Today and

@@ -16,6 +16,11 @@ contract as follows.
   `required`; omitted means the settings profile, whose default is `off`. It replaces the boolean
   `top_set`. `preferred` accepts a straight-set fallback with a reason; `required` marks an
   unexpected fallback as unsatisfied.
+- The plan payload carries the frozen `top_set` outcome
+  `{status, reason_code, reason, top_set_load_kg?, top_set_rir?, backoff_load_kg?}`. Statuses are
+  `applied`, `not_applicable`, `fallback` and `unsatisfied`; reason codes are `intent_off`,
+  `applied`, `blocked_by_design`, `no_usable_load`, `fewer_than_two_sets`, `not_eligible` and
+  `outside_policy`. A plan issued before the change may omit the block.
 - A plan is frozen at start. Plan editing is removed; substitutions and additions are append-only
   execution events on the workout, and `substitutes_plan_item_index` annotates the performed set.
 - The plan payload carries ordered `set_groups` with `group_index` (the list position),

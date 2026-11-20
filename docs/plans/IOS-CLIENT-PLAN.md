@@ -1046,9 +1046,11 @@ entry that blocks further mutations. R7 removes the blocking call and adds the w
 owner asked for.
 
 - **Settings before issuing:** session type (`auto` or an explicit type), the minimum-session
-  fallback and an optional main-lift structure (`top_set` true for top set/back-off, false for
-  straight sets, omitted for the server/resolver default), validated by the server and recorded as
-  provenance. This amends the Phase 2 rule that only `auto` exists.
+  fallback and an optional main-lift structure (`top_set_intent` `off`, `preferred` or
+  `required`; omitted follows the settings profile), validated by the server and recorded as
+  provenance. `preferred` accepts a recorded straight-set fallback; `required` marks an
+  unexpected fallback unsatisfied on a still-startable plan. This amends the Phase 2 rule that
+  only `auto` exists.
 - **Non-blocking request:** `POST /api/ios/v1/prescriptions` validates the gates, writes a
   `queued` row and returns 202 immediately. One bounded dispatcher thread drains the queue on the
   shared CPU slot (`_CPU_JOB_SLOTS`, no second budget), re-checking eligibility before the slot and
