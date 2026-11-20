@@ -524,8 +524,8 @@ overlap; the server foundation precedes every client step.
   `DEC-RESOLVER-24`.
 - **WP4 — programme header (implemented 2026-11-20; latency check deferred).** One server
   helper; Today payload; the intelligence facts and registered methods; the AFC-4 nudge,
-  weekly review and chat facts; iPhone and web display; trained week and deload calendar week
-  labelled separately.
+  weekly review and chat facts; iPhone and web display, including the AFC-4 review nudge on
+  both; trained week and deload calendar week labelled separately.
   **Depends on:** WP0. **Exit:** Today and intelligence parity, no-history derivation, read-latency
   target. **Evidence:** `tests/test_programme_header.py`, `tests/test_nudges.py`,
   `tests/test_intelligence_weekly.py`, `tests/test_web.py`, `tests/test_ios_workflow.py`,
