@@ -451,9 +451,9 @@ overlap; the server foundation precedes every client step.
 
 - **WP0 — decisions and fixtures (done 2026-11-19).** Approve the role-quality class boundaries,
   family membership and recency window in versioned config with domain reasons; confirm the
-  intelligence method names; add synthetic fixtures (legacy two-group role plan, three-group
-  plan, straight-set plan performed as top-set/back-off, RIR-6 import row, deload and taper
-  days); create the ROADMAP tracking entry. **Exit:** config approved, fixtures committed, no real
+  intelligence method names; add synthetic fixtures (legacy two-group role plan, straight-set
+  plan performed as top-set/back-off, RIR-6 import row, deload and taper days); create the
+  ROADMAP tracking entry. **Exit:** config approved, fixtures committed, no real
   data. **Evidence:** `config/resolver-role-quality.v1.yaml`,
   `tests/fixtures/resolver_structure/`, `tests/test_resolver_role_quality_config.py`,
   `DEC-RESOLVER-21`, ROADMAP §4.37.
@@ -472,9 +472,8 @@ overlap; the server foundation precedes every client step.
   role inputs. **Evidence:** `tests/test_execution_changes.py`, `tests/test_migration_0073.py`,
   `tests/test_ios_workflow.py`, `tests/test_ios_watch_ownership.py`, `tests/test_workout.py`;
   `DEC-RESOLVER-23`.
-- **WP2 — clients.** iPhone, Watch and web decode ordered groups, render one row per group
-  (including the synthetic three-group fixture), prefill by order and remove the plan-edit menus
-  and role picker. Web prefill becomes group-aware before the picker is deleted. The watch renders
+- **WP2 — clients.** iPhone, Watch and web decode ordered groups, render one row per group,
+  prefill by order and remove the plan-edit menus and role picker. Web prefill becomes group-aware before the picker is deleted. The watch renders
   the phone-authored execution view and merges by watermark; it never originates a substitution.
   **Depends on:** WP1a. **Exit:** two-group display and prefill on phone and watch, substitution
   appears on the watch, no plan-edit UI.
@@ -538,8 +537,8 @@ claims completion from code presence; the backend ROADMAP records status only wi
 
 **Functional**
 
-- A top-set plan displays and prefills two different target rows on iPhone and Watch; a synthetic
-  three-group fixture displays three and is not collapsed to the item-level load.
+- A top-set plan displays and prefills two different target rows on iPhone and Watch and is not
+  collapsed to the item-level load.
 - `off`, `preferred` and `required` take distinct, tested paths; `required` with an unexpected
   blocker returns a startable plan marked `unsatisfied` with a reason; `preferred` falls back with
   `fallback` and its reason; a deload is `not_applicable`, not unsatisfied.
