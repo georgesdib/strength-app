@@ -435,8 +435,9 @@ execution-target enforcement, patchy Wi-Fi with partial flushes and an offline f
 corrections (Plan/navigation lock, refresh and reconnect, idle/abandoned messaging, Session
 contents and the phone mirror form lock).
 
-**Deferred:** the pending-session shell for offline start and the “Send to iPhone” relay are
-explicitly out of v1; contract §21 records what each would require.
+**Deferred:** the pending-session shell for offline start remains deferred. The “Send to iPhone”
+relay was implemented in WP8 on 2026-11-21 (contract §21) and does not make start possible when
+both devices are offline.
 
 ## 5. Offline behavior — explicit contract
 
@@ -1046,9 +1047,11 @@ entry that blocks further mutations. R7 removes the blocking call and adds the w
 owner asked for.
 
 - **Settings before issuing:** session type (`auto` or an explicit type), the minimum-session
-  fallback and an optional main-lift structure (`top_set` true for top set/back-off, false for
-  straight sets, omitted for the server/resolver default), validated by the server and recorded as
-  provenance. This amends the Phase 2 rule that only `auto` exists.
+  fallback and an optional main-lift structure (`top_set_intent` `off`, `preferred` or
+  `required`; omitted follows the settings profile), validated by the server and recorded as
+  provenance. `preferred` accepts a recorded straight-set fallback; `required` marks an
+  unexpected fallback unsatisfied on a still-startable plan. This amends the Phase 2 rule that
+  only `auto` exists.
 - **Non-blocking request:** `POST /api/ios/v1/prescriptions` validates the gates, writes a
   `queued` row and returns 202 immediately. One bounded dispatcher thread drains the queue on the
   shared CPU slot (`_CPU_JOB_SLOTS`, no second budget), re-checking eligibility before the slot and
@@ -1091,6 +1094,11 @@ R8 brings the web UI's existing live-workout edits to the phone: swap a plan ite
 exercise, remove one, move one, and change a set count. It supersedes the Phase 2 clause "no plan
 edits, exercise swap, set-count change". Move was added on 2026-11-17 with a solved load on add
 (`DEC-IOS-08`, `DEC-IOS-09`).
+
+> **Superseded in part 2026-11-19.** Plan editing is retired by the
+> [resolver prescription structure plan](RESOLVER-PRESCRIPTION-STRUCTURE.md). Plans are frozen at
+> start; a substitution or addition is an execution event on the workout, not a plan edit. The
+> closed record below is preserved for history.
 
 - Every edit runs through the existing `workout.py` services (`swap_exercise`, `add_exercise`,
   `remove_exercise`, `change_sets`, `move_exercise`); they rewrite `plan_modified_json` and append

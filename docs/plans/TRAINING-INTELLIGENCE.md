@@ -297,10 +297,9 @@ Rules:
   strength-trend migration behind a readiness check) is implemented 2026-11-14 with parity and
   ODROID measurements recorded. **Milestone C** (weekly spinal exposures plus deload, outcomes and
   monitoring migration, with full-dataset parity and measured improvements) is also implemented.
-  Snapshots remain optional and deferred; the INT integration review is a follow-up. The remaining
-  operational item is follow-up **C-1**: a background maintenance worker that reconciles the derived
-  build automatically on startup, periodically and after exercise-writer changes, replacing the
-  manual `analytics build` trigger.
+  Snapshots remain optional and deferred; the INT integration review is a follow-up. **C-1** is
+  complete: a systemd one-shot maintenance service and timer reconcile the derived build after a
+  web-service restart, on boot, and every 15 minutes, replacing manual `analytics build` use.
 
   The ODROID HTTP benchmark (2026-11-14) measured p95 6,201 ms for session details, 4,058 ms for
   overview, 3,800 ms for the programme summary and 1,663 ms for readiness. The owner accepted a
@@ -1883,7 +1882,8 @@ Deliberately **not** built:
   event, not an artifact (`DEC-LLM-01`).
 - No OAuth authorization server, no user accounts, no tenancy.
 - No MCP prompts, no MCP sampling, no MCP roots, no subscriptions (read-only, no live updates).
-- No caching layer, no message queue, no background workers.
+- No caching layer, no message queue, or in-process intelligence background worker. C-1's
+  separately deployed systemd maintenance service is limited to derived-analytics reconciliation.
 - No duplicate metric code in Swift or in the intelligence package.
 - No fourth repository.
 

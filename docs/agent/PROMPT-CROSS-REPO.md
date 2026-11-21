@@ -3,13 +3,13 @@
 
 This is a cross-repo contract change.
 
-Server repository: `strength-training-app/`
-iOS client repository: `StrengthApp/`
+Server repository: `strength-app/strength-training-app/`
+iOS client repository: `strength-app/StrengthApp/`
 
 ## Before implementation
 
 1. Identify the authoritative side: server or client.
-2. Read and update the canonical shared plan/contracts in the portfolio `docs/plans/` and `docs/contracts/`; keep API implementation, data-model implementation, migrations and code-specific detail in `strength-training-app/`, and Apple implementation/acceptance detail in `StrengthApp/`. Link across repositories with absolute GitHub URLs.
+2. Read and update the canonical shared plan/contracts in the portfolio `docs/plans/` and `docs/contracts/`; keep API implementation, data-model implementation, migrations and code-specific detail in `strength-app/strength-training-app/`, and Apple implementation/acceptance detail in `strength-app/StrengthApp/`. Link across repositories with absolute GitHub URLs.
 3. Read the relevant server contract document and iOS contract/document.
 4. Identify every affected route, request/response field, error code,
    authentication rule, client model, decoder, and test.

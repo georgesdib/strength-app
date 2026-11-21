@@ -7,6 +7,51 @@
 start-transaction prescription are on `development`. §17 records where the implementation differs
 from the plan below; everything else here is current behaviour.
 
+## 2026-11-19 amendment — tri-state intent, frozen plan and execution view
+
+The [resolver prescription structure plan](../plans/RESOLVER-PRESCRIPTION-STRUCTURE.md) changes this
+contract as follows.
+
+- The request `settings` object accepts an optional `top_set_intent` of `off`, `preferred` or
+  `required`; omitted means the settings profile, whose default is `off`. It replaces the boolean
+  `top_set`. `preferred` accepts a straight-set fallback with a reason; `required` marks an
+  unexpected fallback as unsatisfied.
+- The plan payload carries the frozen `top_set` outcome
+  `{status, reason_code, reason, top_set_load_kg?, top_set_rir?, backoff_load_kg?}`. Statuses are
+  `applied`, `not_applicable`, `fallback` and `unsatisfied`; reason codes are `intent_off`,
+  `applied`, `blocked_by_design`, `no_usable_load`, `fewer_than_two_sets`, `not_eligible` and
+  `outside_policy`. A plan issued before the change may omit the block.
+- A plan is frozen at start. Plan editing is removed; substitutions and additions are append-only
+  execution events on the workout, and `substitutes_plan_item_index` annotates the performed set.
+- The plan payload carries ordered `set_groups` with `group_index` (the list position),
+  `sets`, `load_kg`, `reps_low`, `reps_high` and `rir_target`. No role and no back-off ratio is
+  sent; the client renders the list in order. A straight-set item has an empty list.
+- `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is
+  unchanged. The header is `{trained_week, dup?, deload, competition?}`: `trained_week` is
+  null without a block anchor; `dup` is present only with undulation enabled and an anchor;
+  `deload` carries `{calendar_week, status, trigger, reason}`; `competition` carries
+  `{date, days_until, window}` and omits `days_until` for a past date. The web
+  `/api/overview` dashboard carries the same block.
+- `plan_revision` is plan identity only and never changes after start; the execution watermark
+  orders view updates.
+- `POST /api/ios/v1/workouts/<id>/execution` (phone token only) appends one substitution or
+  addition; `GET .../execution` returns `execution: {workout_id, watermark, substitutions,
+  additions}` additively. The watermark is the latest change event identity and only moves
+  forward, so a watch applies a payload only when it is at least as new as its own.
+- A set may carry `substitutes_plan_item_index`; a substitution stores the same slot in
+  `plan_item_index` and the annotation. A stale `plan_item_index` is preserved as extra work and
+  `409 plan_item_mismatch` is retired. A client never sends a prefill load.
+- A substitution is accepted only before any set is attributed to the plan slot. Once a set
+  exists for the slot the request is rejected; the athlete continues the original item or logs
+  extra work. The replacement never takes over a partly completed slot.
+- A set's identity is `(exercise_id, set_index)`, so the next index is allocated per performed
+  exercise, not per plan slot. Reusing an index with a different payload is rejected instead of
+  being treated as an idempotent retry.
+- An execution client-event id is idempotent only for the same canonical request; a concurrent
+  insertion with different content is rejected.
+- Execution prefill may be null. The client keeps a null load null and never falls back to the
+  original exercise's prescribed load; the athlete enters the unknown load as actual data.
+
 **Why R7 exists.** Phase 2 issues a prescription by calling `build_prescription` synchronously
 inside the request handler ([server.py](https://github.com/georgesdib/strength-training-app/blob/development/strength_coach/web/server.py) `_ios_prescription`).
 With Settings → Resolver enabled the build takes **35–46 s** on the ODROID-C4
