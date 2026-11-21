@@ -341,7 +341,13 @@ which is precisely the shape to avoid.
 No `ThreadPoolExecutor`, no new queue abstraction, no second CPU budget. The dispatcher is a loop
 over the database, and it still acquires the existing shared
 `_CPU_JOB_SLOTS = threading.Semaphore(1)` before building, so the iOS queue competes with the web
-forecast rather than bypassing it.
+forecast rather than bypassing it. The dispatcher follows the database it was started for: it is
+reused only while it is alive and watching the same database file, and starting one for a
+different file retires the previous thread first, with per-dispatcher wake and stop events. A
+single-database deployment is therefore unchanged — one thread, reused for the life of the
+process — while a process that opens several databases (tests, disposable servers) cannot leave a
+retired thread watching a database nobody is using, consuming its successor's wake, or being
+revived by a shared stop flag.
 
 Loop (each iteration):
 
