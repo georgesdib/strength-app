@@ -193,6 +193,12 @@ of the extraction.
   transaction the server revokes the parent's active watch (if any), inserts the new device with
   `credential_epoch = max(prior epochs for the parent, 0) + 1`, and returns
   `{device_id, label, epoch, token}` once; only the digest is stored.
+- The same transaction supersedes any live plan whose execution target is the replaced watch. A
+  plan is bound to the device id it was issued to and is retired, never re-targeted: `plans/current`
+  reports `none` instead of advertising a ready plan the watch can no longer start. Without it the
+  phone (which resolves the plan by requester) and the watch (which resolves it by target) could
+  disagree about the same row — "requested for Apple Watch" on the phone, "No workout for Apple
+  Watch" on the watch, for a workout that already existed.
 - Minting is **identity-idempotent**, not receipt-idempotent: a lost response produces a new
   epoch and device, and the previous watch token is revoked. There is never a second active watch
   and no plaintext token is stored for replay. Mint is rate-limited per phone.
@@ -273,6 +279,8 @@ of the extraction.
 - Revoking a phone also revokes its active child watch in the same transaction; the DELETE response
   includes `revoked_watch_ids` so a legacy stranded watch is visible. This prevents a replaced
   phone from leaving an independently usable watch token behind.
+- Revoking a watch, directly or through its phone's cascade, supersedes its live plan in the same
+  transaction. A repeat revocation also retires a plan left behind by an older server build.
 - Re-pairing the phone itself does not resurrect a watch token; the phone mints a new watch device
   after its own pairing succeeds.
 
