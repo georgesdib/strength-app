@@ -109,12 +109,15 @@ are otherwise the same.
 
 - **Aerobic reference:** WHO 150–300 min moderate or 75–150 min vigorous per week, combined by the
   conventional 1 vigorous = 2 moderate equivalence. A convention, not a validated conversion.
-- **Classification:** Apple METs first, then average heart rate as a share of a store-observed
-  maximum (200 bpm today), then unclassified. The fallback mean uses only `association = 'workout'`
-  samples inside the workout's own interval; the ten-minute recovery tail is retained in the corpus
-  but is never exercise intensity. Whole-workout classification is an estimate: a lifting session's
-  average heart rate can read moderate or vigorous without sustained aerobic work, and an interval
-  session's rests dilute it.
+- **Classification:** Apple METs first, then average heart rate as a share of the effective
+  settings-profile maximum heart rate (`cardio.max_hr_bpm`, default 200 bpm, 120–250, effective-dated),
+  then unclassified. Changing it reclassifies cached history on the next summary read and
+  recomputes time-in-zone on the next request (`CARDIO-STAGE.md`, `DEC-CARDIO-05` post-completion
+  amendment). The fallback mean uses only `association = 'workout'` samples inside the workout's
+  own interval; the ten-minute recovery tail is retained in the corpus but is never exercise
+  intensity. Whole-workout classification is an estimate: a lifting session's average heart rate
+  can read moderate or vigorous without sustained aerobic work, and an interval session's rests
+  dilute it.
 - **Time-in-zone:** only continuity-eligible workouts, never merged into the weekly total. Zone
   time is the elapsed time between adjacent workout samples, clipped to the workout. The sample at
   *t* describes *[t, next_t)*; the final sample closes no interval; unobserved time (before the
