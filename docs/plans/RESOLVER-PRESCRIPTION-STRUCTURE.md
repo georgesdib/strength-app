@@ -1,9 +1,12 @@
 # Resolver prescription structure and programme context
 
-**Status:** complete 2026-11-21. WP0–WP9 are complete; the production ODROID service was
-deployed from `development` at `5a3c1df` on 2026-11-21 after a verified database backup. The
-owner chose a direct development pull, so `main` was not merged or tagged. The WP4 real-data
-latency check remains deferred. Work packages and release trains are in §6.
+**Status:** implemented 2026-11-21. WP0–WP9 are implemented; the WP6 role-quality corrective
+closeout is implemented on 2026-11-21 and its corrected A/B and benchmark evidence are below,
+but the owner review of that corrective evidence is pending. The original WP6 four-case A/B
+remains owner-accepted from 2026-11-20. The production ODROID service was deployed from
+`development` at `5a3c1df` on 2026-11-21 after a verified database backup. The owner chose a
+direct development pull, so `main` was not merged or tagged. The WP4 real-data latency check and
+the ODROID WP6 benchmark remain deferred. Work packages and release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -72,7 +75,11 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D19 | Derived actual structure is a separate analysis layer over the recorded sequence: segmented classes with ordinal confidence and named evidence, separate from planned matching, never written to raw sets, and with no training-policy effect until a separate decision. |
 | D20 | Repetition and variation are owned by the pre-build dwell layer: the cap, the deterministic exploration draw and a bounded factor ordering, after required-pattern coverage and within the slot's structural class. Role quality does not re-score dwell counts or last used. |
 
-## 4. Current state
+## 4. Baseline before this plan (recorded 2026-11-19)
+
+This is the assessment that motivated the plan, not a snapshot of production on 2026-11-21.
+Some bullets describe the cutover the plan then implemented; current implementation status is
+in §6 and the backend ROADMAP.
 
 - `prescribe/resolver.py` runs candidate pools, a bounded beam, full evaluation, integrity
   checks and snapshot provenance. `prescribe/engine.py` remains authoritative for load, reps,
@@ -276,8 +283,8 @@ feasibility precedes every soft level; there is no composite score.
    | Role | Ranking criteria | Source |
    |---|---|---|
    | Main | Specificity class (same lift, same family, same pattern, comparable pattern); heavy-exposure adequacy (band plus e1RM confidence and age, not a point estimate); technical suitability (ratings, technique throttle, form) | taxonomy and lift family, e1RM age and quality, lift readiness, form assessment, suitability |
-   | Secondary (support) | Complementarity with the chosen main lift's pattern and primary muscles; usefulness to the volume band; redundancy and fatigue cost | taxonomy patterns and primary muscles, volume ledger, existing redundancy penalty, spinal and fatigue, selection tax |
-   | Accessory | Coverage of otherwise uncovered patterns and muscles (counts, not doses); productive volume per unit time; stimulus-to-fatigue | taxonomy, volume ledger, selection tax, time estimate |
+   | Secondary (support) | Complementarity with the selected main lift's pattern, materialised volume key and lift family; marginal volume usefulness against the candidate's own pattern target (missing neutral); redundancy against the main and other selected exercises (pattern/key/family/muscle overlap, not set count) | taxonomy patterns, volume ledger, lift groups, primary muscles |
+   | Accessory | Coverage of patterns not already covered by the main or other selected work (own slot excluded); productive volume against the pattern target (not a set count); stimulus-to-fatigue as a mandatory-tax cost class at the slot's fixed dose (independent stimulus magnitude is not measured; the limitation is recorded) | taxonomy, volume ledger, selection tax |
 
    Within a role, order the criteria as listed; across roles, order role priority first (main,
    then secondary, then accessory). Missing data is neutral, never a guess, and power slots are
@@ -286,8 +293,11 @@ feasibility precedes every soft level; there is no composite score.
    Eligibility filters (injury, can_do, will_do, feels_bad, pattern) are pass/fail and never
    quality points; the suitability class ranks only candidates that passed. The dwell cap and the
    exploration draw are pre-build controls (§5.7); role quality does not re-score them.
-4. **Volume adequacy and distribution** — only within the band: closeness to target, pattern
-   balance, and no pattern left badly short. The symmetric volume error is removed.
+4. **Volume adequacy and distribution** — only within the band: the existing symmetric volume
+   error is a soft tie-break after the role vector, not a gate and not a role-quality composite.
+   The band remains the hard gate; the legacy additive score remains a final fallback, and for
+   feasible finalists it repeats the same volume/time/warning terms already compared, so it
+   cannot reverse an earlier level.
 5. **Recovery and practicality** — session time, fatigue and spinal context, warnings.
 6. **Deterministic tie-break** — the existing resolver tie-break, then stable assignment order.
    Repetition is not re-added here; it is owned by the pre-build dwell layer (§5.7).
@@ -381,17 +391,19 @@ otherwise.
 - The cap is unchanged: `_apply_dwell_exclusion` drops candidates at or above
   `resolver.dwell.target`; when every candidate is at the cap, the pool is kept with a warning.
 - The exploration draw is the rotation: with probability `resolver.dwell.probability`, the slot's
-  last choice is removed from (or demoted to the end of) its eligible list, using the existing
+  last choice is demoted to the end of its structural pattern class, using the existing
   deterministic draw keyed on `(date, session type, slot id)`, so a preview and the saved
-  prescription agree. The last choice comes from the same history mapping the generator used; if
-  it is absent from the pool, the draw has no effect.
+  prescription agree. It is never removed: it stays available as a fallback. The last choice
+  comes from the same history mapping the generator used; if it is absent from the pool, the
+  draw has no effect.
 - The factor `f(c) = 1 - exp(-c / tau)` is a bounded preference. It orders candidates only within
   a structural class; it never crosses required-pattern coverage and never overrides eligibility
   or the cap. A pure factor sort is rejected because `f` saturates quickly: it would let any used
   lift beat any never-used lift regardless of readiness, fatigue or spinal cost.
-- Precedence: required-pattern coverage first, then the draw, then the factor within the slot's
-  structural family, then catalogue order. Coverage must survive the draw so the only candidate
-  for a required pattern cannot be removed. The beam still reserves required-pattern candidates
+- Precedence in the pool: structural grouping, bounded factor ordering within the group,
+  deterministic draw/demotion within the group, then catalogue order. Required-pattern coverage
+  is a beam reserve, not a pool sort key: coverage must survive the draw so the only candidate
+  for a required pattern cannot be lost. The beam still reserves required-pattern candidates
   when it truncates.
 - The dwell layer owns repetition and variation. Role quality does not score dwell counts or last
   used, so there is no second continuity signal.
@@ -544,18 +556,7 @@ overlap; the server foundation precedes every client step.
   metrics untouched. **Evidence:** `tests/test_derived_structure.py`,
   `tests/test_actual_structure_adherence.py`, `tests/test_adherence.py`,
   `tests/test_vbt_analysis.py`, `tests/test_order_matching.py`; `DEC-RESOLVER-27`.
-- **WP6 — evaluator (done 2026-11-20; owner accepted all four A/B cases).** Role-quality classes in
-  config (no last-used continuity); six-level hierarchy with the volume gate; intensity profile;
-  snapshot vector; fingerprint bump; fixed-history A/B with owner review of straight, top-set,
-  substitution and divergent sessions. Enable only if it does not trade safety, band or time.
-  **Done so far:** lexicographic quality snapshot and beam key; response-only snapshot; fingerprint
-  `prescription-input-v4`; the four-case synthetic A/B (straight, top-set, substitution,
-  divergent) changes the winner from `competition_squat` to `ssb_squat` in three cases, keeps
-  the substitution unchanged, and keeps every case inside the band with zero time overrun. The
-  owner accepted all four cases on 2026-11-20. **Depends on:** WP1a and WP0. **Exit:** measured
-  comparison and p50/p95 recorded; owner review complete. **Evidence:**
-  `tests/test_role_quality.py`, `tests/test_evaluator_ab.py`, `tests/test_evaluator_ab_report.py`,
-  `python -m strength_coach.prescribe.evaluator_ab`, `DEC-RESOLVER-30`.
+- **WP6 — evaluator (original 2026-11-20; owner accepted the original four A/B cases. Corrective closeout implemented 2026-11-21; owner review of the corrected evidence pending).** Role-quality classes in config (no last-used continuity); six-level hierarchy with the volume gate; intensity profile; snapshot vector; fingerprint bump; fixed-history A/B with owner review of straight, top-set, substitution, divergent and the corrected full-template secondary/accessory cases. Enable only if it does not trade safety, band or time. **Done:** the lexicographic snapshot and beam key; response-only snapshot; fingerprint `prescription-input-v4`; class semantics `role-quality-v2`. The original four-case synthetic A/B changes the winner from `competition_squat` to `ssb_squat` in three cases, keeps the substitution unchanged, and keeps every case inside the band with zero time overrun; the owner accepted those four cases on 2026-11-20. **Corrective closeout (2026-11-21):** complementarity is relative to the selected main lift; secondary volume usefulness and accessory productive volume remove the candidate's sets from its own ledger group and reward a genuine deficit without rewarding excess; redundancy compares pattern/key/family/primary-muscle overlap with the main and other selected exercises, not set count; accessory coverage excludes the candidate's own slot; stimulus-to-fatigue is a mandatory-tax cost class at the slot's fixed dose, with missing tax neutral and the independent-stimulus limitation reported in the snapshot. The extended synthetic A/B adds full-template cases: secondary complementarity leaves the choice unchanged, secondary redundancy changes the support choice, accessory coverage changes the accessory choice, and accessory stimulus cost changes the accessory choice; every finalist remains feasible, inside the band and with zero time overrun. The A/B is synthetic and does not claim generalisation. **Performance:** `tools/resolver_benchmark.py --synthetic --case secondary_complementarity --runs 10` reports cold start, p50/p95, finalist evaluations, prescription builds, candidate count and beam truncation for the corrected path and the same builds with the role-quality snapshot disabled; the ODROID-C4 measurement is pending and the historical 1.21/1.24 s row is not a current guarantee. **Depends on:** WP1a and WP0. **Exit:** measured comparison and p50/p95 recorded (ODROID pending); owner review complete (corrective review pending). **Evidence:** `tests/test_role_quality.py`, `tests/test_resolver_role_quality_config.py`, `tests/test_evaluator_ab.py`, `tests/test_evaluator_ab_report.py`, `python -m strength_coach.prescribe.evaluator_ab`, `tools/resolver_benchmark.py`, `DEC-RESOLVER-30`, `DEC-RESOLVER-31`.
 - **WP7a — resolver dwell completion (done 2026-11-20).** The cap, deterministic draw and bounded
   factor now order the production `candidate_pools`. The draw demotes the last choice within its
   structural pattern class instead of removing it; the last-choice key is the most recent working
@@ -595,7 +596,7 @@ overlap; the server foundation precedes every client step.
   heading checks. **Depends on:** WP1–WP8. **Exit:** a new reader can trace template → pool → beam
   → winner from the formulas and examples alone; every example is mirrored by a test or fixture;
   no stale canonical links remain; docs checks pass. **Done:** `RESOLVER-ALGORITHM.md` rewritten
-  with the production pipeline, formulas, code map and the eight worked examples; specialist
+  with the production pipeline, formulas, code map and the nine worked examples; specialist
   documents point to it; manifest and index updated; docs checks pass.
 
 ### 6.2 Release trains
@@ -607,7 +608,9 @@ overlap; the server foundation precedes every client step.
   2026-11-21; `main` not merged or tagged.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
   **Status:** WP5–WP7b complete 2026-11-20; both the evaluator A/B and the dwell ordering
-  comparison were owner-accepted. Release B is complete on `development`.
+  comparison were owner-accepted. Release B is complete on `development`. The WP6 corrective
+  closeout is a source-only correction on `development`; it does not change the deployed SHA or
+  the historical release record.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B. **Status:** complete 2026-11-21; owner accepted the physical relay run with no
   follow-ups.
@@ -619,8 +622,9 @@ overlap; the server foundation precedes every client step.
 Every package runs its narrowest backend tests and `ruff check` for the changed area, and a
 migration test on a database copy when schema changes. Client packages run the narrowest Swift
 tests plus the web UI checks. WP7a adds the dwell unit tests (draw determinism, cap fallback,
-coverage preservation). WP6 and WP7b add the fixed-history comparison, owner review and p50/p95,
-measured separately; WP8 adds the WatchConnectivity spike and a physical-device run. WP9 runs the
+coverage preservation). WP6 adds the corrected fixed-history comparison, owner review and p50/p95 (ODROID pending),
+measured separately; WP7b adds its own pool-order comparison; WP8 adds the WatchConnectivity
+spike and a physical-device run. WP9 runs the
 docs manifest, consistency, link and heading checks and requires every worked example to be
 mirrored by a test or fixture. No package claims completion from code presence; the backend
 ROADMAP records status only with that evidence.
@@ -643,8 +647,12 @@ ROADMAP records status only with that evidence.
 - The same header facts reach the intelligence facts without LLM calculation.
 - Role quality is role-specific: a main-lift candidate with better specificity, exposure
   adequacy or suitability beats an otherwise comparable candidate; a secondary candidate that
-  complements the main lift and adds less redundancy wins; an accessory that covers an uncovered
-  pattern at lower fatigue wins; missing data is neutral.
+  complements the selected main lift and adds less redundancy wins; a secondary candidate that
+  fills a genuine pattern-volume deficit beats one that adds redundant volume; an accessory that
+  covers an otherwise uncovered pattern wins, and at equal coverage a lower mandatory-tax
+  candidate wins; missing data is neutral. The stimulus-to-fatigue class is a cost comparison at
+  the slot's fixed dose, not an independent stimulus measurement, and the snapshot reports that
+  limitation.
 - Dwell rotation is live in the resolver: the cap, the deterministic draw and the bounded factor
   order the pool; the all-at-cap fallback keeps it; the draw never removes the only candidate for
   a required pattern; role quality does not score dwell or last used.
@@ -687,6 +695,14 @@ ROADMAP records status only with that evidence.
   not load history.
 - Role quality uses the single build per assignment; it does not add evaluations or a second
   resolver pass.
+- The corrected WP6 benchmark reports cold start, steady-state p50/p95, finalist evaluations,
+  prescription builds, candidate count and beam truncation for the corrected path and for the
+  same builds with the role-quality snapshot disabled. It is reproducible with
+  `tools/resolver_benchmark.py --synthetic --case secondary_complementarity --runs 10`. The
+  MacBook measurement on 2026-11-21 (20 steady-state runs, full fixture) was corrected p50/p95
+  0.230/0.260 s and 0.197/0.235 s for the same builds with the role-quality snapshot disabled;
+  both runs evaluated 2 finalists and built 2 prescriptions. The ODROID-C4 measurement is
+  pending, and the historical 1.21/1.24 s row is not a current guarantee.
 - Candidate ordering and each dwell variant are measured before any beam or cap change.
 
 **Documentation**
@@ -716,6 +732,7 @@ ROADMAP records status only with that evidence.
 | Programme header drifts from engine context | One server-side helper, one source of week definitions, reused by Today and intelligence facts. |
 | Role quality trades safety, volume or time for specificity | It ranks after feasibility, intent and the volume gate; neutral when data is missing; enabled only with the fixed-history comparison. |
 | Role criteria become a second scoring engine | Fixed role table, deterministic classes, one owner per signal, no weighted total. |
+| The corrected role classes overfit a small synthetic A/B | Evidence is explicitly synthetic and does not claim generalisation; unit tests pin each class's direction and missing-data neutrality; the owner reviews every A/B row; no beam, cap or budget change. |
 | Dwell and role quality double-count repetition | Role quality does not score dwell or last used; the dwell layer owns repetition. |
 | A pure dwell factor overrides readiness, fatigue or spinal cost | The factor orders only within a structural class, after required-pattern coverage; a pure sort is a rejected reference. |
 | The exploration draw removes the only candidate for a required pattern | Coverage precedes the draw, and the beam still reserves required-pattern candidates when it truncates. |
