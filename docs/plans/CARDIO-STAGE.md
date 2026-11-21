@@ -723,8 +723,9 @@ verified backup and one restore drill before the first such migration.
 
 ## 12. Accompanying edits
 
-Landed 2026-11-17 on task branches. Not merged into `development` and not pushed; nothing is committed
-to `main`.
+Initially landed 2026-11-17 on task branches. The work was subsequently integrated through
+`development` and merged into `main` on 2026-11-21 through the backend, iOS and portfolio
+integration PRs #27, #8 and #2.
 
 | Repository | Change | Commits |
 |---|---|---|
@@ -732,8 +733,8 @@ to `main`.
 | Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here, A2/A3 stay v1.6, v1.6 stays open | `9ac0a67`, `9a9a39e` |
 | iOS | `docs/README.md` index pointer, `docs/HEALTHKIT.md` (current read/write scope and privacy limits), and the widened `NSHealthShareUsageDescription` | `a2e84e6`, `359baf4`, `2c644d6`, `ded27d4` |
 
-Links to this plan point at the portfolio `development` branch: `main` carries release pins and lags
-`development`, so a `main` link would 404 until the next release merge.
+Cross-repository links now point at the portfolio `main` branch, which contains this plan. The
+`development` branch remains the integration branch for subsequent work.
 
 `docs/HEALTHKIT.md` was the missing iOS-side reference this plan needed for C2. It describes shipped
 behaviour only and records the entitlement/usage-string discrepancy C2 must resolve.

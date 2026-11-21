@@ -5,8 +5,9 @@ closeout and the reviewed stimulus extension (`DEC-RESOLVER-32`) were owner-acce
 2026-11-21, and their corrected A/B and benchmark evidence are below. The original WP6 four-case
 A/B remains owner-accepted from 2026-11-20. The production ODROID service was deployed from
 `development` at `5a3c1df` on 2026-11-21 after a verified database backup. The owner chose a
-direct development pull, so `main` was not merged or tagged. The WP4 real-data latency check
-remains deferred; the WP6 ODROID benchmark is recorded below. Work packages and release trains
+direct development pull; backend, iOS and portfolio histories were subsequently merged into
+`main` through PRs #27, #8 and #2. No release tag was created by those merges. The WP4 real-data
+latency check remains deferred; the WP6 ODROID benchmark is recorded below. Work packages and release trains
 are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -606,7 +607,8 @@ overlap; the server foundation precedes every client step.
   cutover, because the plan-edit routes and the request schema change. Finish or abandon in-flight
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
   **Status:** deployed to the production ODROID from `development` at `5a3c1df` on
-  2026-11-21; `main` not merged or tagged.
+  2026-11-21; backend, iOS and portfolio histories were subsequently merged into `main` through
+  PRs #27, #8 and #2. No release tag was created by those merges.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
   **Status:** WP5–WP7b complete 2026-11-20; both the evaluator A/B and the dwell ordering
   comparison were owner-accepted. Release B is complete on `development`. The WP6 corrective
