@@ -3,7 +3,7 @@
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
 latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP5–WP7b complete; WP8 in progress (WatchConnectivity spike built, physical run pending); WP9 not started. Work packages and
+and is not tagged, merged to `main` or deployed; WP5–WP8 complete; WP9 not started. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -575,14 +575,15 @@ overlap; the server foundation precedes every client step.
   **Exit:** a later-catalogue candidate is not excluded by position; selection changes and outcome
   metrics recorded; owner review complete. **Evidence:** `tests/test_generator.py`,
   `tests/test_dwell_ab.py`, `python -m strength_coach.prescribe.dwell_ab`.
-- **WP8 — gateway (implemented 2026-11-20; physical acceptance pending).** The phone relay is
-  implemented with the watch token, original operation ids, direct-first fallback, per-operation
-  acknowledgement and waiting/timeout states; plan push already carries the frozen plan and
-  execution view. The owner skipped the separate spike; the iPhone development build is installed
-  but the physical Watch was unavailable for the relay run. **Depends on:** WP2. **Exit:** watch
+- **WP8 — gateway (done 2026-11-21; owner-accepted).** The phone relay is implemented with the
+  watch token, original operation ids, direct-first fallback, per-operation acknowledgement and
+  waiting/timeout states; plan push carries the frozen plan and execution view. The physical run
+  started a watch-owned session with the watch unable to reach the server, relayed the set, form
+  and finish, and recorded one set with no duplicate. **Depends on:** WP2. **Exit met:** watch
   starts and syncs with the server unreachable but the phone reachable; no duplicates;
   offline-from-both remains a documented limitation. **Evidence:** `WatchRelayModels.swift`,
-  `WatchRelayTests`, `WatchRelayGatewayTests`, `docs/WATCH-GATEWAY.md`.
+  `WatchRelayTests`, `WatchRelayGatewayTests`, `docs/WATCH-GATEWAY.md`; physical run on
+  ODROID development 2026-11-21.
 
 - **WP9 — documentation and algorithm reference (final closeout).** Publish one canonical
   reference for the resolver algorithm and workout selection: the end-to-end pipeline, the formulas
@@ -607,7 +608,8 @@ overlap; the server foundation precedes every client step.
   **Status:** WP5–WP7b complete 2026-11-20; both the evaluator A/B and the dwell ordering
   comparison were owner-accepted. Release B is complete on `development`.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
-  Release B.
+  Release B. **Status:** complete 2026-11-21; owner accepted the physical relay run with no
+  follow-ups.
 - **Release D — documentation closeout:** WP9. Each package updates its own docs; Release D
   publishes the consolidated algorithm reference, retires superseded documents and audits the
   agent and manifest links.

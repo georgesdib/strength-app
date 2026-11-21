@@ -835,7 +835,7 @@ Implemented: the relay envelope, per-operation acknowledgement, direct-first fal
 token in the encrypted request, and waiting/timeout when the phone is unreachable. It cannot be
 relied on while the watch app is suspended. Takeover is not a substitute: its receipts are
 phone-device-scoped, so a later watch retry could duplicate. See
-`StrengthApp/docs/WATCH-GATEWAY.md`. Physical acceptance is pending.
+`StrengthApp/docs/WATCH-GATEWAY.md`. Physical acceptance passed on 2026-11-21 and the owner accepted it with no follow-ups.
 
 **iOS post-workout correction.** The server already corrects a completed session from History →
 Edit session, including mean and per-rep VBT overrides, with an append-only audit. The iOS client
