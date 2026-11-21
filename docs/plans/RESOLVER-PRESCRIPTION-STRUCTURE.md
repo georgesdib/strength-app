@@ -1,10 +1,9 @@
 # Resolver prescription structure and programme context
 
-**Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
-WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
-latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP0–WP9 complete. Work packages and
-release trains are in §6.
+**Status:** complete 2026-11-21. WP0–WP9 are complete; the production ODROID service was
+deployed from `development` at `5a3c1df` on 2026-11-21 after a verified database backup. The
+owner chose a direct development pull, so `main` was not merged or tagged. The WP4 real-data
+latency check remains deferred. Work packages and release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
 **Backend implementation status:** [strength-training-app ROADMAP](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
@@ -605,7 +604,8 @@ overlap; the server foundation precedes every client step.
 - **Release A — structure and context:** WP1a, WP1b, WP2, WP3, WP4. This is the only coordinated
   cutover, because the plan-edit routes and the request schema change. Finish or abandon in-flight
   workouts first; apply migration `0073`; no dual protocol and no capability negotiation.
-  **Status:** integrated on `development` 2026-11-20; not tagged, merged to `main` or deployed.
+  **Status:** deployed to the production ODROID from `development` at `5a3c1df` on
+  2026-11-21; `main` not merged or tagged.
 - **Release B — actual data and evaluation:** WP5, WP6, WP7a, WP7b. Server-only; no client change.
   **Status:** WP5–WP7b complete 2026-11-20; both the evaluator A/B and the dwell ordering
   comparison were owner-accepted. Release B is complete on `development`.
