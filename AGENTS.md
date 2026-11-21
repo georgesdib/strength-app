@@ -49,8 +49,6 @@ Python remains authoritative for training decisions and server behavior; the por
   training decisions.
 - The iOS client may display, capture, cache, and replay data, but must not
   define training policy or compute training decisions.
-- Preserve append-only records, migration compatibility, and existing test
-  conventions.
 - Never commit or transmit `data/`, `private/`, credentials, API keys, pairing
   tokens, personal health data, or real training exports.
 - Never run destructive database, Git, filesystem, or deployment commands without
@@ -100,19 +98,15 @@ This repository documents three machine roles:
 - **ODROID-C4** — backend development server and backend main server, also used for benchmarking. Load
   `docs/agent/PROMPT-ODROID.md` when operating in that environment.
 
-Keep development and main-server targets/configuration distinct even though they share the ODROID
-host. Its server role does not, by itself, determine where a coding-agent session runs; follow the
-active machine prompt and local `AGENTS.machine.md`. The ODROID is not the Apple/Xcode workstation.
+Keep development and main-server targets/configuration distinct even though they share the ODROID host. Its server role does not, by itself, determine where a coding-agent session runs; follow the active machine prompt and local `AGENTS.machine.md`. The ODROID is not the Apple/Xcode workstation.
 
 At the start of a task, load the machine-specific instructions if available:
 
 - `AGENTS.machine.md` at the repository root.
 
-This file is intentionally local, uncommitted, and ignored by Git. It
-supplements but does not override this committed `AGENTS.md`.
+This file is intentionally local, uncommitted, and ignored by Git. It supplements but does not override this committed `AGENTS.md`.
 
-If the local file is absent, follow the shared instructions, the machine prompt above and the
-appropriate task-routing prompt.
+If the local file is absent, follow the shared instructions, the machine prompt above and the appropriate task-routing prompt.
 
 Machine-specific instructions may define:
 
