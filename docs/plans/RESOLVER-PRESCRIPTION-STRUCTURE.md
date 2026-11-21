@@ -706,7 +706,9 @@ ROADMAP records status only with that evidence.
   snapshot disabled. On the ODROID-C4 (Linux 6.18.44 aarch64, Python 3.13.5, 4 CPUs) the same
   fixture measured 3.183/3.194 s corrected and 3.018/3.144 s with the snapshot disabled; the
   straight case measured 1.128/1.214 s and 0.921/1.179 s. Both hosts evaluated 2 finalists and
-  built 2 prescriptions. The historical 1.21/1.24 s row is not a current guarantee.
+  built 2 prescriptions. Percentiles are nearest-rank with the stated n; the corrected path is
+  measured before the baseline, so the delta is indicative rather than paired. The historical
+  1.21/1.24 s row is not a current guarantee.
 - Candidate ordering and each dwell variant are measured before any beam or cap change.
 
 **Documentation**
