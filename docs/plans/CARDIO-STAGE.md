@@ -139,8 +139,9 @@ event too, so a flapping source is visible rather than silent.
 
 **Amended 2026-11-17 after a concordance check that contradicted the earlier ladder.** 829 workouts
 carry both Apple's `AverageMETs` and an average heart rate. Classifying each way — MET bands (light
-< 3, moderate 3–6, vigorous > 6) against `%HRmax` with the observed maximum of 200 bpm (light < 64 %,
-moderate 64–76 %, vigorous > 76 %) — they agree on **109 (13 %)**. Every disagreement runs the same way:
+< 3, moderate 3–6, vigorous > 6) against `%HRmax` using the 200 bpm value that was then the fixed
+maximum (light < 64 %, moderate 64–76 %, vigorous > 76 %) — they agree on **109 (13 %)**. Every
+disagreement runs the same way:
 METs count the workout, heart rate calls it light (walking 414/452, strength 141/284, cycling 13/23,
 swimming 14/17). Not one goes the other way.
 
@@ -154,8 +155,8 @@ for the whole denominator.
 
 1. `HKMetadataKeyAverageMETs` where Apple supplies it; Apple's value is authoritative and is never
    re-derived or "corrected" by us;
-2. otherwise `%HRmax` from the athlete's observed maximum of 200 bpm, using heart-rate statistics where
-   present and the series otherwise;
+2. otherwise `%HRmax` from the effective maximum heart rate (`cardio.max_hr_bpm`, default 200 bpm,
+   the observed maximum), using heart-rate statistics where present and the series otherwise;
 3. otherwise `unclassified`.
 
 `WHO-equivalent minutes = moderate + 2 × vigorous`, computed over classified minutes only, with the
@@ -182,6 +183,12 @@ the tier that produced it, and no value is silently recomputed.
 Apple exercise minutes. `unclassified` stays a first-class value and never zero. Flipping the method
 later is a `method_version` bump (`DEC-CARDIO-12`), not a migration. No VO₂max estimator is introduced
 (`DEC-CARDIO-10`).
+
+**Post-completion amendment (2026-11-21).** The maximum heart rate is now an effective-dated
+settings-profile value, `cardio.max_hr_bpm` (120–250 bpm, default 200 bpm — the observed maximum), so a
+better personal maximum can be set without a code change or migration. The cascade, bands and tier
+labels are unchanged; changing the value reclassifies the cached history on the next summary read. The
+concordance figures above remain the record at 200 bpm.
 
 ### DEC-CARDIO-06 — Standalone metrics go where the backend already keeps them; no new metric table
 
