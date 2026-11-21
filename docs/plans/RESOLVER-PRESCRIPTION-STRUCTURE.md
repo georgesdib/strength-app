@@ -3,7 +3,7 @@
 **Status:** proposed 2026-11-19 (revised after owner review); WP0, WP1a and WP1b complete;
 WP2, WP3 and WP4 complete (WP2 visual acceptance owner-confirmed 2026-11-20; the WP4 real-data
 latency check is deferred by the owner); Release A is integrated on `development` 2026-11-20
-and is not tagged, merged to `main` or deployed; WP5–WP8 complete; WP9 not started. Work packages and
+and is not tagged, merged to `main` or deployed; WP0–WP9 complete. Work packages and
 release trains are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -585,7 +585,7 @@ overlap; the server foundation precedes every client step.
   `WatchRelayTests`, `WatchRelayGatewayTests`, `docs/WATCH-GATEWAY.md`; physical run on
   ODROID development 2026-11-21.
 
-- **WP9 — documentation and algorithm reference (final closeout).** Publish one canonical
+- **WP9 — documentation and algorithm reference (done 2026-11-21).** Publish one canonical
   reference for the resolver algorithm and workout selection: the end-to-end pipeline, the formulas
   (dwell factor, draw and cap; volume projection and band; role-quality class vector and
   hierarchy; top-set load, RIR and back-off; warm-up; minimum-session time estimate; fingerprint
@@ -596,7 +596,9 @@ overlap; the server foundation precedes every client step.
   manifest so agents load only the canonical set; run the docs manifest, consistency, link and
   heading checks. **Depends on:** WP1–WP8. **Exit:** a new reader can trace template → pool → beam
   → winner from the formulas and examples alone; every example is mirrored by a test or fixture;
-  no stale canonical links remain; docs checks pass.
+  no stale canonical links remain; docs checks pass. **Done:** `RESOLVER-ALGORITHM.md` rewritten
+  with the production pipeline, formulas, code map and the eight worked examples; specialist
+  documents point to it; manifest and index updated; docs checks pass.
 
 ### 6.2 Release trains
 
@@ -610,9 +612,8 @@ overlap; the server foundation precedes every client step.
 - **Release C — gateway:** WP8. Additive and independent; it can follow Release A without blocking
   Release B. **Status:** complete 2026-11-21; owner accepted the physical relay run with no
   follow-ups.
-- **Release D — documentation closeout:** WP9. Each package updates its own docs; Release D
-  publishes the consolidated algorithm reference, retires superseded documents and audits the
-  agent and manifest links.
+- **Release D — documentation closeout:** WP9. **Status:** complete 2026-11-21; the canonical
+  algorithm reference is published and the docs checks pass.
 
 ### 6.3 Verification per package
 
