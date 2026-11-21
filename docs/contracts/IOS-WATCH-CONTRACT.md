@@ -26,8 +26,8 @@ contract as follows; where they differ, this block wins.
 - Plan fetch and start may be performed by the phone with the watch token when the watch cannot
   reach the server; the watch's direct path remains primary when online. Start still requires the
   phone or the server.
-- §21's phone relay is now planned for a later slice, with the watch-token handoff,
-  per-operation acknowledgement and receipt deduplication described there.
+- §21's phone relay is implemented (WP8), with the watch-token handoff, per-operation
+  acknowledgement and receipt deduplication described there. Offline start remains deferred.
 - `substitutes_plan_item_index` is added to the set payload; an added exercise is an off-plan set.
 
 ## 1. Purpose
@@ -53,8 +53,9 @@ mirror while the watch owns the session.
 - Execution telemetry (rest and set events with their original `occurred_at`) so the server
   timeline keeps the times the user acted, not the replay times.
 - Offline-first execution: every mutation is persisted locally before the network call and
-  replayed in order; partial flushes are normal. Start and plan fetch still require connectivity in
-  v1; the pending-session shell for offline start is deferred (section 21).
+  replayed in order; partial flushes are normal. Start and plan fetch require the server or a
+  reachable phone relay; the pending-session shell for start with both devices offline is
+  deferred (section 21).
 - Heart rate during the session and one `traditionalStrengthTraining` HealthKit workout with
   heart rate, active energy and the effort rating derived from sRPE.
 - Plan-revision propagation so a substitution made on the phone reaches the watch without
@@ -74,22 +75,24 @@ watch. No heart-rate zones, no Shortcuts automation, no Apple Intelligence/PCC, 
 no watch-side pairing UI, no cellular or away-server support, and no second HealthKit writer on
 the phone. The watch is a home-gym device on the same LAN as the server.
 
-The watch does not notify the phone: there is no watch→phone event channel and no attempt to
-auto-open the phone app. The phone discovers a watch-started session through its normal foreground
-refresh. WatchConnectivity is used only for the phone→watch credential/config handoff and for the
-phone→watch plan nudge described in section 10.
+The watch does not notify the phone for session events: there is no watch→phone event channel and
+no attempt to auto-open the phone app. The phone discovers a watch-started session through its
+normal foreground refresh. WatchConnectivity carries the phone→watch credential/config handoff,
+the plan nudge in section 10, and the WP8 relay request/reply when the watch cannot reach the
+server directly.
 
-No offline start in v1: the watch must reach the server once to start. The pending-session shell
-that would make start offline-capable is deferred (section 21). No phone relay in v1 either:
-"Send to iPhone" is deferred with the watch-token and idempotency constraints recorded in
-section 21. The watch performs no Home/Away switching and never follows the phone's Away route.
+No offline start: the watch must reach either the server or a reachable phone to start. The
+pending-session shell that would make start possible with both devices offline is deferred
+(section 21). The phone relay is implemented (WP8) and lets the phone perform start/set/event/
+finish with the watch token; it is a transport fallback, not a second writer. The watch performs
+no Home/Away switching and never follows the phone's Away route.
 
 ## 4. Locked decisions
 
 | # | Decision |
 |---|---|
 | D1 | The watch is its own server device (`kind = watch`), with its own token and independent revocation. |
-| D2 | Plan fetch and start require connectivity; logging and finish work offline and replay. |
+| D2 | Plan fetch and start require the server or a reachable phone relay; logging and finish work offline and replay. |
 | D3 | During a watch session the watch is the only set writer. The phone may declare execution substitutions/additions and mirrors state, but cannot log sets or edit the plan. |
 | D4 | iOS and watchOS share a `StrengthCore` Swift package; views stay per-platform. |
 | D5 | `issued_plan_ttl_seconds` becomes 14400 (4h). The same-server-date rule is unchanged, so a plan still cannot cross midnight. |
@@ -103,7 +106,7 @@ section 21. The watch performs no Home/Away switching and never follows the phon
 | D13 | A plan has an `execution_target` (`phone` or `watch`); the server rejects a start from the other kind with `409 wrong_execution_target`. |
 | D14 | The watch is pinned to `homeBaseURL`; config changes carry a monotonic `configVersion` and apply only between sessions with an empty outbox. No Home/Away switching. |
 | D15 | Offline-first after start: sets, forms, telemetry, finish and HealthKit are local-first; the network is opportunistic and partially flushed. |
-| D16 | Post-finish sync is foreground retry on the summary plus sync on next open. The phone relay and offline start are deferred. |
+| D16 | Post-finish sync is foreground retry on the summary plus sync on next open. The phone relay is implemented (WP8); offline start and the pending-session shell are deferred. |
 | D17 | The watch captures optional mean and per-rep velocity per set, one 1–5 form rating per exercise, and session productivity at finish; the phone mirror cannot add any of them to a watch-owned session, and take-over is the only path. Correcting a watch-owned set's velocity after acknowledgement is a post-workout History edit on the server (append-only mean and per-rep VBT overrides); the iOS client's report is read-only for now. |
 
 ## 5. Platform targets and project shape
@@ -338,9 +341,10 @@ of the extraction.
   `owner_device_id` to the calling device. A retried start with the same plan returns the
   existing in-progress workout; the existing `409 workout_active`, `410 plan_expired`,
   `410 plan_consumed` and `409 plan_not_ready` responses keep their meaning.
-- Start is the only online gate in v1. If the watch cannot reach the home server it shows “connect
-  to home Wi-Fi”, retries within the plan TTL, and does not fabricate a session. Offline start via a
-  pending-session shell is deferred (section 21).
+- Start needs either the home server or a reachable phone relay. If neither is available the watch
+  shows “connect to home Wi-Fi / open the iPhone app”, retries within the plan TTL, and does not
+  fabricate a session. Offline start with both devices offline via a pending-session shell is
+  deferred (section 21).
 - The watch must have HealthKit workout authorisation before it starts (section 11). If it does
   not, it explains why and offers to log on the phone instead.
 - The watch derives a clock offset from the server time in `bootstrap`/`today` and stamps
@@ -438,9 +442,9 @@ server-side reservation or locking while the watch is offline.
 
 - **Network states:** `unknown`, `online(home)`, `offline`. “Cellular available” is **not** online:
   the server is on the home LAN. The watch does not switch servers or fall back.
-- **Start gate:** start needs one successful call to the home server. Without it the watch shows
-  “connect to home Wi-Fi”, retries within the plan TTL, and does not fabricate a session. Offline
-  start via the pending-session shell is deferred (section 21).
+- **Start gate:** start needs one successful call to the home server or a reachable phone relay.
+  Without either the watch shows the waiting state, retries within the plan TTL, and does not
+  fabricate a session. Offline start via the pending-session shell is deferred (section 21).
 - **Persist first:** after start, every set, form, telemetry event and finish is written to the
   session store before the request. The UI shows captured/pending until acknowledged.
 - **Partial flush:** the outbox flushes in order and acknowledges per operation; it stops on the
@@ -798,10 +802,11 @@ the phone mirror form section is disabled.
 - LAN-only networking: the watch must be on the same Wi-Fi; cellular cannot reach the server and
   is not treated as online.
 - watchOS suspension: logging depends on the HK session; persistence covers crashes but not user
-  force-quits during finalisation. After finish, sync needs the app to run again; the deferred
-  phone relay is the only answer for a watch that never opens at home.
-- Start needs one moment of home connectivity; the deferred pending-session shell is the only way
-  to remove that gate.
+  force-quits during finalisation. After finish, sync needs the app to run again; the WP8 phone
+  relay covers a reachable phone, but a watch that never opens at home still needs the deferred
+  pending-session design.
+- Start needs the server or a reachable phone relay; the deferred pending-session shell is the
+  only way to remove that gate.
 - Target enforcement must be right: a phone start of a watch plan, or the reverse, would create a
   session the other device cannot log into.
 - HealthKit finalisation across a crash: the backdated minimal-workout fallback needs a spike

@@ -84,13 +84,12 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 - `validate_plan_set_groups` accepts 1..N ordered groups and ignores a legacy role; the five
   core plan-edit functions and their web/iOS routes are deleted and a plan is frozen at start.
 - `set_role` is no longer an input on any logging surface; the stored column is legacy
-  provenance that `adherence.py` and `features/vbt_analysis.py` still explain, and the web role
-  picker is removed.
+  provenance that the analysis no longer reads for matching, and the web role picker is removed.
 - `GET /api/ios/v1/today` returns date, readiness, score, active workout and plan state, but
   not trained week, DUP, deload or competition.
-- The watch start gate requires a successful server call; the phone relay is explicitly
-  deferred. Idempotency receipts are scoped `(device_id, operation_id)`, and a plan is readable
-  by its requester or its execution target.
+- The watch start gate requires the server or a reachable phone relay; offline start with both
+  devices offline is deferred. Idempotency receipts are scoped `(device_id, operation_id)`, and a
+  plan is readable by its requester or its execution target.
 
 ## 5. Target model
 

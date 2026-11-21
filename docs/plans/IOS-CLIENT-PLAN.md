@@ -435,8 +435,9 @@ execution-target enforcement, patchy Wi-Fi with partial flushes and an offline f
 corrections (Plan/navigation lock, refresh and reconnect, idle/abandoned messaging, Session
 contents and the phone mirror form lock).
 
-**Deferred:** the pending-session shell for offline start and the “Send to iPhone” relay are
-explicitly out of v1; contract §21 records what each would require.
+**Deferred:** the pending-session shell for offline start remains deferred. The “Send to iPhone”
+relay was implemented in WP8 on 2026-11-21 (contract §21) and does not make start possible when
+both devices are offline.
 
 ## 5. Offline behavior — explicit contract
 
