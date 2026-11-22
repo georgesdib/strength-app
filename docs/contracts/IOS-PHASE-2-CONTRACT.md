@@ -2,6 +2,13 @@
 
 # iOS Phase 2 — Online Strength Workflow: implementation contract
 
+**Amendment, 2026-11-22 (additive, no owner approval required):** `GET /api/ios/v1/history/<id>`
+gains an optional `heart_rate` object, `{avg_bpm, max_bpm, activity_type, source}`, carrying
+Apple's own average and peak for the workout currently linked to the session, and `null` when no
+workout is linked. Nothing is derived, no existing field changes, and per-set recovery is
+deliberately excluded — see the backend's `docs/HR-RECOVERY-PROBE.md` and
+[`IOS-WATCH-CONTRACT.md`](IOS-WATCH-CONTRACT.md). The phone shows it on History detail only.
+
 **Status:** approved by the owner, implemented, remediated and accepted on 2026-11-07. Server work
 was implemented on `iOS-app` and merged to `development`; client work is on `main` in the separate
 `StrengthApp` repository. Phase 1 is complete (see
