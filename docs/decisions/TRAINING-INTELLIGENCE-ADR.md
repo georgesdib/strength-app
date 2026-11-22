@@ -677,8 +677,9 @@ on the device and never enter the repository, the server, an envelope or a promp
 
 **Status.** **Accepted 2026-11-16** (decision 17), at the owner's request, after §1.2 was narrowed from
 "notification/Live-Activity intelligence" to Live Activities only. Implemented 2026-11-16 on the iOS
-client (`StrengthApp`, development branch) with automated tests passing; the physical-device checks
-remain outstanding. iOS-only, no backend or contract change. No question from this decision remains
+client (`StrengthApp`, development branch) with automated tests passing. The remaining physical-device
+checks were waived by the owner on 2026-11-18, so the item is closed; it shipped in StrengthApp v1.2
+on 2026-11-18. iOS-only, no backend or contract change. No question from this decision remains
 open.
 
 ## ADR-INT-020 — Explain the System: local knowledge retrieval (accepted 2026-11-16)
@@ -805,8 +806,8 @@ carries.
 
 **Status.** **Accepted 2026-11-16** (decision 20) at the owner's request, amending INT-4d's chat-only
 boundary for this surface only. Implemented 2026-11-16 on the iOS client. **Closed 2026-11-17** by
-owner decision: the physical-device acceptance was waived rather than run, and the card ships with the
-next tagged client release.
+owner decision: the physical-device acceptance was waived rather than run. The card shipped in
+StrengthApp v1.2 on 2026-11-18.
 
 ## Rejected architectural alternatives (summary)
 

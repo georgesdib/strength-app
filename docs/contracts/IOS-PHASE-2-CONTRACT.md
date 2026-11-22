@@ -725,8 +725,8 @@ mutations. These are config/contract values, not new training rules.
   replays attempted operations with the original UUID/body and is not an offline queue. R3
   explicit plan-item selection and R5 workout recovery/reconciliation UX were implemented and
   closed on 2026-11-07. R2 is closed as absorbed by R7's `plans/current` read; R7 is implemented
-  and simulator-verified; R8 is implemented; R4 remains deferred in roadmap
-  §4.30 and is not a Phase 2 closure blocker.
+  and simulator-verified; R8 is implemented; R4 was implemented and closed on 2026-11-08
+  (client plan §R4) and is not a Phase 2 closure blocker.
 
 ## 17. References
 

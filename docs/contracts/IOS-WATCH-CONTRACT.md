@@ -525,11 +525,13 @@ On launch, the watch reads its session store and `GET .../execution`:
 ### 11.6 Execution telemetry (watch)
 
 The watch emits only what it observes: `set_started`, `set_completed`, `rest_started`,
-`rest_completed`, `rest_extended`, `exercise_started` and `exercise_completed`. It never
-emits `rest_skipped` (a rest ends through one deliberate action, and the server derives duration
-and deviation from the timestamps), `workout_paused`/`workout_resumed` (the watch has no pause),
-or an event for a set or exercise that never started. A rest closes on an explicit end (the watch's −15s
-control ends it once that is all that remains), or at the instant the next set starts. `set_completed` gains `set_id` only after the matching add-set is
+`rest_completed`, `rest_skipped`, `rest_extended`, `exercise_started` and
+`exercise_completed`. It never emits `workout_paused`/`workout_resumed` (the watch has no
+pause), or an event for a set or exercise that never started. A rest closes exactly once:
+`rest_skipped` when the lifter ends it early — the −15 s control bound for zero is that command,
+matching the phone's Skip — or `rest_completed` when it runs out or the next set starts. A skip
+is a deliberate end, not a pause: the server derives duration and deviation from the timestamps,
+and the time after the skip is outside the interval. `set_completed` gains `set_id` only after the matching add-set is
 acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index`,
 `prescribed_rest_s`, `added_s`.
 
