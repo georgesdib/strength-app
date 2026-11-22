@@ -30,6 +30,16 @@ contract as follows; where they differ, this block wins.
   acknowledgement and receipt deduplication described there. Offline start remains deferred.
 - `substitutes_plan_item_index` is added to the set payload; an added exercise is an off-plan set.
 
+## 2026-11-22 note — per-rep motion capture withdrawn
+
+The [watch motion metrics plan](../plans/WATCH-MOTION-METRICS.md) proposed an amendment adding
+100 Hz accelerometer, gyroscope and gravity capture per rep. It was approved and implemented on
+unmerged branches, then withdrawn when the plan closed as a failed project: rep segmentation could
+not be validated without labelled captures. **No motion-capture amendment is in force.** The
+proposed payload fields (`lower_ms`, `lift_ms`, `pause_ms`, `rom_m`, `steadiness`,
+`confidence`, `method_version`) are not part of this contract, nothing here authorises capture or
+upload of raw motion, and this contract is otherwise unchanged by that attempt.
+
 ## 1. Purpose
 
 The watch fetches the server-issued plan, starts the workout, logs sets and rest, shows heart

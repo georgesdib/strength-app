@@ -11,7 +11,9 @@ its caveat, and `final_set` (`hr_end_bpm`, `hrr60_bpm`, `hrr120_bpm`) anchored t
 completion, not to the workout's finish tap. Nothing is read back into a prescription, readiness or adherence; the recovery
 value is display-only because it was measured to track set effort rather than recovery. See the
 backend's `docs/HR-RECOVERY-PROBE.md` and [`IOS-WATCH-CONTRACT.md`](IOS-WATCH-CONTRACT.md); the
-phone shows both on History detail only and the watch remains out of scope.
+phone shows both on History detail only and the watch remains out of scope. **Status: released
+2026-11-22, display only** — shipped to production without a version tag; the backend changelog entry
+remains under `[Unreleased]`.
 
 **Status:** approved by the owner, implemented, remediated and accepted on 2026-11-07. Server work
 was implemented on `iOS-app` and merged to `development`; client work is on `main` in the separate

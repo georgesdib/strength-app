@@ -4,31 +4,67 @@
 deriving movement metrics from Apple Watch motion sensors. Component implementation documentation
 remains in its owning repository.
 
-**Status: closed, 2026-11-22 — the inference half failed.** The automatic rep segmentation and
+**Status: closed and abandoned, 2026-11-22 — a failed project.** The automatic rep segmentation and
 wrist-derived velocity were abandoned after a day of testing on twelve real captures. Capture works
 (raw accelerometer, gyroscope and gravity at 100 Hz, exported off the watch); **inference does not**:
 on the only clip with a trustworthy label the detector found one rep where three were performed, and
 no combination of rest, burst, lobe or velocity-maximum detection separated reps from racking
-without ground truth to calibrate against. Nothing was deployed: no migration applied, no flag
-enabled, no client build shipped. The work lives on the backend branch `wp3-rep-motion-capture` and
-the client branch `wp4-watch-motion-capture`, both unmerged; the capture contract amendment was not
-merged either.
+without ground truth to calibrate against. Working capture is not a deliverable on its own.
 
-**What would change the verdict:** labelled sets (known rep times) rather than more unlabelled
+Nothing was deployed: no migration applied, no flag enabled, no client build shipped, no
+capture-contract amendment merged. The implementation is retained, unmerged, on the branch
+`watch-motion-capture-defunct` in both the backend and the iOS repository (the former
+`wp3-rep-motion-capture` and `wp4-watch-motion-capture`).
+
+This document is the historical record of an attempt, not a commitment, a backlog item or a
+resume point. **Nothing in it is open or pending** — the full disposition is §0. There is no
+monitoring cadence and no re-measurement date; unlike per-set heart-rate recovery (a separate,
+live, display-only measurement), nothing here is expected to be revisited.
+
+**What a future attempt would need:** labelled sets (known rep times) rather than more unlabelled
 clips, or a sensor other than the wrist. The literature measures wrist mean velocity at SEE ≈
 0.064 m/s against Vicon, so the placement is capable — this project's detector and evaluation were
-not. Do not restart by tuning thresholds against unlabelled recordings.
+not. Do not restart by tuning thresholds against unlabelled recordings, and do not reopen this
+plan: that evidence would justify a new one.
 
 **Owner:** the athlete.
 
 **Autonomy:** descriptive only. These metrics are facts about a set. They must never feed a
-prescription, a load, a readiness score, a progression rule or a training decision in this cycle.
-The structural guarantee is the module boundary in §8, not good intentions.
+prescription, a load, a readiness score, a progression rule or a training decision. The structural
+guarantee was the module boundary in §8, not good intentions.
 
-**Primary objective:** turn the watch from a rest timer into an honest movement recorder — rep
-segmentation, phase durations, consistency — without claiming accuracy it has not demonstrated.
+**Primary objective (not met, and no longer pursued):** turn the watch from a rest timer into an
+honest movement recorder — rep segmentation, phase durations, consistency — without claiming
+accuracy it has not demonstrated.
+
+## 0. Closure record, 2026-11-22
+
+Closed by the owner as a failed project. The disposition below is complete, so no part of this
+document reads as pending work:
+
+| Item | Disposition |
+|---|---|
+| WP0 scope and decisions (§3, §5, §7, §10, §13, D1–D16) | Historical. Design record only; none of it is in force. |
+| WP1 read-only analysis (§15.4) | Completed 2026-11-22. Results retained as the evidence that closed the project. |
+| WP2 capture-contract amendment (`IOS-WATCH-CONTRACT.md`) | Withdrawn 2026-11-22, never merged. The watch contract carries no motion-capture amendment and none is planned. |
+| WP3 phase table, materialisation, `rep_tempo.py`, session-detail field | Abandoned, unmerged, not deployed. Retained on `watch-motion-capture-defunct` (`c0baf46`). |
+| WP4 watch capture (100 Hz recorder, set stamping, debug export, ad-hoc recorder) | Abandoned, unmerged, not deployed. The physical-device check was never run. Retained on `watch-motion-capture-defunct` (`576f14e`). |
+| WP5 offline segmentation and velocity (`tools/motion_segmentation.py`) | Reference implementation only, abandoned with the project. |
+| WP6–WP9 pilot, validation study, promotion, shadow mode | Not started; closed with the project. |
+| Branches | `watch-motion-capture-defunct` in both repositories — kept for history, never merged, not to be resumed. |
+| Gates G1–G4 (§10) | Never run. No verdict exists and none is owed. |
+| Residual questions (§13) | Closed as moot; see §13. |
+| Follow-up | None. No owner review, no re-measurement cadence, no roadmap entry. |
+
+One piece of knowledge is carried forward: wrist capture is feasible, wrist **inference without
+labels** is not, and timing-derived analysis of any kind inherits the watch's user-tapped set
+boundaries — recorded as accepted design choice `LIM-72` in the backend's
+[`LIMITATIONS-REGISTER.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/LIMITATIONS-REGISTER.md)
+and in [`HR-RECOVERY-PROBE.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/HR-RECOVERY-PROBE.md#L68).
 
 ## 1. Why this exists
+
+*Historical rationale, written before the attempt. It is not current intent — see §0.*
 
 The watch already has the sensors and the runtime session. What it does not have is a defensible
 definition of what a rep is, when a phase starts, or how much a derived velocity can be trusted.
@@ -53,14 +89,16 @@ page.
 | `rep_velocity.py` — descriptive per-set report, "never feeds a prescription" | `strength_coach/features/rep_velocity.py` | The template for the tempo report module, including its abstention posture. |
 | `vbt_analysis.py` / `vbt_performance.py` — targets, residual bands, cohorts, within-set drift | `strength_coach/features/` | Consistency metrics should reuse these bands rather than invent statistics. |
 | Calibration eligibility: RIR 2–3, 1–8 reps, load ≥ 0.60 × e1RM, band = median ± 2·MAD | `docs/VBT-CALIBRATION.md` | The study only needs sets that can move a target. Everything else is wasted effort. |
-| Watch contract D17 — optional mean and per-rep velocity per set | `docs/contracts/IOS-WATCH-CONTRACT.md` | The capture contract already exists for velocity; it is the document to extend. |
+| Watch contract D17 — optional mean and per-rep velocity per set | `docs/contracts/IOS-WATCH-CONTRACT.md` | The capture contract existed for velocity; it was the document to extend, and no motion amendment was merged. |
 | Session detail exposes `device_reps` as `{rep_index, velocity_mps}` only | `strength_coach/history.py` | The API shape must be extended additively. |
 | `clean_set` already carries set-level `tut_s`, `rom_mm`, `power_w`, `form_score` and `velocity_present` | `store/migrations/0001_initial.sql` | Time under tension and ROM already exist at set level. This plan adds per-rep resolution, not the concept — do not add duplicate columns. |
 | Calibration eligibility is implemented, with per-reason exclusion counts | `features/vbt_calibration.py` | WP1 must reuse it rather than re-express the filters, so the garbage accounting is identical to production. |
 
 ## 3. Scope
 
-**In scope, v1 (descriptive):**
+*Historical scope: approved, then closed unbuilt. Nothing below is a backlog item.*
+
+**In scope, v1 (descriptive) — never shipped:**
 
 1. Rep count and set bounds, with confidence.
 2. Phase durations: lowering, lifting, pause, per rep.
@@ -147,6 +185,10 @@ and no velocity. **Consequences of that decision:**
 
 Clients that send only `{rep_index, velocity_mps}` must keep working unchanged.
 
+**None of this is in force.** On `development`, `_append_reps` still requires `velocity_mps` and
+drops unknown keys, so the payload above is not accepted, and `RepVelocity.velocityMps` is still
+non-optional. The changes exist only on the defunct branch.
+
 ## 6. Wrist steadiness is not wobble
 
 The watch measures the wrist. Gyro magnitude there is dominated by wrist rotation, grip, forearm
@@ -185,6 +227,10 @@ Rules:
 - Materialisation is replay-safe and idempotent.
 - `source` uses the existing vocabulary, so a set remains single-source.
 
+**`clean_rep_phase` does not exist in any database**: the migration was never applied and is not on
+`development`. The table and its triggers live only on the defunct branch. The retention rule above
+is therefore also not implemented, and no recording is being retained or exported anywhere.
+
 ## 8. Descriptive module contract
 
 `features/rep_tempo.py`, modelled on `rep_velocity.py`:
@@ -196,6 +242,9 @@ Rules:
   `ambiguous_axis`, `low_confidence`, `dropped_lowering`;
 - has no import path from any prescription, calibration or readiness module. A test asserts it.
 
+**`features/rep_tempo.py` does not exist on `development`** — the module, its tests and the session-detail
+field are all confined to the defunct branch, so nothing today reports tempo.
+
 ## 9. Source precedence
 
 A set has one velocity source, which keeps `clean_rep`'s uniqueness intact:
@@ -206,6 +255,9 @@ A set has one velocity source, which keeps `clean_rep`'s uniqueness intact:
 
 Consequence: rollout is incremental and reversible, historical calibration targets keep their
 meaning, and no session is mixed within a set.
+
+This precedence was never implemented: nothing writes device velocity today, so imported and manual
+values remain the only source.
 
 ## 10. Validation and gates
 
@@ -224,7 +276,11 @@ compared for the same rep without touching `clean_rep`'s constraints in producti
 | G3 Target stability | Recomputing calibration targets from device-only data moves no band by more than one step and flips `vbt_status` for < 5% of eligible sets | LPT stays the calibration source; device values are additive only |
 | G4 Field false positives | ≤ 1 false rep per 20 sets in shadow mode | Tighten detection; keep the feature hidden |
 
-**Per-family gating.** Capture covers every `vbt_family` member, but a family is displayed only after
+**These gates were never run.** The project closed after WP1: no study was scheduled, no clip set
+was labelled, and G1–G4 have no verdict. The "if it fails" column is design history, not a pending
+branch.
+
+**Per-family gating (never applied).** Capture covers every `vbt_family` member, but a family is displayed only after
 it clears G1 with adequate coverage (D8). The gate report lists, per family, the set count, the
 abstention counts by reason, and the verdict. Families that fail stay hidden. Families are never
 pooled to rescue a sample size, for the same reason `VBT-CALIBRATION.md` refuses pooled L2/L3 fits —
@@ -237,19 +293,20 @@ CV. If typical losses are 20%, an 8% MDC is useful; if they are 5%, no wrist sen
 
 | WP | Work | Repo | Exit criterion |
 |---|---|---|---|
-| WP0 | Scope and the five decisions: metrics in/out, optional velocity, family coverage, tiebreaker, retention, informational-only | portfolio | **Done 2026-11-22** — §3, §5, §7, §10, §13, D7–D11 |
-| WP1 | Read-only historical analysis: loss distribution per lift, velocity scatter within `(lift, reps, RIR band)`, band sensitivity to velocity error, share of tempo-eligible sets. Aggregates only; owner-run or explicitly approved | backend (read-only) | **Done 2026-11-22** — results in §15.4; per-rep base confirmed since 2026-10-25 (D12) |
-| WP2 | This plan plus the capture-contract delta in `IOS-WATCH-CONTRACT.md` | portfolio | **Approved 2026-11-22** — amendment “per-rep motion capture” |
-| WP3 | Migration: `clean_rep_phase`, materialisation, normaliser extension, `rep_tempo.py`, additive session-detail field, tests | backend | **Implemented 2026-11-22** on `wp3-rep-motion-capture` (`c0baf46`), full suite 2422 passed; legacy payloads byte-identical; not deployed |
-| WP4 | Watch capture: 100 Hz recorder inside the workout session, set identity stamping, debug export, plus an ad-hoc recorder that needs no workout or server; measure sample gaps and battery | iOS | **Implemented 2026-11-22** on `wp4-watch-motion-capture` (`576f14e`), debug-only and off by default; **physical-device check pending** (procedure: `StrengthApp/docs/WATCH-MOTION-CAPTURE.md`) |
-| WP5 | Offline segmentation and velocity work against recorded files | backend / analysis | **Reference implementation 2026-11-22** (`tools/motion_segmentation.py`, fixtures green); G1/G2 numbers await real captures and LPT |
-| WP6 | Pilot: one lifter, one lift, one load, end to end | all | Join integrity on a real set |
-| WP7 | Validation study and gate report | all | Every gate has a verdict with evidence |
-| WP8 | Promotion: ship descriptive metrics; device velocity only if G2/G3 pass | all | Feature flag per exercise family |
-| WP9 | Shadow mode, no UI, compare against manual logs | iOS | G4 measured |
+| WP0 | Scope and the five decisions: metrics in/out, optional velocity, family coverage, tiebreaker, retention, informational-only | portfolio | **Closed 2026-11-22 (historical)** — §3, §5, §7, §10, §13, D7–D11; design record only |
+| WP1 | Read-only historical analysis: loss distribution per lift, velocity scatter within `(lift, reps, RIR band)`, band sensitivity to velocity error, share of tempo-eligible sets. Aggregates only; owner-run or explicitly approved | backend (read-only) | **Completed 2026-11-22** — results in §15.4; retained as the closing evidence |
+| WP2 | This plan plus the capture-contract delta in `IOS-WATCH-CONTRACT.md` | portfolio | **Withdrawn 2026-11-22** — never merged; the watch contract carries no motion-capture amendment |
+| WP3 | Migration: `clean_rep_phase`, materialisation, normaliser extension, `rep_tempo.py`, additive session-detail field, tests | backend | **Abandoned 2026-11-22** — unmerged, not deployed; retained on `watch-motion-capture-defunct` (`c0baf46`) |
+| WP4 | Watch capture: 100 Hz recorder inside the workout session, set identity stamping, debug export, plus an ad-hoc recorder that needs no workout or server; measure sample gaps and battery | iOS | **Abandoned 2026-11-22** — unmerged, not deployed; the physical-device check was never run; retained on `watch-motion-capture-defunct` (`576f14e`) |
+| WP5 | Offline segmentation and velocity work against recorded files | backend / analysis | **Abandoned 2026-11-22** — reference implementation only (`tools/motion_segmentation.py`); no gate number was ever produced |
+| WP6 | Pilot: one lifter, one lift, one load, end to end | all | **Not started** — closed with the project |
+| WP7 | Validation study and gate report | all | **Not started** — closed with the project; no gate report exists |
+| WP8 | Promotion: ship descriptive metrics; device velocity only if G2/G3 pass | all | **Closed** — nothing promoted; capture is not a shipped feature |
+| WP9 | Shadow mode, no UI, compare against manual logs | iOS | **Not started** — closed with the project |
 
-WP3 and WP4 may run in parallel once WP2 is approved, which is the main reason to freeze the
-payload contract first.
+WP3 and WP4 were built in parallel after WP2 was approved, which is why the payload contract was
+frozen first; both are now abandoned and the freeze has no remaining purpose. Nothing in this table
+is pending.
 
 ## 12. Risks
 
@@ -266,9 +323,14 @@ payload contract first.
 | A mixed-velocity set corrupts first-versus-last loss | All-or-none invariant enforced at ingestion (§5) |
 | A nullable velocity breaks an older client's decoding | Coordinated contract change; `0` is never a placeholder (§5) |
 
+These are design-stage risks of a closed project: none is monitored, and none needs a mitigation.
+The risk that materialised was the one the gates existed to catch — G1 was never run, so no
+stream-gap or battery measurement could compensate for a detector with no labelled data.
+
 ## 13. Resolved questions
 
-All five were answered by the owner on 2026-11-22.
+All seven were settled by 2026-11-22; none is open. Q1–Q5 were answered by the owner while the plan
+was live; R1–R2 were mooted when the project closed.
 
 | # | Question | Answer | Where |
 |---|---|---|---|
@@ -278,12 +340,13 @@ All five were answered by the owner on 2026-11-22.
 | Q4 | Keep raw 100 Hz traces? | **Debug-only**, opt-in, removed only once exported and past a 30-day backstop, so field failures can be diagnosed. Hence `method_version` on every phase row | §7, D10 |
 | Q5 | Does a tempo breach ever become a training decision? | **No. Informational only** — no alert, nudge, gate or prescription input | §3, D11 |
 
-**Residual questions**, neither blocking WP1:
+**Residual questions — closed 2026-11-22, both moot.** They were recorded as non-blocking for WP1;
+the project closed before either could matter, and neither is a backlog item:
 
-1. The minimum set count per family before G1 can be judged — needs the per-family coverage counts
-   from WP1.
-2. Whether the nullable-velocity contract change ships in one client release or behind a capability
-   flag, which depends on the installed base rather than on the data.
+| # | Question | Disposition |
+|---|---|---|
+| R1 | The minimum set count per family before G1 could be judged | Moot: G1 was never run, and the tempo track closed with the project. |
+| R2 | Whether the nullable-velocity contract change ships in one client release or behind a capability flag | Moot: the contract change was never merged, so no client release ever carries it. |
 
 ## 14. Decision log
 
@@ -305,6 +368,9 @@ All five were answered by the owner on 2026-11-22.
 | D16 | Velocity loss = `(max − last)/max`; first-to-last secondary; faster-ending sets labelled `ramping` | 2026-11-22 |
 | D13 | Tempo is validated against the LPT export's `tut_s`/`rom_mm`, not only video | 2026-11-22 |
 | D14 | Velocity is trend-first; absolute targets are not the v1 claim | 2026-11-22 |
+
+D1–D16 are historical design decisions of a closed project. None is in force; they are retained
+because §15.4's evidence refers to them.
 
 ## 15. WP1 analysis specification
 
@@ -338,6 +404,9 @@ measuring a different population than the one that gets calibrated.
 | O1 complete per-rep sets < 50 per family | Take the loss distribution from the study, not history; O2 becomes advisory |
 | O0 shows `tut_s` / `rom_mm` already populated | Tempo has a historical base; the new work is per-rep resolution and trust, not first capture |
 | O5 < 12 velocity sets per family per month | Expect a long calibration runway; limit v1 to the four main lifts |
+
+The velocity track was retired and the tempo track then failed on rep detection; §0 records the
+closure. No branch of this table is live, and O3–O5 remain evidence only.
 
 ### 15.3 Effort
 
@@ -373,13 +442,18 @@ Decisions taken on this evidence:
   while velocity loss and band membership stay usable.
 
 O4 assumes a normal group distribution seeded from each target's own median and MAD. It estimates
-band stability, not per-set accuracy; G1 and G2 still require the study.
+band stability, not per-set accuracy. G1 and G2 were never run: no study followed, and the project
+closed on the rep-detection failure.
 
 ## 16. Related documents
 
 - [iOS client phase plan](IOS-CLIENT-PLAN.md) — R10 closed the watch set-timing and VBT entry work.
-- [iOS watch contract](../contracts/IOS-WATCH-CONTRACT.md) — the capture contract this plan extends.
+- [iOS watch contract](../contracts/IOS-WATCH-CONTRACT.md) — carries **no** motion-capture amendment;
+  the 2026-11-22 amendment was withdrawn and the contract is unchanged by this attempt.
 - [VBT calibration](https://github.com/georgesdib/strength-training-app/blob/development/docs/VBT-CALIBRATION.md)
-  — target eligibility that defines the study population.
-- [Training Intelligence plan](TRAINING-INTELLIGENCE.md) — where any post-session narrative over these
-  metrics would live, if it is ever added.
+  — target eligibility that defined the (never-run) study population.
+- [Training Intelligence plan](TRAINING-INTELLIGENCE.md) — where a post-session narrative over these
+  metrics would have lived; no narrative consumes them.
+- [Per-set heart-rate recovery](https://github.com/georgesdib/strength-training-app/blob/development/docs/HR-RECOVERY-PROBE.md)
+  — the separate measurement that is live and display-only; it exposed the same user-tapped set
+  boundary that defeated this project's timing analysis.
