@@ -5,9 +5,12 @@
 **Amendment, 2026-11-22 (additive, no owner approval required):** `GET /api/ios/v1/history/<id>`
 gains an optional `heart_rate` object, `{avg_bpm, max_bpm, activity_type, source}`, carrying
 Apple's own average and peak for the workout currently linked to the session, and `null` when no
-workout is linked. Nothing is derived, no existing field changes, and per-set recovery is
-deliberately excluded — see the backend's `docs/HR-RECOVERY-PROBE.md` and
-[`IOS-WATCH-CONTRACT.md`](IOS-WATCH-CONTRACT.md). The phone shows it on History detail only.
+workout is linked. Each set in the same response gains `hrr60_bpm` — the heart-rate drop 60 s
+after that set, or `null` — and the session gains `hr_recovery` with the number of measured sets
+and its caveat. Nothing is read back into a prescription, readiness or adherence; the recovery
+value is display-only because it was measured to track set effort rather than recovery. See the
+backend's `docs/HR-RECOVERY-PROBE.md` and [`IOS-WATCH-CONTRACT.md`](IOS-WATCH-CONTRACT.md); the
+phone shows both on History detail only and the watch remains out of scope.
 
 **Status:** approved by the owner, implemented, remediated and accepted on 2026-11-07. Server work
 was implemented on `iOS-app` and merged to `development`; client work is on `main` in the separate
