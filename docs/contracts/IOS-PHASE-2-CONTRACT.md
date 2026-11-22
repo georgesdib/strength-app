@@ -6,8 +6,9 @@
 gains an optional `heart_rate` object, `{avg_bpm, max_bpm, activity_type, source}`, carrying
 Apple's own average and peak for the workout currently linked to the session, and `null` when no
 workout is linked. Each set in the same response gains `hrr60_bpm` — the heart-rate drop 60 s
-after that set, or `null` — and the session gains `hr_recovery` with the number of measured sets
-and its caveat. Nothing is read back into a prescription, readiness or adherence; the recovery
+after that set, or `null` — and the session gains `hr_recovery` with the number of measured sets,
+its caveat, and `final_set` (`hr_end_bpm`, `hrr60_bpm`, `hrr120_bpm`) anchored to the last set's
+completion, not to the workout's finish tap. Nothing is read back into a prescription, readiness or adherence; the recovery
 value is display-only because it was measured to track set effort rather than recovery. See the
 backend's `docs/HR-RECOVERY-PROBE.md` and [`IOS-WATCH-CONTRACT.md`](IOS-WATCH-CONTRACT.md); the
 phone shows both on History detail only and the watch remains out of scope.
