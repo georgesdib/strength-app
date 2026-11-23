@@ -1,12 +1,11 @@
 # Unified offline workout execution
 
-**Status:** 2026-11-23. Server side implemented and green (full suite 2469 passed, 1 skipped at
-`e5ebdbc`); the audit is closed on the server. S5's ownership, target, picker and mirror removals
-are implemented on both sides. The client ledger (C1/C2) is implemented on
-`StrengthApp/offline-execution`. Follow-up findings 1, 2, 3 and 5 are fixed: completed start
-replays acknowledge the same execution, optimistic offline changes are persisted and visible,
-the catalogue's dose/VBT contract is applied locally, and set origin is durable. Physical-device
-acceptance and the release are outstanding.
+**Status:** **Closed 2026-11-23.** Server full suite 2469 passed, 1 skipped at `e5ebdbc`;
+client `scripts/ci.sh` 563 tests passed, 1 skipped at `9bf3c5e`. C1, C2, S5 and the audit are
+implemented on both sides. Follow-up findings 1, 2, 3 and 5 are fixed. Physical-device acceptance
+was closed by owner decision on 2026-11-23 (record:
+`StrengthApp/docs/acceptance/device/14-offline-execution.md`). Release is app-first per §20 and is
+an operational handoff, not open plan work.
 **Gate:** this document is the WP0 record required by `AGENTS.md` before the refactor; the work
 packages below record what was built and what is still open.
 **Owner decisions are recorded in §4.** Anything marked *proposed* has not been applied to a canonical document.
@@ -421,9 +420,12 @@ both the ceiling and the size coupling.
 **Server-side walking skeleton implemented 2026-11-23:** one HTTP conversation covers adopt → log →
 finish with a pending device → late set with its original instant → totals recomputed → device
 resolved → window closed (`tests/test_ios_workflow.py::test_the_whole_offline_flow_reconciles_end_to_end`).
-It is the reference the Swift work is written against; the matrix below still needs physical devices.
+It is the reference the Swift work was written against. **Owner decision 2026-11-23: the matrix
+is closed as accepted, not separately executed.** The record is
+`StrengthApp/docs/acceptance/device/14-offline-execution.md`; it does not claim each scenario was
+individually observed. Simulator success alone remains not acceptance.
 
-Simulator success is not acceptance (`StrengthApp/AGENTS.md`). Required:
+The matrix, retained as the reference:
 
 1. Phone-only, airplane mode, full workout start → finish → sync.
 2. Watch-only, phone powered off, full workout start → finish → later sync.
@@ -460,8 +462,8 @@ device result from a simulator run.
 
 - No resolver, no load calculation beyond the §9 formula, no training policy.
 - Ownership, mirror mode, `execution_target` and the picker are already removed (S5, 2026-11-23);
-  do not reintroduce them. The watch writes through the phone; the server-side read-only rule for a
-  watch token is the last thing outstanding in that slice.
+  do not reintroduce them. The watch writes through the phone, and the server refuses execution
+  writes from a watch token.
 - Do not add a second write path to the server for the watch.
 
 **C1 — S0 client (small, unblocked).**
@@ -568,69 +570,62 @@ execution writes from a watch token.
 **Recorded, not code:** WP6's writer policy (D11) is a client decision; the server has no HealthKit
 involvement.
 
-## 20. Release sequencing (owner decision 2026-11-23: server first)
+## 20. Release sequencing (owner decision 2026-11-23: app first)
 
-The server branch and the current app are incompatible **in both directions**: the old app sends
-`prefill_requested`, which the server now rejects, and a new app sending `prefill_load_kg` would be
-rejected by an old server. There is no rolling-compatible order, so the window is planned rather
-than avoided.
+**Status:** release handoff. The implementation plan is closed; the steps below are operational.
+
+The server branch and the current app are incompatible in both directions: the old app sends
+`prefill_requested` and `execution_target`, which the server no longer accepts; a new app sends
+`execution_id` and `prefill_load_kg`, which an old server may reject. App-first is the owner's
+chosen order. It keeps phone start/log work available in the expected case, while the watch's
+start, substitution prefill and S5 visibility wait for the server deploy.
 
 **Preconditions**
 
-1. `./check.sh full` green on the server branch (the fast lane is not enough for a merge).
-   **Verified 2026-11-23 at `a2e8176`: 2464 passed, 1 skipped.**
-2. The iOS build carrying the client changes is ready to submit, or already in review.
-3. A database backup per `docs/BACKUP.md`.
+1. `./check.sh full` green on the server branch. **Verified 2026-11-23 at `9ff472b`: 2469 passed,
+   1 skipped.**
+2. Client `scripts/ci.sh` green. **Verified 2026-11-23 at `9bf3c5e`: 563 passed, 1 skipped.**
+3. The iOS build carrying the client changes is ready to submit, or already in review.
+4. A database backup per the server `docs/BACKUP.md`.
 
 **Order**
 
-1. Merge the server branch into `development` (never `main`; no squash) and deploy on the ODROID.
-   Restart `strength-coach-web.service`; migrations `0076` and `0077` apply on start.
-2. Verify: health 200; `GET /api/ios/v1/plans/current` returns `execution_id` and
-   `load_catalogue`; one substitution with `prefill_load_kg` returns `prefill_verified: true`;
-   a summary returns the `reconciliation` block.
-3. Ship the app build.
+1. **Ship the app build.** Run one smoke test against the deployed pre-offline server: phone
+   pairing, plan request, phone start, one set, finish. If the old server rejects the new start
+   fields, treat the window as feature-dark: do not advertise offline execution and keep the
+   window to hours.
+2. **Merge the server branch into `development`** (never `main`; no squash), back up, deploy on
+   the ODROID, restart `strength-coach-web.service`. Migrations `0076`–`0080` apply on start.
+3. **Verify after deploy:** health 200; `GET /api/ios/v1/plans/current` returns `execution_id` and
+   `load_catalogue`; a phone substitution with `prefill_load_kg` returns
+   `prefill_verified: true`; a watch offline start replay after a completed session returns the
+   same workout; a set carries `origin_device_id`; a summary returns the `reconciliation` block.
+4. **Confirm the app build against the new server** and enable the watch/offline surfaces.
 
-**The window is wider than when server-first was chosen (2026-11-23, after S5 landed).** The old app
-still sends `execution_target` on a prescription request, which the server no longer accepts, so
-during the window the old app:
+**During the app-first window**
 
-- **cannot request a new plan** (`400 unknown_field`), therefore cannot start a new workout;
-- cannot substitute (`prefill_requested` is gone);
-- cannot start a plan issued before the deploy (`409 plan_not_bindable`);
-- **can** log sets, correct and remove them, rate form, finish an open session, and read history.
-
-That is a bigger degradation than "substitutions only". Three ways to handle it, for the owner:
-
-1. **Accept it** and keep the window to hours: no new workout from the old app between deploy and
-   ship. Simplest, and consistent with removing compatibility.
-2. **App-first instead**: the new app omits `execution_target`, and the old server defaults it to
-   `phone`, so phone starts keep working; only watch starts wait for the server. This is now the
-   gentler order.
-3. **A temporary shim**: accept and ignore `execution_target` for the window only, then remove it.
-   Three lines, but it reintroduces exactly the kind of compatibility path this plan deleted.
-
-**During the window**
-
-- Do not issue a plan that the old app must start; the four-hour window means any plan issued
-  before the deploy is expired within hours anyway.
-- Do not advertise the feature until the app build is live.
+- New-app phone start and logging are the expected minimum. Watch start, watch-committed writes,
+  offline substitution prefill and the S5 removed-target screens must not be advertised until the
+  server deploy verifies.
+- Existing old-app clients cannot request a new plan after the server deploy; keep the deploy-to-
+  app-update window short.
+- Do not issue a plan the old app must start; the four-hour plan TTL makes pre-deploy plans expire.
 
 **Rollback**
 
-- Redeploy the previous server commit. Migrations `0076` and `0077` are additive (a nullable column
-  and a unique index each), so leaving them in place is harmless and no data rewrite is involved.
-  Do not drop them as part of a rollback.
-- The app build can be held back independently; it does not read anything the old server lacks
-  except the new fields, which decode as absent.
+- The app build can be held back independently.
+- Before `0079`/`0080`, rollback is a redeploy of the previous server commit; migrations `0076`–
+  `0078` are additive and may stay.
+- After `0079`/`0080` drop `target_device_id`/`execution_target`, a rollback to a pre-S5 server
+  needs the database backup restored, not just a commit revert. Rehearse this once before the
+  deploy.
 
 **After the release**
 
-1. S5 is complete; the remaining sequence is merge, deploy, ship, then device acceptance.
-2. Then the leftovers: the last compatibility branches, and any test that still asserts the old
-   behaviour.
-3. Advance submodule pointers only when the owner asks for a consolidation.
+1. Record the deployed commit, app build and verification results in the release notes.
+2. Advance submodule pointers only on an explicit portfolio consolidation request.
 
+## 21. Status and change control
 ## 21. Status and change control
 
 This document is the canonical cross-repository statement for offline execution. Component
