@@ -1,0 +1,354 @@
+# Unified offline workout execution
+
+**Status:** draft for owner review, 2026-11-23. **No implementation has started.**
+**Gate:** this is the WP0 document required by `AGENTS.md` before an architectural refactor. Work packages start only after owner approval of this document and of the contract amendments in §13.
+**Owner decisions are recorded in §4.** Anything marked *proposed* has not been applied to a canonical document.
+
+## 1. Purpose
+
+Redesign workout execution so the iPhone and Apple Watch can each start, execute and complete an
+issued workout with no internet connection and no connection to the other device, while keeping
+one logical history, never losing or duplicating a set, and reconciling deterministically when the
+devices next meet. Python remains the downstream authority for prescription, resolver output,
+analytics and training intelligence.
+
+"Offline" here means: after the plan has been issued and downloaded, nothing in execution requires
+the home server or the other device. It does not mean offline plan generation.
+
+## 2. Relationship to existing documents
+
+- **Supersedes** [RESOLVER-PRESCRIPTION-STRUCTURE.md](RESOLVER-PRESCRIPTION-STRUCTURE.md) §5.8
+  ("Phone gateway and offline watch execution"). That section's D10 limitation — the watch is
+  offline-capable only while the phone is online — is the thing this plan removes.
+- **Amends** [IOS-WATCH-CONTRACT.md](../contracts/IOS-WATCH-CONTRACT.md) §8 (start gate), §9
+  (ownership), §10.4 (mismatch policy), §14 (server API), §21 (deferred). Amendment text is in
+  §13; it is not applied until approved.
+- **Amends** [IOS-CLIENT-PLAN.md](IOS-CLIENT-PLAN.md) §5 (offline behaviour table), which still
+  says a start requires server connectivity.
+- **Keeps** the technique-throttle modifier (MOD-TECH-001) and the execution-change model
+  (DEC-RESOLVER-23) as the basis for offline plan changes.
+
+## 3. Baseline verified on 2026-11-23
+
+Read from the code, not inferred:
+
+- The server rejects writes from a non-owner device: `409 not_owner` (contract §9). Ownership is
+  set at start and transferred by `POST .../takeover`.
+- A performed set is identified by `(exercise_id, set_index)`; an omitted index is allocated as
+  `MAX(set_index) + 1` per exercise, and a reused index with any different field is rejected as
+  `set_index_conflict` (`workout.py` `add_set`). A full field match is treated as a replay.
+- A completed workout rejects new sets (`workout.py`, `add_set` status guard).
+- Substitution/add prefill is solved by the server at arrival through
+  `prescribe_engine.resolve_replacement`; the client cannot send a load and an offline author gets
+  `prefill_load_kg: null` with `prefill_reason: authored_offline` (`workout.py` `_change_prefill`).
+- `resolve_replacement` builds the item but skips the session-level back-flare effort and dose
+  modifiers, so a substitute in a flare session currently receives an unmodified load.
+- The iOS prescription settings schema is closed: `session_type`, `minimum_session`,
+  `minimum_target_minutes`, `top_set_intent` (`server.py` `_ios_request_settings`). The web
+  prescription path already accepts `technique_throttle` and `technique_throttle_pattern`.
+- The watch today relays execution writes through the phone, or reaches the server directly when
+  it can. It keeps a durable local operation queue, stamps time from a server-derived clock offset,
+  and has a stored server execution view with a watermark.
+- The phone has a durable pending-mutation journal (capped at 16 entries, 28-day replay window) and
+  a separate offline capture store. Both are queue semantics, not ledger semantics.
+
+## 4. Decisions
+
+| ID | Decision | Why |
+|---|---|---|
+| D1 | Execution identity is minted per start, not per plan: the first starter claims it; the web UI mints on start as today; the phone adopts the ID it holds in the issued plan, and an offline start binds at first sync. A web start warns when an outstanding issued plan exists for today. | Removes the offline hole in `409 workout_active` without blocking the web UI or killing plans on a timer. |
+| D2 | `(exercise_id, set_index)` stays the server's set identity. The watch's offline sets are provisional and carry only a local ID; the phone assigns indexes at merge. | No schema change, no second identity domain, and one writer keeps the index unambiguous. |
+| D3 | The phone is the only committer to Python for execution writes. The watch holds an optimistic local view. | One idempotency domain, one merge implementation, one place to resolve conflicts. |
+| D4 | Merge never rejects a set. A collision is renumbered after the current maximum, in capture order, with device provenance retained. | A rejection on the merge path is a lost set. |
+| D5 | Clock use is relaxed: `performed_at` orders events when both carry an offset derived from the same server epoch; otherwise `(device_id, device_seq)`. Timestamps within ±2 s are unordered. Timestamps never establish identity or dedupe. | Both devices derive time from the same server, so residual skew is small; the failure mode is a stale offset, not drift. |
+| D6 | Rest timer state is device-local and derived from the last set event. It is never merged. | Two devices running independent timers would otherwise need a conflict rule for a UI convenience. |
+| D7 | Conflicts auto-resolve; only *edit versus remove of the same set* asks the athlete. A set logged against a slot the phone substituted keeps its performed exercise and plan-slot provenance. | A dialog per set is not usable in a gym; silent reinterpretation is not acceptable either. |
+| D8 | Late events are accepted on a completed session for **7 days**, recorded in the event stream, with derived metrics recomputed. After the window, events are preserved as rejected-late, never deleted. | Completion must not discard unreceived work; the bound keeps old sessions from changing under analytics. |
+| D9 | Offline substitution load comes from a **server-built load catalogue** shipped with the plan. The client applies only `round_down(base / (1 + (reps + rir)/30), increment)`; Python verifies it from the snapshot it issued and never re-solves. | Keeps the training decision on the server while allowing modification with no connection. |
+| D10 | `owner_device_id` becomes provenance only. Authorization becomes: any non-revoked device of the pairing; revocation is enforced. | Ownership was doing correctness work (set-index uniqueness); that work moves to D2–D4. |
+| D11 | One HealthKit workout per session, keyed by `sessionUUID`. The watch writes it when the watch executed any part; the phone only when the watch took no part. | Two devices writing a workout each would duplicate rings, HR samples and imports. |
+| D12 | The watch's direct-to-server *execution writes* are retired; it keeps its device credential for read-only surfaces. | D3 has one committer; a second write path would reintroduce dual authority. |
+
+**Execution is not prescription.** A substitution, an added set, or a corrected set is an
+execution fact recorded with provenance. A client-applied load is a shipped suggestion the athlete
+acted on, never a change to the prescription and never a re-solve. When performed work differs from
+prescribed work, the record says so plainly: the workout did not do what was prescribed. The frozen
+prescription is never rewritten, and no later read may imply that it was.
+
+## 5. Execution identity (D1)
+
+- `ios_issued_plan` gains `execution_id` (UUID), generated at issue. The plan payload carries it.
+- `POST /api/ios/v1/workouts` accepts `execution_id` alongside `issued_plan_id` and binds it as the
+  workout ID. Repeated calls with the same pair return the same workout (existing retry semantics).
+- An offline phone start writes a local session under that ID; the first sync performs the same
+  binding. Nothing else is stored while offline.
+- A web start mints as today. Before minting, the server checks for an unexpired issued plan for
+  today and returns `409 plan_pending_for_phone` unless the caller confirms
+  (`start_anyway: true`); the UI shows the warning rather than a hard block.
+- A phone opening a web-started workout adopts the server's workout ID (existing recovery path).
+- If both exist anyway, they stay two sessions. Nothing is auto-merged, and the phone shows a
+  "two sessions today" state.
+
+## 6. The ledger, and what it does not replace
+
+The append-only ledger is **client-side**. It records intent, is written before the UI acknowledges
+the action, and is replayed in order. It does not replace or duplicate server tables.
+
+- Server canonical record stays `workout_set` (performed sets) plus the append-only `workout_event`
+  stream (mutations, audit, execution changes and telemetry).
+- Device ledger entries map to existing server writes: `start`, `add_set`, `execution_events`,
+  `execution_change`, `complete`. Two markers are new: `late_reconciliation` and
+  `reconciliation_closed`, both plain `workout_event` rows.
+- Ledger entries are never aged out or capped before acknowledgement. The existing 16-entry journal
+  and 28-day replay window are queue semantics and must not be inherited.
+- The materialised device state is the existing session snapshot extended with the catalogue
+  version, the plan's execution ID, and per-device reconciliation status. It is rebuilt from the
+  ledger on launch.
+
+## 7. Merge rules (D2–D7)
+
+**Ack-before-commit.** When the phone is reachable, the watch sends the set and waits for the
+phone's acknowledgement before it treats the set as indexed. No acknowledgement within 3 s means
+the watch proceeds as offline. This is what makes "if both are logging, they are connected" true.
+
+**At merge the phone:**
+
+1. Reads its own committed sets for the workout.
+2. Orders the watch's provisional sets by device sequence.
+3. Performed-exercise first: for each `(exercise_id, plan slot)`, assigns the next free indexes
+   after the current maximum, ascending.
+4. Writes each set with its original `performed_at`, load, reps, RIR, velocity, source device and
+   plan-slot provenance, under the same idempotent request shape used today.
+5. Keeps a `local_set_id → set_id` mapping per device, so a later edit or removal from either
+   device addresses the right row.
+6. Uploads, then persists the merged state.
+
+**Conflict classes and resolution:**
+
+| Case | Resolution |
+|---|---|
+| Same event ID delivered twice | Deduplicated by identity |
+| Two devices log the same exercise independently | Both kept, indexes assigned at merge (D2/D4) |
+| Both edit the same set | Later edit by D5 ordering wins on value; both edits retained in the event stream |
+| One removes, the other edits | Removed state wins; the edit is retained and surfaced as a note |
+| Phone substitutes a slot the watch already performed | Set keeps its performed exercise and slot provenance; the slot shows substituted; no reassignment |
+| Both modify the plan | Substitution is phone-only; additions merge in capture order |
+| Both complete | Earliest `ended_at` is the completion; both events retained |
+| Completion before the watch's events arrive | D8 late reconciliation, not a conflict |
+
+**Ordering.** Causal order first (a set before its edit or removal; a plan revision before sets that
+reference it). Then D5. Display order and accounting order are separate concerns: the index is
+accounting, `performed_at` is display.
+
+## 8. Late reconciliation (D8)
+
+- A phone that cannot reach the watch after finishing uploads with a `late_reconciliation` event
+  carrying `pending_devices` and `closes_at = ended_at + 7 days`. It does not ask the athlete to
+  choose between waiting and losing data; nothing is lost.
+- The summary payload carries `reconciliation: {state, pending_devices, closes_at}`. The phone shows
+  "Apple Watch data pending" and refreshes when the watch syncs.
+- Late sets are appended through the same add-set path with the original timestamps. Derived
+  metrics (volume, e1RM inputs, VBT aggregation, calibration) recompute on read; the server does not
+  store a second summary.
+- After the window, a late arrival is preserved as a `late_rejected` event with its payload and the
+  response says `reconciliation_window_closed`. It is visible in the event stream and excluded from
+  aggregates.
+- The UI must not show a completed session as final while reconciliation is open.
+
+## 9. Load catalogue (D9)
+
+### 9.1 Shape
+
+One entry per exercise, shipped inside the issued plan:
+
+```json
+{
+  "catalogue_version": "load-catalogue/v1",
+  "as_of": "2026-11-23",
+  "exercises": {
+    "barbell_bench_press": {
+      "load_source": "e1rm",
+      "base_load_kg": 102.5,
+      "base_provenance": {
+        "selector": "best_usable", "ref": "set:abc/42",
+        "coverage": 4, "quality": "ok", "decayed": true, "calibrated": false
+      },
+      "last_working_load_kg": 100.0,
+      "increment_kg": 2.5,
+      "bodyweight": false,
+      "power": false
+    }
+  }
+}
+```
+
+`base_load_kg` is already decayed and calibrated by the server. The client multiplies nothing.
+
+### 9.2 Client application
+
+```
+power or bodyweight     -> 0, or null with reason
+base_load_kg present    -> round_down(base_load_kg / (1 + (reps + rir) / 30), increment_kg)
+no base, last working   -> round_down(last_working_load_kg, increment_kg)
+neither                 -> null, reason: no_catalogue_base
+```
+
+Rounding uses decimal arithmetic from the decimal string, matching `loads.round_down`. No
+`Double` intermediate. Missing `rir` falls back to plain Epley (`reps / 30`), mirroring
+`estimate_e1rm`; this case must be tested because `load_for_reps` itself has no fallback.
+
+### 9.3 Generation and parity
+
+- Extract the load branch of `build_item` into `prescribe/load_recipe.py` returning this record, so
+  the resolver and the catalogue cannot drift.
+- Build the catalogue once at issue over the taxonomy (~150 exercises); reuse the `RuleContext`
+  already loaded for the plan build.
+- **Parity gate:** for every exercise and several issue dates, assert
+  `catalogue-derived load == build_item load`. This test is the contract; if it fails, the
+  catalogue is wrong.
+- Swift tests replay the same fixtures, including boundary cases that land exactly on an increment.
+
+### 9.4 Recording
+
+- `ExecutionChangeRequest` gains `prefill_load_kg`, `prefill_catalogue_version` and
+  `prefill_as_of`; `prefill_requested` is retired.
+- One rule for online and offline: the prefill is the issue-time value. The server recomputes from
+  the snapshot it issued and stores `prefill_verified`. A mismatch records both values and never
+  blocks the set.
+- A substitution outside the catalogue, or one with no base, records null with a reason. It is never
+  retro-solved and never falls back to the original exercise's load.
+
+### 9.5 Back-flare alignment
+
+`resolve_replacement` currently skips the per-item back-flare effort and dose modifiers. The fix is
+small — they act only on `item.flare` — but it must reorder the path to
+`build_item → flare effort → flare dose → warmup.attach → VBT`, because the effort hold re-solves
+the load and ramps must be rebuilt after it. Readiness-level modifiers stay out of scope and the
+asymmetry is recorded.
+
+## 10. Ownership and authorization (D10)
+
+- `owner_device_id` is retained as provenance and reported, not enforced as a gate.
+- Authorization: a write is accepted from any non-revoked device belonging to the session's pairing;
+  a revoked device is refused immediately, whatever it holds locally.
+- Slice S5 removes `409 not_owner`, the takeover endpoint and phone mirror mode, updates the tests
+  that assert them, and removes the user-visible "Logging on Apple Watch" state. This is a
+  user-visible removal and needs its own approval point and documentation update.
+
+## 11. HealthKit (D11)
+
+- `sessionUUID` is the key. The watch writes when it executed any part of the session; the phone
+  writes only when the watch took no part.
+- A phone that must finish before reconciliation cannot yet know: it writes with `sessionUUID` in
+  the workout metadata, and the import reconciles on that key instead of creating a second workout.
+- Exact behaviour at the boundary is settled in WP4 with a device test, not in this document.
+
+## 12. Technique throttle
+
+- Server already implements MOD-TECH-001 (bounded load cap, RIR floor, compared against modifiers
+  already applied rather than stacked).
+- Add `technique_throttle` (boolean, main-work scope only) to the closed iOS settings schema and
+  pass it into the resolver call, matching the web path. No pattern picker on the phone.
+- The issued plan must make the modifier visible (rationale ref `MOD-TECH-001`) so lighter loads are
+  explained to the athlete.
+- No ledger or offline impact: the throttle is frozen into the plan at issue. Changing it
+  mid-workout is out of scope.
+
+## 13. Contract amendments (proposed, not applied)
+
+**IOS-WATCH-CONTRACT §8** — replace the start gate bullets with: a plan carries `execution_id`; the
+watch may start offline from its cached plan and binds the ID at first sync; start no longer requires
+the home server, the phone, or a relay.
+
+**IOS-WATCH-CONTRACT §9** — replace ownership transfer with provenance plus device-scope
+authorization; remove the mirror-mode and takeover paragraphs; state that any non-revoked paired
+device may log.
+
+**IOS-WATCH-CONTRACT §10.4** — mark superseded: DEC-RESOLVER-23 already retired
+`409 plan_item_mismatch`; a stale `plan_item_index` is extra work with preserved provenance. The
+document is currently stale relative to that decision and should be corrected in the same edit.
+
+**IOS-WATCH-CONTRACT §14** — add `technique_throttle` to iOS prescription settings; add
+`execution_id` to start; add `prefill_load_kg`/`prefill_catalogue_version`/`prefill_as_of` to the
+execution-change request; add `409 plan_pending_for_phone`; add the reconciliation block to the
+summary.
+
+**IOS-WATCH-CONTRACT §21** — remove the deferred pending-session shell; it is being built.
+
+**IOS-CLIENT-PLAN §5** — the offline table's "start still requires connectivity" row changes to
+"start requires a downloaded plan, not a connection".
+
+## 14. Work packages and slices
+
+**WP0 — this document and the amendments.** Gate: owner approval. No code.
+
+**S0 — technique throttle** (independent, no dependency on the rest). Server field + pass-through,
+client toggle, plan display. Shippable on its own.
+
+**S1 — identity, ledger, watch-only reap.** Execution ID at issue; adopt path; device ledger and
+rebuild; watch executes a full session offline with sets and finish; phone merges and uploads.
+Proves the pipeline end to end. No substitutions, no concurrent logging.
+
+**S2 — concurrent and never-reject merge.** Ack-before-commit; provisional sets; renumbering;
+provenance UI; conflict classes and the single edit-vs-remove prompt.
+
+**S3 — offline plan changes.** Load catalogue, parity gate, client arithmetic, phone substitution,
+additions on either device, back-flare alignment.
+
+**S4 — lifecycle.** Offline start, late reconciliation (D8), HealthKit boundary, termination and
+reboot recovery, upgrade mid-workout (adopt existing queues), device-restart acceptance.
+
+**S5 — ownership removal.** D10 gate removal, mirror mode and takeover retired, watch direct-write
+path retired, tests and docs updated.
+
+Each slice: own branch, its own acceptance, and a rollback that returns to the previous behaviour
+without data loss.
+
+## 15. WP1 audit checklist (before S1)
+
+1. Confirm the start path can bind a supplied `execution_id` without breaking idempotency receipts.
+2. Establish what the watch's cached plan actually contains, and whether plan + catalogue fit the
+   WatchConnectivity delivery path (the application context is reserved for the credential
+   handshake; plan and catalogue may need file transfer).
+3. List every test asserting `not_owner`, mirror mode and takeover, so S5's removal is explicit.
+4. Confirm `build_item`'s load branch extracts cleanly (it depends on `_resolve_flare_policy`,
+   `context.entity`, `thresholds`, `_last_working_set`).
+5. Confirm the migration path for the existing pending journal and offline capture queue on update,
+   or gate the release on queue-empty.
+6. Measure catalogue size on a real account and the resulting plan payload.
+
+## 16. Acceptance matrix (physical devices)
+
+Simulator success is not acceptance (`StrengthApp/AGENTS.md`). Required:
+
+1. Phone-only, airplane mode, full workout start → finish → sync.
+2. Watch-only, phone powered off, full workout start → finish → later sync.
+3. Both logging concurrently while connected, then reconnect.
+4. Both logging concurrently while partitioned, then reconcile.
+5. Terminate each app mid-set; relaunch; state restored exactly once.
+6. Watch reboot mid-workout.
+7. Phone finishes while the watch is unreachable; late sets arrive within the window; summary updates.
+8. Late set after the window is rejected-late and preserved.
+9. Offline substitution on the phone; watch continues on the old slot; merge keeps both.
+10. Technique throttle on: loads lower and explained.
+11. Phone lost or wiped with unreconciled watch data: the watch session survives locally.
+
+## 17. Risks and non-goals
+
+**Risks:** WatchConnectivity suspension delays (mitigated by explicit triggers and a visible pending
+state); catalogue staleness on a plan issued days earlier (bounded by `as_of` and the 4-hour plan
+window); stale clock offsets after a watch reboot (D5 fallback); two sessions on the same day in the
+web-start edge (D1 soft check, no merge); HealthKit duplication before reconciliation (D11 key);
+device storage growth from an uncapped ledger (bounded by acknowledgement, not age).
+
+**Non-goals:** a Swift resolver; server-side event sourcing or a database migration; a generic sync
+framework; resurrecting plan editing; watch-authored substitutions (D9 of the resolver plan stands);
+mid-workout technique-throttle changes.
+
+## 18. Status and change control
+
+This document is the canonical cross-repository statement for offline execution. Component
+implementation detail belongs in `strength-training-app/docs/` and `StrengthApp/docs/`; the
+contracts stay canonical here. Status changes only with evidence: code merged, tests green, and the
+§16 device acceptance recorded. No submodule pointer is advanced as part of this work unless
+explicitly requested.
