@@ -1,7 +1,12 @@
 # Unified offline workout execution
 
-**Status:** draft for owner review, 2026-11-23. **No implementation has started.**
-**Gate:** this is the WP0 document required by `AGENTS.md` before an architectural refactor. Work packages start only after owner approval of this document and of the contract amendments in §13.
+**Status:** 2026-11-23. Server side implemented and green (full suite 2467 passed, 1 skipped at
+`82d5092`); the audit is closed on the server. S5's ownership, target, picker and mirror removals
+are implemented on both sides. The client ledger (C1/C2) is implemented on
+`StrengthApp/offline-execution`; physical-device acceptance and the release are outstanding. The
+WP8 relay and the watch's direct execution writes remain.
+**Gate:** this document is the WP0 record required by `AGENTS.md` before the refactor; the work
+packages below record what was built and what is still open.
 **Owner decisions are recorded in §4.** Anything marked *proposed* has not been applied to a canonical document.
 
 ## 1. Purpose
@@ -351,7 +356,8 @@ additions on either device, back-flare alignment.
 **S4 — lifecycle.** Offline start, late reconciliation (D8), HealthKit boundary, termination and
 reboot recovery, upgrade mid-workout (adopt existing queues), device-restart acceptance.
 
-**S5 — ownership removal and the visible simplification.** The authorization change and the UX
+**S5 — ownership removal and the visible simplification.** **Implemented 2026-11-23 on both sides
+(items 1–5 and 7); item 6 remains.** The authorization change and the UX
 change land together, because the second depends on the first:
 
 1. Remove the `409 not_owner` gate; `owner_device_id` stays as provenance (D10).
@@ -371,8 +377,10 @@ change land together, because the second depends on the first:
    the takeover case in `Phase2ClientTests`, and the `not_owner` case in
    `WatchExecutionEngineTests`.
 
-Until item 2 lands, the picker must stay: the current start gate still refuses a non-target device,
-so removing it earlier would break watch start rather than simplify it.
+**Still open from this slice:** the WP8 "Send to iPhone" relay and the watch's direct execution
+writes (item 6). Everything else is in: `execution_target` and its index are gone,
+`pairing_device_id` (migration `0078`) is the plan's scope, `owner_device_id` is provenance, and
+takeover and mirror mode no longer exist in either client.
 
 Each slice: own branch, its own acceptance, and a rollback that returns to the previous behaviour
 without data loss.
@@ -443,8 +451,8 @@ device result from a simulator run.
 **Constraints that do not change:**
 
 - No resolver, no load calculation beyond the §9 formula, no training policy.
-- Do not remove the ownership gate, mirror mode or the takeover endpoint; that is S5 and needs its
-  own approval point.
+- Ownership, mirror mode, `execution_target` and the picker are already removed (S5, 2026-11-23);
+  do not reintroduce them. The WP8 relay is the last piece of that slice still outstanding.
 - Do not add a second write path to the server for the watch.
 
 **C1 — S0 client (small, unblocked).**
@@ -544,8 +552,9 @@ WP5's removal of the elapsed-time heuristic.
   Narrowed to the fields the athlete acts on plus the shipped VBT target, because the performed set
   is the durable record (DEC-RESOLVER-23) and the event is a view hint.
 
-**Deferred to S5:** `execution_target`, ownership, takeover, mirror mode, the WP8 relay and the
-iPhone/watch picker — one removal, gated on the client ledger.
+**Deferred to S5, now implemented except the transport:** `execution_target`, ownership,
+takeover, mirror mode and the picker are removed on both sides; the WP8 relay and the watch's
+direct execution writes remain.
 
 **Recorded, not code:** WP6's writer policy (D11) is a client decision; the server has no HealthKit
 involvement.
@@ -571,10 +580,26 @@ than avoided.
 2. Verify: health 200; `GET /api/ios/v1/plans/current` returns `execution_id` and
    `load_catalogue`; one substitution with `prefill_load_kg` returns `prefill_verified: true`;
    a summary returns the `reconciliation` block.
-3. Ship the app build. Until it lands, the old app is degraded in exactly two ways: a substitution
-   fails with `unknown_field`, and a plan issued before the deploy cannot be started
-   (`409 plan_not_bindable`). Sets, corrections, removals, finishing, history and readiness are
-   unaffected, which is why server-first is the lesser window.
+3. Ship the app build.
+
+**The window is wider than when server-first was chosen (2026-11-23, after S5 landed).** The old app
+still sends `execution_target` on a prescription request, which the server no longer accepts, so
+during the window the old app:
+
+- **cannot request a new plan** (`400 unknown_field`), therefore cannot start a new workout;
+- cannot substitute (`prefill_requested` is gone);
+- cannot start a plan issued before the deploy (`409 plan_not_bindable`);
+- **can** log sets, correct and remove them, rate form, finish an open session, and read history.
+
+That is a bigger degradation than "substitutions only". Three ways to handle it, for the owner:
+
+1. **Accept it** and keep the window to hours: no new workout from the old app between deploy and
+   ship. Simplest, and consistent with removing compatibility.
+2. **App-first instead**: the new app omits `execution_target`, and the old server defaults it to
+   `phone`, so phone starts keep working; only watch starts wait for the server. This is now the
+   gentler order.
+3. **A temporary shim**: accept and ignore `execution_target` for the window only, then remove it.
+   Three lines, but it reintroduces exactly the kind of compatibility path this plan deleted.
 
 **During the window**
 

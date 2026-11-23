@@ -113,7 +113,7 @@ no Home/Away switching and never follows the phone's Away route.
 | D10 | A watch session requires an `HKWorkoutSession`. Exactly one HealthKit workout is saved per session, keyed by a stable external UUID; a session with no saved workout is possible only on an unrecoverable HealthKit failure and is reported. |
 | D11 | Credential handoff is state, not events: one `updateApplicationContext` payload with a server-issued epoch and an acknowledgement. No queued event copying of tokens. |
 | D12 | Execution-view updates never overwrite: the watch applies only a watermark at least as new as its own, and a replayed set from a legacy plan edit is preserved as an off-plan set rather than dropped. |
-| D13 | A plan has an `execution_target` (`phone` or `watch`); the server rejects a start from the other kind with `409 wrong_execution_target`. |
+| D13 | **Superseded 2026-11-23 by S5.** A plan belongs to the device pairing, not to a target kind: either non-revoked device may start it, and `execution_target`/`wrong_execution_target` no longer exist. See §9 and §14. |
 | D14 | The watch is pinned to `homeBaseURL`; config changes carry a monotonic `configVersion` and apply only between sessions with an empty outbox. No Home/Away switching. |
 | D15 | Offline-first after start: sets, forms, telemetry, finish and HealthKit are local-first; the network is opportunistic and partially flushed. |
 | D16 | Post-finish sync is foreground retry on the summary plus sync on next open. The phone relay is implemented (WP8); offline start and the pending-session shell are deferred. |
@@ -349,10 +349,10 @@ of the extraction.
   already allows 60–86400. This is a start window, not a workout lifetime.
 - The server-date rule stays: a plan whose `for_date` is not today returns `410 plan_expired`.
   Late-night sessions regenerate rather than extend.
-- The plan request carries `execution_target: "phone" | "watch"`. The server stores it on the
-  issued plan and returns it from `GET /api/ios/v1/plans/current`; only a device of the matching
-  kind may start it. A phone start of a watch-targeted plan, or the reverse, returns
-  `409 wrong_execution_target`. This is the “plan for the watch” option.
+- The plan request carries no target. The plan is scoped to the pairing — the phone that
+  requested it, or the phone that minted the requesting watch — and `GET /api/ios/v1/plans/current`
+  resolves it for either device of that pairing. Either non-revoked device may start it; there is
+  no "plan for the watch" choice to make and no `wrong_execution_target` response.
 - The watch reads `GET /api/ios/v1/plans/current` on launch, on foreground and on **Refresh**.
   **Retrieve workout** is Refresh, not a transport.
 - `POST /api/ios/v1/workouts` with `issued_plan_id` starts the session and sets
@@ -709,7 +709,7 @@ Migration `0058_watch_companion.sql` (additive, no data rewrite):
 - Partial unique index: one active watch per parent
   (`(parent_device_id) WHERE kind = 'watch' AND revoked_at IS NULL`)
 - `ios_issued_plan.target_device_id TEXT REFERENCES ios_device(device_id)` (backfilled to `device_id`)
-- `ios_issued_plan.execution_target TEXT NOT NULL DEFAULT 'phone' CHECK (execution_target IN ('phone','watch'))`
+- `ios_issued_plan.execution_target TEXT` — **legacy, unused since S5**; kept only so a rollback does not have to drop a column. `pairing_device_id` is the live scope (migration `0078`).
 - Target-scoped live index on
   `(COALESCE(target_device_id, device_id)) WHERE consumed_at IS NULL AND superseded_at IS NULL`
 - `workout_session.owner_device_id TEXT` (nullable; NULL keeps legacy permissive behaviour)
@@ -741,10 +741,10 @@ runs lazily on start, today and execution reads and preserves every set.
 | Phone swaps an unstarted item offline | Replayed set hits `409 plan_item_mismatch`; preserved as off-plan and flagged. |
 | Watch relaunch with pending ops | Store reload, ordered replay, HK recovery; UI shows pending until acked. |
 | HealthKit save fails at finish | Retry on launch; if the builder is gone, save the minimal persisted workout once; else report unsaved. |
-| Watch stolen/lost | Phone takes over ownership, finishes or abandons; revoke the watch device. |
+| Watch stolen/lost | Any device of the pairing may finish or abandon; revoke the watch device. |
 | Phone substitutes the current exercise | Allowed only before any set; watch applies at the next idle point. |
 | Server unreachable at start | Blocking message; retry within the plan TTL; no fabricated session. |
-| Wrong execution target | `409 wrong_execution_target`; no state change; the phone must request a plan for its own target. |
+| Plan belongs to another pairing | `404 plan_not_found`; no state change; the device must request its own plan. |
 | Network drops mid-set | Set persists; partial flush on reconnect; no blocking error; backoff retry. |
 | Home URL changes mid-session | Config change deferred until the session is finished, synced and the outbox empty; old-URL operations flush first. |
 | Finish while offline | Finish and `ended_at` persist; HealthKit saves locally; server finish queues; summary shows “syncing”. |
@@ -753,11 +753,10 @@ runs lazily on start, today and execution reads and preserves every set.
 ## 17. Tests and acceptance
 
 Server (pytest, default suite): TTL 4h boundary, same-date rejection, idle warning and 24h lazy
-abandon (idempotent, sets preserved), ownership enforcement and takeover, plan revision increments
-and ordering, `plan_item_mismatch` and off-plan retry, device mint/replace/revoke with one active
-watch and monotonic epochs, credential epoch in device responses, idempotency replay, target
-enforcement (`409 wrong_execution_target` both ways), `execution_target` in `plans/current`, and
-rollback of `watch_enabled`.
+abandon (idempotent, sets preserved), pairing-scoped plan resolution and a start from either device
+of the pairing, device mint/replace/revoke with one active watch and monotonic epochs, credential
+epoch in device responses, idempotency replay, the late-reconciliation window and its late events,
+and rollback of `watch_enabled`.
 
 `StrengthCore` tests: outbox ordering, bounded retry, revision rejection, finish-after-sets,
 relaunch recovery, and one parity test per extracted session operation.
@@ -781,8 +780,9 @@ Required scenario tests (unit/integration where possible, physical where not):
    the set is preserved off-plan and its original index is recorded in telemetry.
 5. **Stale plan revision rejection:** a delayed R4 payload cannot overwrite a cached R5; an R6
    payload applies.
-6. **Take-over and read-only state:** the phone takes ownership, logs a set, and the watch becomes
-   read-only; a set write from the watch returns `409 not_owner` and nothing is lost.
+6. **Interchangeable logging:** the phone and the watch both log into the same pairing session,
+   with no take-over, no read-only state and no `not_owner` response; a set logged on either device
+   survives the merge.
 7. **HealthKit finish retry without duplication:** simulate a failed `finishWorkout`, a crash
    before the save and a relaunch; exactly one workout with the session's external UUID exists,
    with the real start/end, and the resumed segment is not saved separately.
@@ -792,9 +792,9 @@ Required scenario tests (unit/integration where possible, physical where not):
    `WATCHOS_DEPLOYMENT_TARGET = 27.0` for the watch target and
    `IPHONEOS_DEPLOYMENT_TARGET = 27.0` for the app; the CI watch scheme builds on a watchOS 27.0
    simulator.
-10. **Execution target:** a watch-targeted plan cannot be started by the phone and a phone-targeted
-    plan cannot be started by the watch; both return `409 wrong_execution_target`, and
-    `plans/current` reports the target.
+10. **Pairing scope:** the phone and its watch each resolve the same live plan from
+    `plans/current`, either may start it, and a start under the same `execution_id` is one
+    workout. A plan from another pairing is `404 plan_not_found`.
 11. **Patchy Wi-Fi:** drop the network several times mid-session; each drop queues, each return
     partially flushes, and no operation is cleared before acknowledgement. Finish offline, reconnect
     two minutes later, and confirm the server matches the watch: same sets, same timestamps, one
