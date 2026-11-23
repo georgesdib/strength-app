@@ -4,7 +4,7 @@
 `82d5092`); the audit is closed on the server. S5's ownership, target, picker and mirror removals
 are implemented on both sides. The client ledger (C1/C2) is implemented on
 `StrengthApp/offline-execution`; physical-device acceptance and the release are outstanding. The
-server-side read-only enforcement for a watch token remains.
+S5 is complete on both sides.
 **Gate:** this document is the WP0 record required by `AGENTS.md` before the refactor; the work
 packages below record what was built and what is still open.
 **Owner decisions are recorded in §4.** Anything marked *proposed* has not been applied to a canonical document.
@@ -377,12 +377,11 @@ change land together, because the second depends on the first:
    the takeover case in `Phase2ClientTests`, and the `not_owner` case in
    `WatchExecutionEngineTests`.
 
-**Item 6 is half done (2026-11-23).** The watch no longer writes execution directly: start, sets,
+**Item 6 is done (2026-11-23).** The watch no longer writes execution directly: start, sets,
 corrections, removals, form, telemetry and finish travel to the phone, which commits them with its
 own credential and the watch's operation id. The old phone→server relay that used the watch token
-is gone. **What remains is enforcement:** the server still accepts execution writes from a watch
-token, so "read-only" is a client property, not a server one. A watch-token write to
-`/workouts/{id}/sets` succeeds today.
+is gone, and the server now enforces the rule: a watch token gets `403 watch_read_only` for every
+execution write. Abandon stays open to any device as the safety valve, and reads are unchanged.
 
 Everything else is in: `execution_target` and its index are gone, `pairing_device_id`
 (migration `0078`) is the plan's scope, `owner_device_id` is provenance, and takeover and mirror
@@ -559,9 +558,9 @@ WP5's removal of the elapsed-time heuristic.
   Narrowed to the fields the athlete acts on plus the shipped VBT target, because the performed set
   is the durable record (DEC-RESOLVER-23) and the event is a view hint.
 
-**Deferred to S5, now implemented except enforcement:** `execution_target`, ownership, takeover,
-mirror mode and the picker are removed on both sides, and the watch commits through the phone. The
-server does not yet refuse execution writes from a watch token.
+**Deferred to S5, now implemented:** `execution_target`, ownership, takeover, mirror mode and the
+picker are removed on both sides; the watch commits through the phone and the server refuses
+execution writes from a watch token.
 
 **Recorded, not code:** WP6's writer policy (D11) is a client decision; the server has no HealthKit
 involvement.
@@ -624,8 +623,7 @@ That is a bigger degradation than "substitutions only". Three ways to handle it,
 
 **After the release**
 
-1. S5 remainder: refuse execution writes from a watch token server-side, so the single-committer
-   rule is enforced rather than conventional.
+1. S5 is complete; the remaining sequence is merge, deploy, ship, then device acceptance.
 2. Then the leftovers: the last compatibility branches, and any test that still asserts the old
    behaviour.
 3. Advance submodule pointers only when the owner asks for a consolidation.

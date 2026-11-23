@@ -372,7 +372,9 @@ of the extraction.
 ## 9. Ownership and phone mirror (superseded by S5)
 
 > **S5 applied 2026-11-23.** `workout_session.owner_device_id` is provenance only. There is no
-> `409 not_owner` gate, no take-over endpoint, no mirror mode and no target picker. Any
+> `409 not_owner` gate, no take-over endpoint, no mirror mode and no target picker. The watch
+> credential is read-only for execution: every execution write answers `403 watch_read_only`, and
+> the watch commits through the phone. Abandon stays open to any device. Any
 > non-revoked device of the pairing may write, start, finish or abandon a session; plan edits
 > remain phone-only. The text below is retained for history only.
 
