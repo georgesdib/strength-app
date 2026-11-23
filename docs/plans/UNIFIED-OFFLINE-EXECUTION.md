@@ -216,12 +216,17 @@ Rounding uses decimal arithmetic from the decimal string, matching `loads.round_
 ### 9.4 Recording
 
 - `ExecutionChangeRequest` gains `prefill_load_kg`, `prefill_catalogue_version` and
-  `prefill_as_of`; `prefill_requested` is retired.
-- One rule for online and offline: the prefill is the issue-time value. The server recomputes from
-  the snapshot it issued and stores `prefill_verified`. A mismatch records both values and never
-  blocks the set.
-- A substitution outside the catalogue, or one with no base, records null with a reason. It is never
-  retro-solved and never falls back to the original exercise's load.
+  `prefill_as_of`. **Implemented 2026-11-23**; `prefill_requested` is retained as the documented
+  legacy path for one release and can be removed once the phone always sends a value.
+- The server recomputes from the snapshot it issued and stores `prefill_verified`,
+  `prefill_expected_load_kg` and, on disagreement, `prefill_mismatch_reason`. A mismatch records
+  both values and never blocks the change: the number the athlete saw is kept.
+- A substitution outside the catalogue, or one with no base, records a reason such as
+  `no_catalogue_base`. It is never retro-solved and never falls back to the original exercise's
+  load.
+- **Back-flare alignment implemented 2026-11-23:** `resolve_replacement` now applies the per-item
+  effort hold and erector dose before attaching warm-ups, so a replacement performed during a flare
+  gets the same treatment as a planned item.
 
 ### 9.5 Back-flare alignment
 
@@ -385,8 +390,12 @@ device result from a simulator run.
 3. Decode `execution_id` from `POST /prescriptions` and `GET /plans/current`, store it with the
    cached plan, and send it with `POST /workouts`; send `started_at` when the start came from a
    cached plan rather than a live request.
-4. Tests: settings encoding, `execution_id` round-trip, start body shape, and the "plan changed"
-   banner path.
+4. Substitution and addition requests send `prefill_load_kg` computed from the shipped
+   catalogue — `round_down(base/(1+(reps+rir)/30), increment)` for an essential slot, the
+   accessory value otherwise — with `prefill_catalogue_version`. A `prefill_verified: false`
+   response is a diagnostic for the logs, not something to correct silently in front of the athlete.
+5. Tests: settings encoding, `execution_id` round-trip, start body shape, the catalogue prefill
+   formula against the server's fixtures, and the "plan changed" banner path.
 
 **C2 — S1 client (after C1).**
 

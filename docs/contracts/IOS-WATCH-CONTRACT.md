@@ -680,6 +680,7 @@ message is involved; the phone discovers the session on its next foreground refr
 | `POST /api/ios/v1/workouts` | Binds the plan's `execution_id` as the workout id (minted at issue, migration `0076`); accepts the athlete's `started_at` and binds by the plan's issue window with `for_date` today or yesterday; a start recorded over two minutes ago is a syncing session and may run beside another open one; a different `execution_id` is `409 execution_id_mismatch`. **Implemented 2026-11-23.** |
 | `POST /api/workout/start` (web UI) | `409 plan_pending_for_phone` when an unexpired phone plan is outstanding for today; `start_anyway: true` proceeds. **Implemented 2026-11-23.** |
 | `GET /api/ios/v1/plans/current` | Adds `load_catalogue` (`load-catalogue/v1`): one entry per taxonomy exercise, built by the resolver (`engine.build_item`) with `base_load_kg`, `accessory_load_kg`, `increment_kg` and flags, so a substitution can be prefilled offline. Null on a plan built before the column existed. **Implemented 2026-11-23.** |
+| `POST /api/ios/v1/workouts/{id}/execution` | Accepts `prefill_load_kg`, `prefill_catalogue_version` and `prefill_as_of`; verifies the value against the snapshot the plan shipped and records `prefill_verified`, `prefill_expected_load_kg` and a mismatch reason without rejecting the change. `prefill_requested` stays as a legacy path. **Implemented 2026-11-23.** |
 
 ### 14.1 Agreed amendments for offline execution (approved 2026-11-23)
 
@@ -687,8 +688,6 @@ Recorded here so the contract and the plan do not diverge; **not yet in force**.
 slice named, and this subsection shrinks as it does. Canonical statement:
 [Unified offline workout execution](../plans/UNIFIED-OFFLINE-EXECUTION.md).
 
-- **S3** — the execution-change request replaces `prefill_requested` with `prefill_load_kg`,
-  `prefill_catalogue_version` and `prefill_as_of`, verified against the issued snapshot.
 - **S4** — the summary carries `reconciliation {state, pending_devices, closes_at}`; late events
   are accepted for seven days and preserved as `late_rejected` afterwards.
 - **S5** — §9's ownership gate, take-over and mirror mode are removed; the watch's direct execution
