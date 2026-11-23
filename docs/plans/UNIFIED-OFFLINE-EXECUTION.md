@@ -316,8 +316,28 @@ additions on either device, back-flare alignment.
 **S4 — lifecycle.** Offline start, late reconciliation (D8), HealthKit boundary, termination and
 reboot recovery, upgrade mid-workout (adopt existing queues), device-restart acceptance.
 
-**S5 — ownership removal.** D10 gate removal, mirror mode and takeover retired, watch direct-write
-path retired, tests and docs updated.
+**S5 — ownership removal and the visible simplification.** The authorization change and the UX
+change land together, because the second depends on the first:
+
+1. Remove the `409 not_owner` gate; `owner_device_id` stays as provenance (D10).
+2. Remove `execution_target`, `target_device_id` and `409 wrong_execution_target` from start; the
+   plan is targeted at the **pairing**, and the live-plan uniqueness becomes one row per pairing
+   instead of one per target device.
+3. **Remove the iPhone/watch execution-target picker from the request screen.** It exists only
+   because a plan currently names its executor; once the plan is pairing-scoped, the device that
+   presses Start is simply the device that starts. This is a product change, not a side effect,
+   and it must be reviewed as one.
+4. Remove mirror mode: the "Logging on Apple Watch" banner, the disabled controls and
+   `isMirroringWatchSession` guards. The phone is editable whenever a session is open.
+5. Retire `POST /workouts/{id}/takeover` and its `MutationKind.takeover` journal entry.
+6. Retire the WP8 "Send to iPhone" relay and the watch's direct execution writes (D12); the watch
+   keeps its credential for read-only surfaces only.
+7. Update every test that asserts these behaviours — the server ownership suite, `WatchMirrorTests`,
+   the takeover case in `Phase2ClientTests`, and the `not_owner` case in
+   `WatchExecutionEngineTests`.
+
+Until item 2 lands, the picker must stay: the current start gate still refuses a non-target device,
+so removing it earlier would break watch start rather than simplify it.
 
 Each slice: own branch, its own acceptance, and a rollback that returns to the previous behaviour
 without data loss.

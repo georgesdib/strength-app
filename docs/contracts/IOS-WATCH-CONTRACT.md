@@ -692,8 +692,10 @@ Recorded here so the contract and the plan do not diverge; **not yet in force**.
 slice named, and this subsection shrinks as it does. Canonical statement:
 [Unified offline workout execution](../plans/UNIFIED-OFFLINE-EXECUTION.md).
 
-- **S5** — §9's ownership gate, take-over and mirror mode are removed; the watch's direct execution
-  writes are retired. §21's pending-session deferral is removed when offline start lands.
+- **S5** — §9's ownership gate, take-over and mirror mode are removed; `execution_target` and the
+  per-target live-plan rule are removed so a plan belongs to the pairing, and the iPhone/watch
+  target picker goes with them; the watch's direct execution writes and the WP8 relay are retired.
+  §21's pending-session deferral is removed when offline start lands.
 
 `config/ios.v1.yaml` gains `idle_warn_seconds` (10800), `idle_abandon_seconds` (86400) and
 `watch_enabled` (tracked `true`; the code default remains `false` so a missing or malformed config fails closed; gates device minting), and
