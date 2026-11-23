@@ -66,7 +66,7 @@ Read from the code, not inferred:
 | D8 | Late events are accepted on a completed session for **7 days**, recorded in the event stream, with derived metrics recomputed. After the window, events are preserved as rejected-late, never deleted. | Completion must not discard unreceived work; the bound keeps old sessions from changing under analytics. |
 | D9 | Offline substitution load comes from a **server-built load catalogue** shipped with the plan. The client applies only `round_down(base / (1 + (reps + rir)/30), increment)`; Python verifies it from the snapshot it issued and never re-solves. | Keeps the training decision on the server while allowing modification with no connection. |
 | D10 | `owner_device_id` becomes provenance only. Authorization becomes: any non-revoked device of the pairing; revocation is enforced. | Ownership was doing correctness work (set-index uniqueness); that work moves to D2–D4. |
-| D11 | One HealthKit workout per session, keyed by `sessionUUID`. The watch writes it when the watch executed any part; the phone only when the watch took no part. | Two devices writing a workout each would duplicate rings, HR samples and imports. |
+| D11 | HealthKit duplicates are accepted. The watch writes a workout whenever it executed the session; the phone writes when it finishes one. Both may write, and the user deletes the duplicate in Health. No deferral, no pending-write state, no workout identity in the merge. | A missing workout is worse than a duplicate, and the user can delete one in seconds. Every deferral scheme needed cross-device state that the rest of the design does not otherwise require. An import-side overlap guard stays a contingency. |
 | D12 | The watch's direct-to-server *execution writes* are retired; it keeps its device credential for read-only surfaces. | D3 has one committer; a second write path would reintroduce dual authority. |
 | D13 | A plan binds to an execution when the local start falls inside `created_at…expires_at` and `for_date` is today or yesterday. | A 23:50 start synced at 00:10, or a start after the four-hour window, is the athlete's real session rather than an expired plan (WP1 B2). |
 | D14 | `OfflineCapture` version 2 decodes and migrates version 1 in place. | An app update mid-workout must not make the in-progress capture unreadable (WP1 B3). |
@@ -174,9 +174,14 @@ accounting, `performed_at` is display.
   by the session's own timestamps, so a completed session accepts it without a window; and a
   rejected late set now preserves its per-rep velocities with the rest of its payload, so refusal
   never discards sensor data.
-- Late **corrections and removals** are still refused after completion. That is WP2b, deliberately
-  separate because it must repair the materialised `clean_set` row and the session totals, and it
-  is the only remaining piece that can disturb existing history.
+- **WP2b implemented 2026-11-23:** late removals are accepted inside the window and append a
+  `clean_set` tombstone (a successor row that supersedes the old one and is itself voided), which
+  is the same append-only mechanism a history edit already uses; the session totals are recomputed
+  from live rows. A late correction of a removed set is refused with `409 late_event_rejected` and
+  preserved — it never resurrects the set. The first completion still stands, so a later finish
+  records the earlier instant without rewriting `ended_at`.
+- `clean_set` is append-only in both directions (update and delete are blocked by triggers), which
+  is why repair is expressed as supersession rather than mutation.
 
 ## 9. Load catalogue (D9)
 
@@ -242,10 +247,22 @@ Rounding uses decimal arithmetic from the decimal string, matching `loads.round_
 - A substitution outside the catalogue, or one with no base, records a reason such as
   `no_catalogue_base`. It is never retro-solved and never falls back to the original exercise's
   load.
-- **The event carries the replacement's own set count and source** (`sets`, `prefill_source`), so
-  a live erector dose that caps sets is visible to the client rather than silently discarded
-  (WP1.2). Warm-up ramps and VBT provenance are deliberately not carried: a mid-session substitute
-  is defined by the load, reps, RIR and set count the athlete acts on.
+- **The event carries the replacement's own prescription** (2026-11-23): `sets`,
+  `prefill_source`, `set_groups` (the slot's structure re-solved for the substitute, so a top set
+  plus back-offs stays one), `top_set {status, reason_code}` and `resolved_by`.
+- **Shape is preserved; top-set eligibility is not re-decided.** The slot's group structure belongs
+  to what the athlete is training, so the loads move and the shape stays. Eligibility depends on
+  the resolver's gates and the substitute's own history, so a substitute records
+  `top_set: not_applicable, reason_code: substituted` rather than inheriting the original lift's
+  decision. Warm-up ramps are not carried: a mid-session substitute is defined by load, sets, reps,
+  RIR, groups and VBT.
+- **VBT targets are shipped** in the catalogue for lifts with a trustworthy calibration, and come
+  from the resolver on the server path, so a substitute has the same velocity target online and
+  offline. Entries without a calibration carry no target, never a reconstructed one.
+- **Online and offline may differ in provenance, never in kind.** A server solve is authoritative
+  and stores what it produced; a catalogue prefill stores what the phone applied and is verified
+  against the issued snapshot. `resolved_by` says which, and an offline record is never
+  retro-upgraded later.
 - **Back-flare alignment implemented 2026-11-23:** `resolve_replacement` now applies the per-item
   effort hold and erector dose before attaching warm-ups, so a replacement performed during a flare
   gets the same treatment as a planned item.
@@ -463,6 +480,36 @@ device result from a simulator run.
 logging while partitioned then reconciled; terminate each app mid-set; and a version-1 capture
 upgraded mid-workout.
 
+**C1/C2 additions from the audit close-out (2026-11-23):**
+
+1. An execution change now returns `resolved_by`, `set_groups` and `top_set`. Render the groups
+   as the substitute's prescription — a top set plus back-offs stays one — and show
+   `top_set: not_applicable` rather than the original lift's top-set numbers.
+2. A substitute may carry `vbt_target` (catalogue path) or `vbt` (server path); show the velocity
+   target when present, never invent one.
+3. There is no `prefill_requested` flag. Send `prefill_load_kg` when you applied the catalogue;
+   send `prefill_catalogue_version` with no value to record a catalogue miss; send neither and the
+   server solves.
+4. A late removal is accepted inside the window; a late correction of a removed set returns
+   `409 late_event_rejected` — keep it unsent and show it, don't retry.
+5. The server no longer mints an execution id for a plan issued before the column existed; a plan
+   without one answers `409 plan_not_bindable`, and the fix is to request a fresh plan.
+
+**C3 — HealthKit writer policy (WP6, this is the audit's one client task).**
+
+D11 is now four lines and needs no cross-device machinery:
+
+- The watch saves one HealthKit workout whenever it ran the session, through the existing
+  per-device finaliser keyed by `sessionUUID`. That mechanism is unchanged.
+- The phone saves one when it finishes a session.
+- If both finish, both save, and the user deletes one in Health. The app must not delete, merge or
+  "fix" HealthKit records automatically.
+- No deferral, no pending-write state, no HealthKit identity in the merge, no timeout.
+
+Acceptance: a watch-only session produces one workout; a phone-only session produces one; a
+session finished on both produces two, and the athlete can delete either without breaking the
+server record (the training data comes from `workout_set`, not HealthKit).
+
 **C2 additions for late reconciliation (server ready):**
 
 1. On finish, send `pending_devices` naming the devices whose events have not arrived (the phone
@@ -472,7 +519,34 @@ upgraded mid-workout.
 3. When a late set is refused with `409 reconciliation_window_closed`, keep the device's own copy
    and show it as unsent — the server has preserved it, but only for audit.
 
-## 19. Status and change control
+## 19. Review dispositions (2026-11-23)
+
+The external review raised five work packages. Recorded here so a later reader does not re-raise
+what was decided.
+
+**Accepted and implemented (server):** WP1's parity test against `resolve_replacement`; the
+erector-dose divergence; carrying the replacement's prescription (narrowed — see below); WP2's gap
+for late events; WP2.3's preservation of a rejected event's payload, including per-rep velocities;
+WP5's removal of the elapsed-time heuristic.
+
+**Rejected, with reasons:**
+
+- **WP2.2** — device sequence numbers and stable UUIDs for every server event. The per-device
+  idempotency receipt already makes retries safe, and per-event device provenance is a migration
+  with no consumer today.
+- **WP2.4** — the five-state reconciliation machine. You rejected it; the window is time-bounded
+  (D8) and a device is settled explicitly or by elapsed time, not by a richer state graph.
+- **WP1.2 as written** — carrying warm-up runs and full VBT provenance inside every execution event.
+  Narrowed to the fields the athlete acts on plus the shipped VBT target, because the performed set
+  is the durable record (DEC-RESOLVER-23) and the event is a view hint.
+
+**Deferred to S5:** `execution_target`, ownership, takeover, mirror mode, the WP8 relay and the
+iPhone/watch picker — one removal, gated on the client ledger.
+
+**Recorded, not code:** WP6's writer policy (D11) is a client decision; the server has no HealthKit
+involvement.
+
+## 20. Status and change control
 
 This document is the canonical cross-repository statement for offline execution. Component
 implementation detail belongs in `strength-training-app/docs/` and `StrengthApp/docs/`; the
