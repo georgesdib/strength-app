@@ -448,6 +448,11 @@ The resolver fills those slots only and never adds or removes a slot or a set.
 
 ### 5.8 Phone gateway and offline watch execution (later slice)
 
+> **Superseded 2026-11-23** by [Unified offline workout execution](UNIFIED-OFFLINE-EXECUTION.md),
+> which removes D10's limitation (the watch no longer requires the phone to be online) and replaces
+> this slice. The text below is retained as the historical record of the slice as scoped then;
+> WP8's "Send to iPhone" relay remains implemented as described.
+
 The watch is offline-capable only while the phone is online (D10). There is no pending-session
 shell, no offline start without a reachable phone, and no new server lifecycle state.
 

@@ -133,6 +133,9 @@ submodules.
 - Update submodule pointers only when explicitly requested as a portfolio
   consolidation task.
 - Never discard submodule changes or reset a submodule without approval.
+- Before pushing, fetch and rebase onto the branch tip (`git pull --rebase`); never
+  force-push. Several sessions work the same branches concurrently, so a push that
+  succeeds locally can still be rejected by the remote.
 
 
 ## Shared documentation change management
