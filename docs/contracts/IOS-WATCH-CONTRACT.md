@@ -668,7 +668,7 @@ message is involved; the phone discovers the session on its next foreground refr
 | `GET /api/ios/v1/devices` | New. Lists devices with kind, label, epoch, created/last-seen/revoked. |
 | `DELETE /api/ios/v1/devices/{device_id}` | New. Revokes the watch from phone or itself. Revoking a phone also revokes its active child watch and returns `revoked_watch_ids`. |
 | `POST /api/ios/v1/prescriptions` | Accepts `execution_target` (`phone` or `watch`); for `watch` resolves the phone's active watch into `target_device_id` and returns `409 watch_not_paired` when there is none. Absent means `phone` for older clients. |
-| `GET /api/ios/v1/plans/current` | Returns `execution_target` and `execution_id`; matches the requester or the target so the watch can see a phone-requested plan. |
+| `GET /api/ios/v1/plans/current` | Returns `execution_target`, `execution_id` and `load_catalogue`; matches the requester or the target so the watch can see a phone-requested plan. |
 | `POST /api/ios/v1/workouts` | Rejects a start unless the caller is the target and its kind matches, with `409 wrong_execution_target`; sets `owner_device_id`, `plan_revision = 0` and `last_activity_at`; response includes them. |
 | `GET /api/ios/v1/workouts/{id}/execution` | Adds `owner_device_id`, `plan_revision`, `last_activity_at`, `stale`, the frozen `plan`, and the `execution` block `{workout_id, watermark, substitutions, additions}`. |
 | `POST /api/ios/v1/workouts/{id}/execution` | New, phone token only (`403 not_phone` from a watch): appends one `substitution` or `addition`; the server solves the prefill or records `prefilled_load_kg: null` with `prefill_reason`, and the response is the same `execution` block. Idempotent by the body `event_id`. |
@@ -679,6 +679,7 @@ message is involved; the phone discovers the session on its next foreground refr
 | `POST /api/ios/v1/prescriptions` settings | Adds `technique_throttle` (boolean, main-work scope): MOD-TECH-001 is applied when the plan is built and frozen into it. Omitted by a client that does not send it. **Implemented 2026-11-23.** |
 | `POST /api/ios/v1/workouts` | Binds the plan's `execution_id` as the workout id (minted at issue, migration `0076`); accepts the athlete's `started_at` and binds by the plan's issue window with `for_date` today or yesterday; a start recorded over two minutes ago is a syncing session and may run beside another open one; a different `execution_id` is `409 execution_id_mismatch`. **Implemented 2026-11-23.** |
 | `POST /api/workout/start` (web UI) | `409 plan_pending_for_phone` when an unexpired phone plan is outstanding for today; `start_anyway: true` proceeds. **Implemented 2026-11-23.** |
+| `GET /api/ios/v1/plans/current` | Adds `load_catalogue` (`load-catalogue/v1`): one entry per taxonomy exercise, built by the resolver (`engine.build_item`) with `base_load_kg`, `accessory_load_kg`, `increment_kg` and flags, so a substitution can be prefilled offline. Null on a plan built before the column existed. **Implemented 2026-11-23.** |
 
 ### 14.1 Agreed amendments for offline execution (approved 2026-11-23)
 

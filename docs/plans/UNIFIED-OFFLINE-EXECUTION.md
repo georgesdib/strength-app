@@ -171,15 +171,11 @@ One entry per exercise, shipped inside the issued plan:
   "catalogue_version": "load-catalogue/v1",
   "as_of": "2026-11-23",
   "exercises": {
-    "barbell_bench_press": {
+    "competition_squat": {
       "load_source": "e1rm",
-      "base_load_kg": 102.5,
-      "base_provenance": {
-        "selector": "best_usable", "ref": "set:abc/42",
-        "coverage": 4, "quality": "ok", "decayed": true, "calibrated": false
-      },
-      "last_working_load_kg": 100.0,
-      "increment_kg": 2.5,
+      "base_load_kg": 163.3,
+      "accessory_load_kg": 140.0,
+      "increment_kg": 0.5,
       "bodyweight": false,
       "power": false
     }
@@ -193,8 +189,8 @@ One entry per exercise, shipped inside the issued plan:
 
 ```
 power or bodyweight     -> 0, or null with reason
-base_load_kg present    -> round_down(base_load_kg / (1 + (reps + rir) / 30), increment_kg)
-no base, last working   -> round_down(last_working_load_kg, increment_kg)
+essential slot, base    -> round_down(base_load_kg / (1 + (reps + rir) / 30), increment_kg)
+accessory slot, held    -> round_down(accessory_load_kg, increment_kg)
 neither                 -> null, reason: no_catalogue_base
 ```
 
@@ -204,14 +200,18 @@ Rounding uses decimal arithmetic from the decimal string, matching `loads.round_
 
 ### 9.3 Generation and parity
 
-- Extract the load branch of `build_item` into `prescribe/load_recipe.py` returning this record, so
-  the resolver and the catalogue cannot drift.
-- Build the catalogue once at issue over the taxonomy (~150 exercises); reuse the `RuleContext`
-  already loaded for the plan build.
-- **Parity gate:** for every exercise and several issue dates, assert
-  `catalogue-derived load == build_item load`. This test is the contract; if it fails, the
-  catalogue is wrong.
-- Swift tests replay the same fixtures, including boundary cases that land exactly on an increment.
+- **Implemented 2026-11-23 in `prescribe/catalogue.py`, with a stronger guarantee than the
+  extraction originally proposed:** each entry is produced by calling `engine.build_item` itself,
+  so there is no second implementation to drift. The earlier plan to extract a `load_recipe`
+  module was dropped for that reason.
+- One `RuleContext` and one calibration pass are shared across the taxonomy; exercises with no
+  stored history emit a null entry without a build, and the accessory load reuses the resolver's
+  own `_last_working_set`. Measured on the test account: 144 entries, **20.5 KB**, **0.64 s**.
+- **Parity gate (implemented):** the shipped base plus the client formula must equal
+  `build_item`'s load across exercises and (reps, RIR) pairs. This test is the contract; if it
+  fails, the catalogue is wrong.
+- Swift tests still need the same fixtures replayed, including boundary cases that land exactly on
+  an increment.
 
 ### 9.4 Recording
 
