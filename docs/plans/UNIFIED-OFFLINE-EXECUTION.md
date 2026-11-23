@@ -178,8 +178,10 @@ accounting, `performed_at` is display.
   `clean_set` tombstone (a successor row that supersedes the old one and is itself voided), which
   is the same append-only mechanism a history edit already uses; the session totals are recomputed
   from live rows. A late correction of a removed set is refused with `409 late_event_rejected` and
-  preserved — it never resurrects the set. The first completion still stands, so a later finish
-  records the earlier instant without rewriting `ended_at`.
+  preserved — it never resurrects the set. The first completion still stands: a completion carrying
+  an earlier `ended_at` appends a `late_finish` event with that instant and the completing device,
+  and `ended_at` is never rewritten. A rejected late event also carries the originating device, so
+  a refusal stays attributable.
 - `clean_set` is append-only in both directions (update and delete are blocked by triggers), which
   is why repair is expressed as supersession rather than mutation.
 
