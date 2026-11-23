@@ -550,7 +550,55 @@ iPhone/watch picker — one removal, gated on the client ledger.
 **Recorded, not code:** WP6's writer policy (D11) is a client decision; the server has no HealthKit
 involvement.
 
-## 20. Status and change control
+## 20. Release sequencing (owner decision 2026-11-23: server first)
+
+The server branch and the current app are incompatible **in both directions**: the old app sends
+`prefill_requested`, which the server now rejects, and a new app sending `prefill_load_kg` would be
+rejected by an old server. There is no rolling-compatible order, so the window is planned rather
+than avoided.
+
+**Preconditions**
+
+1. `./check.sh full` green on the server branch (the fast lane is not enough for a merge).
+   **Verified 2026-11-23 at `a2e8176`: 2464 passed, 1 skipped.**
+2. The iOS build carrying the client changes is ready to submit, or already in review.
+3. A database backup per `docs/BACKUP.md`.
+
+**Order**
+
+1. Merge the server branch into `development` (never `main`; no squash) and deploy on the ODROID.
+   Restart `strength-coach-web.service`; migrations `0076` and `0077` apply on start.
+2. Verify: health 200; `GET /api/ios/v1/plans/current` returns `execution_id` and
+   `load_catalogue`; one substitution with `prefill_load_kg` returns `prefill_verified: true`;
+   a summary returns the `reconciliation` block.
+3. Ship the app build. Until it lands, the old app is degraded in exactly two ways: a substitution
+   fails with `unknown_field`, and a plan issued before the deploy cannot be started
+   (`409 plan_not_bindable`). Sets, corrections, removals, finishing, history and readiness are
+   unaffected, which is why server-first is the lesser window.
+
+**During the window**
+
+- Do not issue a plan that the old app must start; the four-hour window means any plan issued
+  before the deploy is expired within hours anyway.
+- Do not advertise the feature until the app build is live.
+
+**Rollback**
+
+- Redeploy the previous server commit. Migrations `0076` and `0077` are additive (a nullable column
+  and a unique index each), so leaving them in place is harmless and no data rewrite is involved.
+  Do not drop them as part of a rollback.
+- The app build can be held back independently; it does not read anything the old server lacks
+  except the new fields, which decode as absent.
+
+**After the release**
+
+1. S5: remove `execution_target`, the ownership gate, takeover, mirror mode, the WP8 relay and the
+   picker, in one slice with the client change.
+2. Then the leftovers: the last compatibility branches, and any test that still asserts the old
+   behaviour.
+3. Advance submodule pointers only when the owner asks for a consolidation.
+
+## 21. Status and change control
 
 This document is the canonical cross-repository statement for offline execution. Component
 implementation detail belongs in `strength-training-app/docs/` and `StrengthApp/docs/`; the
