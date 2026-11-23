@@ -56,7 +56,7 @@ Read from the code, not inferred:
 
 | ID | Decision | Why |
 |---|---|---|
-| D1 | Execution identity is minted per start, not per plan: the first starter claims it; the web UI mints on start as today; the phone adopts the ID it holds in the issued plan, and an offline start binds at first sync. A web start warns when an outstanding issued plan exists for today. | Removes the offline hole in `409 workout_active` without blocking the web UI or killing plans on a timer. |
+| D1 | Execution identity is minted per start, not per plan: the first starter claims it; the web UI mints on start as today; the phone adopts the ID it holds in the issued plan, and an offline start binds at first sync. A web start warns when an outstanding issued plan exists for today. The single in-progress invariant is relaxed so a synced offline session can be created even when another session exists (WP1 B1). | Removes the offline hole in `409 workout_active` without blocking the web UI or killing plans on a timer. |
 | D2 | `(exercise_id, set_index)` stays the server's set identity. The watch's offline sets are provisional and carry only a local ID; the phone assigns indexes at merge. | No schema change, no second identity domain, and one writer keeps the index unambiguous. |
 | D3 | The phone is the only committer to Python for execution writes. The watch holds an optimistic local view. | One idempotency domain, one merge implementation, one place to resolve conflicts. |
 | D4 | Merge never rejects a set. A collision is renumbered after the current maximum, in capture order, with device provenance retained. | A rejection on the merge path is a lost set. |
@@ -68,6 +68,8 @@ Read from the code, not inferred:
 | D10 | `owner_device_id` becomes provenance only. Authorization becomes: any non-revoked device of the pairing; revocation is enforced. | Ownership was doing correctness work (set-index uniqueness); that work moves to D2–D4. |
 | D11 | One HealthKit workout per session, keyed by `sessionUUID`. The watch writes it when the watch executed any part; the phone only when the watch took no part. | Two devices writing a workout each would duplicate rings, HR samples and imports. |
 | D12 | The watch's direct-to-server *execution writes* are retired; it keeps its device credential for read-only surfaces. | D3 has one committer; a second write path would reintroduce dual authority. |
+| D13 | A plan binds to an execution when the local start falls inside `created_at…expires_at` and `for_date` is today or yesterday. | A 23:50 start synced at 00:10, or a start after the four-hour window, is the athlete's real session rather than an expired plan (WP1 B2). |
+| D14 | `OfflineCapture` version 2 decodes and migrates version 1 in place. | An app update mid-workout must not make the in-progress capture unreadable (WP1 B3). |
 
 **Execution is not prescription.** A substitution, an added set, or a corrected set is an
 execution fact recorded with provenance. A client-applied load is a shipped suggestion the athlete
@@ -87,7 +89,10 @@ prescription is never rewritten, and no later read may imply that it was.
   (`start_anyway: true`); the UI shows the warning rather than a hard block.
 - A phone opening a web-started workout adopts the server's workout ID (existing recovery path).
 - If both exist anyway, they stay two sessions. Nothing is auto-merged, and the phone shows a
-  "two sessions today" state.
+  "two sessions today" state. This requires the single in-progress invariant to be relaxed: today
+  `workout.start` refuses to create any second in-progress session.
+- Binding is judged by the athlete's start, not by the sync: a plan binds when the recorded local
+  start falls inside `created_at…expires_at` and `for_date` is today or yesterday (D13).
 
 ## 6. The ledger, and what it does not replace
 
@@ -285,8 +290,10 @@ summary.
 **S0 — technique throttle** (independent, no dependency on the rest). Server field + pass-through,
 client toggle, plan display. Shippable on its own.
 
-**S1 — identity, ledger, watch-only reap.** Execution ID at issue; adopt path; device ledger and
-rebuild; watch executes a full session offline with sets and finish; phone merges and uploads.
+**S1 — identity, ledger, watch-only reap.** Prerequisites from WP1: the bind rule (D13), the
+capture-version migration (D14), and the relaxed in-progress invariant (D1). Then: execution ID at
+issue; adopt path; device ledger and rebuild; watch executes a full session offline with sets and
+finish; phone merges and uploads.
 Proves the pipeline end to end. No substitutions, no concurrent logging.
 
 **S2 — concurrent and never-reject merge.** Ack-before-commit; provisional sets; renumbering;

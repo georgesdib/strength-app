@@ -676,6 +676,24 @@ message is involved; the phone discovers the session on its next foreground refr
 | Plan-edit routes | Removed. All five R8 routes return `404`; a substitution or addition is the only mid-session change. |
 | `POST /api/ios/v1/workouts/{id}/takeover` | New. Transfers ownership and appends an event. |
 | Existing abandon route | Allowed by any device; records the device. |
+| `POST /api/ios/v1/prescriptions` settings | Adds `technique_throttle` (boolean, main-work scope): MOD-TECH-001 is applied when the plan is built and frozen into it. Omitted by a client that does not send it. **Implemented 2026-11-23.** |
+
+### 14.1 Agreed amendments for offline execution (approved 2026-11-23)
+
+Recorded here so the contract and the plan do not diverge; **not yet in force**. Each lands with the
+slice named, and this subsection shrinks as it does. Canonical statement:
+[Unified offline workout execution](../plans/UNIFIED-OFFLINE-EXECUTION.md).
+
+- **S1** — `ios_issued_plan.execution_id` (additive column) is generated at issue;
+  `POST /api/ios/v1/workouts` accepts `execution_id` and binds it as the workout ID;
+  `409 plan_pending_for_phone` warns a web start when an outstanding issued plan exists for today
+  and is overridable with `start_anyway: true`; the single in-progress invariant is relaxed.
+- **S3** — the execution-change request replaces `prefill_requested` with `prefill_load_kg`,
+  `prefill_catalogue_version` and `prefill_as_of`, verified against the issued snapshot.
+- **S4** — the summary carries `reconciliation {state, pending_devices, closes_at}`; late events
+  are accepted for seven days and preserved as `late_rejected` afterwards.
+- **S5** — §9's ownership gate, take-over and mirror mode are removed; the watch's direct execution
+  writes are retired. §21's pending-session deferral is removed when offline start lands.
 
 `config/ios.v1.yaml` gains `idle_warn_seconds` (10800), `idle_abandon_seconds` (86400) and
 `watch_enabled` (tracked `true`; the code default remains `false` so a missing or malformed config fails closed; gates device minting), and
