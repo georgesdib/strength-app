@@ -683,7 +683,8 @@ message is involved; the phone discovers the session on its next foreground refr
 | `POST /api/ios/v1/workouts/{id}/execution` | Accepts `prefill_load_kg`, `prefill_catalogue_version` and `prefill_as_of`; verifies the value against the snapshot the plan shipped and records `prefill_verified`, `prefill_expected_load_kg` and a mismatch reason without rejecting the change. `prefill_requested` stays as a legacy path. **Implemented 2026-11-23.** |
 | `POST /api/ios/v1/workouts/{id}/complete` | Accepts `pending_devices`; a non-empty list opens a `reconciliation_window_days` (default 7) window recorded as a `late_reconciliation` event with the deadline. **Implemented 2026-11-23.** |
 | `POST /api/ios/v1/workouts/{id}/sets` | A set may arrive after completion inside the open window: it is applied with its original timestamp, written into `clean_set` and the session totals are recomputed, with a `late_set` event. After the window the arrival is preserved as a `late_rejected` event and the response is `409 reconciliation_window_closed`. **Implemented 2026-11-23.** |
-| `GET /api/ios/v1/workouts/{id}/summary` | Gains `reconciliation: {state: none|open|closed, pending_devices, closes_at}`. **Implemented 2026-11-23.** |
+| `GET /api/ios/v1/workouts/{id}/summary` | Gains `reconciliation: {state: none|open|closed, pending_devices, closes_at}`; `pending_devices` reports only the devices still outstanding. **Implemented 2026-11-23.** |
+| `POST /api/ios/v1/workouts/{id}/reconciliation` | `{device_id}` records that an expected device has nothing left to send, so a synced watch settles the window early instead of leaving it open for seven days. Idempotent; unknown device is a no-op. **Implemented 2026-11-23.** |
 
 ### 14.1 Agreed amendments for offline execution (approved 2026-11-23)
 

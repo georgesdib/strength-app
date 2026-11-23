@@ -152,8 +152,12 @@ accounting, `performed_at` is display.
 - A phone that cannot reach the watch after finishing uploads with a `late_reconciliation` event
   carrying `pending_devices` and `closes_at = ended_at + 7 days`. It does not ask the athlete to
   choose between waiting and losing data; nothing is lost.
-- The summary payload carries `reconciliation: {state, pending_devices, closes_at}`. The phone shows
-  "Apple Watch data pending" and refreshes when the watch syncs.
+- The summary payload carries `reconciliation: {state, pending_devices, closes_at}`, and
+  `pending_devices` lists only what is still outstanding. The phone shows "Apple Watch data
+  pending" and refreshes when the watch syncs.
+- A device that has nothing left to send is recorded through
+  `POST /workouts/{id}/reconciliation {device_id}`, which settles the window as soon as nothing
+  remains. Without it a synced watch would leave the session "pending" for the full week.
 - Late sets are appended through the same add-set path with the original timestamps. Derived
   metrics (volume, e1RM inputs, VBT aggregation, calibration) recompute on read; the server does not
   store a second summary.
