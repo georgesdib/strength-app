@@ -306,6 +306,9 @@ without data loss.
 
 ## 15. WP1 audit checklist (before S1)
 
+**Complete 2026-11-23.** Findings, severity and the three decisions required before S1 are in
+[UNIFIED-OFFLINE-EXECUTION-WP1-AUDIT.md](UNIFIED-OFFLINE-EXECUTION-WP1-AUDIT.md).
+
 1. Confirm the start path can bind a supplied `execution_id` without breaking idempotency receipts.
 2. Establish what the watch's cached plan actually contains, and whether plan + catalogue fit the
    WatchConnectivity delivery path (the application context is reserved for the credential
