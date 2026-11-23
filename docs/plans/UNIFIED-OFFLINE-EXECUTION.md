@@ -347,6 +347,11 @@ both the ceiling and the size coupling.
 
 ## 16. Acceptance matrix (physical devices)
 
+**Server-side walking skeleton implemented 2026-11-23:** one HTTP conversation covers adopt → log →
+finish with a pending device → late set with its original instant → totals recomputed → device
+resolved → window closed (`tests/test_ios_workflow.py::test_the_whole_offline_flow_reconciles_end_to_end`).
+It is the reference the Swift work is written against; the matrix below still needs physical devices.
+
 Simulator success is not acceptance (`StrengthApp/AGENTS.md`). Required:
 
 1. Phone-only, airplane mode, full workout start → finish → sync.
