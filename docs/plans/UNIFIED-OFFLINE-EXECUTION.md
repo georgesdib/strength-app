@@ -626,8 +626,6 @@ open session. Keep this window short.
 2. Advance submodule pointers only on an explicit portfolio consolidation request.
 
 ## 21. Status and change control
-## 21. Status and change control
-## 21. Status and change control
 
 This document is the canonical cross-repository statement for offline execution. Component
 implementation detail belongs in `strength-training-app/docs/` and `StrengthApp/docs/`; the
