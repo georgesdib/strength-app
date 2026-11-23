@@ -327,6 +327,13 @@ without data loss.
    or gate the release on queue-empty.
 6. Measure catalogue size on a real account and the resulting plan payload.
 
+**B5 settled 2026-11-23.** A measured plan is 12.9–13.7 KB for 6–7 items; a catalogue entry is
+274 B, so the 144-entity library is ≈39.5 KB. Worst case ≈53 KB against a 65,536-byte
+WatchConnectivity ceiling. **Decision: plan and catalogue travel by `transferFile`, not by
+application context or `transferUserInfo`.** A trimmed entry (~180 B, dropping the provenance ref)
+brings the library to ≈26 KB if a message transport is ever preferred, but file transfer removes
+both the ceiling and the size coupling.
+
 ## 16. Acceptance matrix (physical devices)
 
 Simulator success is not acceptance (`StrengthApp/AGENTS.md`). Required:
@@ -355,7 +362,52 @@ device storage growth from an uncapped ledger (bounded by acknowledgement, not a
 framework; resurrecting plan editing; watch-authored substitutions (D9 of the resolver plan stands);
 mid-workout technique-throttle changes.
 
-## 18. Status and change control
+## 18. MacBook handout — Swift work
+
+Everything below is client work for the MacBook, because this checkout has no Xcode and device
+acceptance is a MacBook responsibility. Branch `offline-execution` in `StrengthApp`, PR into
+`development`, and report test status per item; never commit `LiveConfig.swift`, and never claim a
+device result from a simulator run.
+
+**Constraints that do not change:**
+
+- No resolver, no load calculation beyond the §9 formula, no training policy.
+- Do not remove the ownership gate, mirror mode or the takeover endpoint; that is S5 and needs its
+  own approval point.
+- Do not add a second write path to the server for the watch.
+
+**C1 — S0 client (small, unblocked).**
+
+1. Add the `technique_throttle` toggle (main work only) to the prescription request and send it in
+   `settings`. The server half is implemented; see the contract §14 row.
+2. Show on the issued plan that MOD-TECH-001 is in force, so lighter loads are explained. The item's
+   rationale refs carry it.
+3. Decode `execution_id` from `POST /prescriptions` and `GET /plans/current`, store it with the
+   cached plan, and send it with `POST /workouts`; send `started_at` when the start came from a
+   cached plan rather than a live request.
+4. Tests: settings encoding, `execution_id` round-trip, start body shape, and the "plan changed"
+   banner path.
+
+**C2 — S1 client (after C1).**
+
+1. `OfflineCapture` version 2: decode and migrate version 1 in place (D14). A mid-workout update
+   must not make the capture unreadable. Test with a real version-1 fixture.
+2. Ledger entries: `entry_id`, `workout_id`, `device_id`, `device_seq`, `kind`, `payload`,
+   `created_at_local`, `clock_offset_s`, `plan_watermark`, `ack_state`; no age-out before ack.
+3. Plan-only cache on the watch (B4) delivered by `transferFile` (B5), so a start needs nothing but
+   the cached plan and the execution id.
+4. Offline start on either device under the plan's `execution_id`.
+5. Ack-before-commit: when the phone is reachable, a watch set is provisional until acknowledged;
+   after 3 s without an acknowledgement it proceeds as offline.
+6. Merge: the phone renumbers colliding `(exercise, set_index)` after the current maximum in capture
+   order, preserves warm-up indexes ≥1000, keeps device provenance, and never rejects a set.
+7. Edit/remove translation through the per-device `local_set_id → set_id` map.
+
+**Acceptance for C2** (physical devices, from §16): watch-only with the phone powered off; both
+logging while partitioned then reconciled; terminate each app mid-set; and a version-1 capture
+upgraded mid-workout.
+
+## 19. Status and change control
 
 This document is the canonical cross-repository statement for offline execution. Component
 implementation detail belongs in `strength-training-app/docs/` and `StrengthApp/docs/`; the
