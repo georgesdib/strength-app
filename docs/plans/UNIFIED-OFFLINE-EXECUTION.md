@@ -1,14 +1,15 @@
 # Unified offline workout execution
 
-**Status:** **Closed 2026-11-23.** Server full suite 2469 passed, 1 skipped at `e5ebdbc`;
-client `scripts/ci.sh` 563 tests passed, 1 skipped at `9bf3c5e`. C1, C2, S5 and the audit are
-implemented on both sides. Follow-up findings 1, 2, 3 and 5 are fixed. Physical-device acceptance
-was closed by owner decision on 2026-11-23 (record:
-`StrengthApp/docs/acceptance/device/14-offline-execution.md`). Release is app-first per §20 and is
-an operational handoff, not open plan work.
+**Status:** **Closed 2026-11-23.** Server `development` at `34e7f29` is deployed on the
+ODROID (2469 passed, 1 skipped); client `development` at `4032561` passes `scripts/ci.sh`
+(569 tests, 1 skipped), with the watch Today readiness fix at `cfb4ca2` built and pending tests.
+C1, C2, S5 and the audit are implemented on both sides. Follow-up findings 1, 2, 3 and 5 are
+fixed. Physical-device acceptance was closed by owner decision on 2026-11-23 (record:
+`StrengthApp/docs/acceptance/device/14-offline-execution.md`). The release is an operational
+handoff: the **server was deployed first**; the app build remains.
 **Gate:** this document is the WP0 record required by `AGENTS.md` before the refactor; the work
-packages below record what was built and what is still open.
-**Owner decisions are recorded in §4.** Anything marked *proposed* has not been applied to a canonical document.
+packages below record what was built and why.
+**Owner decisions are recorded in §4.** The contract amendments in §13 are applied; the watch contract §14.1 is the canonical statement.
 
 ## 1. Purpose
 
@@ -28,9 +29,9 @@ the home server or the other device. It does not mean offline plan generation.
   offline-capable only while the phone is online — is the thing this plan removes.
 - **Amends** [IOS-WATCH-CONTRACT.md](../contracts/IOS-WATCH-CONTRACT.md) §8 (start gate), §9
   (ownership), §10.4 (mismatch policy), §14 (server API), §21 (deferred). Amendment text is in
-  §13; it is not applied until approved.
-- **Amends** [IOS-CLIENT-PLAN.md](IOS-CLIENT-PLAN.md) §5 (offline behaviour table), which still
-  says a start requires server connectivity.
+  §13; all of it is applied.
+- **Amends** [IOS-CLIENT-PLAN.md](IOS-CLIENT-PLAN.md) §5 (offline behaviour table): the start row
+  now says a start requires a downloaded plan, not a connection.
 - **Keeps** the technique-throttle modifier (MOD-TECH-001) and the execution-change model
   (DEC-RESOLVER-23) as the basis for offline plan changes.
 
@@ -311,7 +312,10 @@ asymmetry is recorded.
 - No ledger or offline impact: the throttle is frozen into the plan at issue. Changing it
   mid-workout is out of scope.
 
-## 13. Contract amendments (proposed, not applied)
+## 13. Contract amendments (applied 2026-11-23)
+
+All amendments below are in force; the applied text is in the watch contract (§14.1 and the
+sections named), and `IOS-CLIENT-PLAN §5` was updated in the same change.
 
 **IOS-WATCH-CONTRACT §8** — replace the start gate bullets with: a plan carries `execution_id`; the
 watch may start offline from its cached plan and binds the ID at first sync; start no longer requires
@@ -330,10 +334,11 @@ document is currently stale relative to that decision and should be corrected in
 execution-change request; add `409 plan_pending_for_phone`; add the reconciliation block to the
 summary.
 
-**IOS-WATCH-CONTRACT §21** — remove the deferred pending-session shell; it is being built.
+**IOS-WATCH-CONTRACT §21** — remove the deferred pending-session shell; offline start is
+implemented (2026-11-23) and needs no shell.
 
-**IOS-CLIENT-PLAN §5** — the offline table's "start still requires connectivity" row changes to
-"start requires a downloaded plan, not a connection".
+**IOS-CLIENT-PLAN §5** — the offline table's "start still requires connectivity" row now reads
+"a start uses the downloaded plan with no connection".
 
 ## 14. Work packages and slices
 
@@ -358,7 +363,7 @@ additions on either device, back-flare alignment.
 reboot recovery, upgrade mid-workout (adopt existing queues), device-restart acceptance.
 
 **S5 — ownership removal and the visible simplification.** **Implemented 2026-11-23 on both sides
-(items 1–5 and 7); item 6 remains.** The authorization change and the UX
+(items 1–7).** The authorization change and the UX
 change land together, because the second depends on the first:
 
 1. Remove the `409 not_owner` gate; `owner_device_id` stays as provenance (D10).
@@ -570,61 +575,57 @@ execution writes from a watch token.
 **Recorded, not code:** WP6's writer policy (D11) is a client decision; the server has no HealthKit
 involvement.
 
-## 20. Release sequencing (owner decision 2026-11-23: app first)
+## 20. Release sequencing (server deployed first, 2026-11-23)
 
-**Status:** release handoff. The implementation plan is closed; the steps below are operational.
+**Status:** the server is deployed; the app build is the remaining release step. The owner chose
+app-first, but the server was deployed first during the offline close-out. That decision is now
+historical; the actual sequence and its window are recorded here.
 
-The server branch and the current app are incompatible in both directions: the old app sends
+The server branch and the old app are incompatible in both directions: the old app sends
 `prefill_requested` and `execution_target`, which the server no longer accepts; a new app sends
-`execution_id` and `prefill_load_kg`, which an old server may reject. App-first is the owner's
-chosen order. It keeps phone start/log work available in the expected case, while the watch's
-start, substitution prefill and S5 visibility wait for the server deploy.
+`execution_id` and `prefill_load_kg`. **The live server is already new.** Until the app ships, the
+old app cannot request a new plan or substitute; it can still log, correct, rate form and finish an
+open session. Keep this window short.
 
-**Preconditions**
+**Verified state**
 
-1. `./check.sh full` green on the server branch. **Verified 2026-11-23 at `9ff472b`: 2469 passed,
-   1 skipped.**
-2. Client `scripts/ci.sh` green. **Verified 2026-11-23 at `9bf3c5e`: 563 passed, 1 skipped.**
-3. The iOS build carrying the client changes is ready to submit, or already in review.
-4. A database backup per the server `docs/BACKUP.md`.
+1. Server `development` at `34e7f29`: `check.sh full` **2469 passed, 1 skipped**; deployed on the
+   ODROID with migrations `0076`–`0080` applied; service active.
+2. Client `development` at `4032561`: `scripts/ci.sh` **569 passed, 1 skipped**.
+3. Pre-deploy database backup: `coach-before-offline-execution-20261123T231714Z.db`,
+   `quick_check = ok`.
 
-**Order**
+**Remaining order**
 
-1. **Ship the app build.** Run one smoke test against the deployed pre-offline server: phone
-   pairing, plan request, phone start, one set, finish. If the old server rejects the new start
-   fields, treat the window as feature-dark: do not advertise offline execution and keep the
-   window to hours.
-2. **Merge the server branch into `development`** (never `main`; no squash), back up, deploy on
-   the ODROID, restart `strength-coach-web.service`. Migrations `0076`–`0080` apply on start.
-3. **Verify after deploy:** health 200; `GET /api/ios/v1/plans/current` returns `execution_id` and
-   `load_catalogue`; a phone substitution with `prefill_load_kg` returns
-   `prefill_verified: true`; a watch offline start replay after a completed session returns the
-   same workout; a set carries `origin_device_id`; a summary returns the `reconciliation` block.
-4. **Confirm the app build against the new server** and enable the watch/offline surfaces.
+1. Ship the app build carrying the client changes. Install phone and watch from the same build;
+   the watch Today readiness fix is at `cfb4ca2` and must be included.
+2. Smoke-test against the deployed server: pair, request a plan, phone start, set, finish; then
+   watch start, offline set, reconnect and late reconciliation.
+3. Verify one substitution returns `prefill_verified: true`, one set carries `origin_device_id`,
+   and a summary returns the reconciliation block.
+4. Record the app build/version and the verification result in the release notes.
 
-**During the app-first window**
+**During the remaining window**
 
-- New-app phone start and logging are the expected minimum. Watch start, watch-committed writes,
-  offline substitution prefill and the S5 removed-target screens must not be advertised until the
-  server deploy verifies.
-- Existing old-app clients cannot request a new plan after the server deploy; keep the deploy-to-
-  app-update window short.
-- Do not issue a plan the old app must start; the four-hour plan TTL makes pre-deploy plans expire.
+- Do not advertise offline execution until the app build is live.
+- The old app cannot request a new plan; keep the deploy-to-app-update window to hours.
+- A plan issued before the server deploy can return `plan_not_bindable`; request a fresh plan.
 
 **Rollback**
 
 - The app build can be held back independently.
 - Before `0079`/`0080`, rollback is a redeploy of the previous server commit; migrations `0076`–
   `0078` are additive and may stay.
-- After `0079`/`0080` drop `target_device_id`/`execution_target`, a rollback to a pre-S5 server
-  needs the database backup restored, not just a commit revert. Rehearse this once before the
-  deploy.
+- After `0079`/`0080` dropped `target_device_id`/`execution_target`, rollback to a pre-S5 server
+  needs the database backup restored. Rehearse once before the app release if a rollback is
+  possible.
 
 **After the release**
 
-1. Record the deployed commit, app build and verification results in the release notes.
+1. Record the deployed server and app commits in the release notes.
 2. Advance submodule pointers only on an explicit portfolio consolidation request.
 
+## 21. Status and change control
 ## 21. Status and change control
 ## 21. Status and change control
 

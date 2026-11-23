@@ -34,11 +34,21 @@ Server contracts:
 [`design/IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) and
 [`design/IOS-R8-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R8-CONTRACT.md). Later phases remain proposals and need
 separate approval. **Phase 6.3 (watchOS companion) closed 2026-11-11; 6.4–6.6 are
-complete and 6.7 physical acceptance was owner-confirmed 2026-11-14**: the watch can start a watch-targeted plan,
+complete and 6.7 physical acceptance was owner-confirmed 2026-11-14**: the watch could start a watch-targeted plan,
 log sets with rest, form and velocity, finish with sRPE, replay offline work, reconcile plan
 revisions, mirror on the phone with take-over, and show the active Set, Session and Plan
-destinations. Physical Apple Watch acceptance was owner-run:
+destinations. The target, mirror and take-over behaviour was removed on 2026-11-23: the watch now
+starts the pairing's plan, including offline from its cached plan, and commits its execution
+writes through the phone. Physical Apple Watch acceptance was owner-run:
 [`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md).
+
+> **Offline execution supersession (2026-11-23):** the [unified offline execution plan](UNIFIED-OFFLINE-EXECUTION.md)
+> removes the execution target, the ownership gate, the phone mirror and take-over. A plan belongs to
+> the pairing; either device may start, the watch starts from its cached plan with no connection,
+> and the watch's execution writes are committed by the phone while its token stays read-only for
+> them. Where §4, §5 or the Phase 6 records below describe a target, mirror, take-over,
+> `409 plan_item_mismatch` or an online-only start, the offline plan and the
+> [watch contract](../contracts/IOS-WATCH-CONTRACT.md) §14.1 win.
 
 **Purpose:** deliver a practical iPhone interface for one person's existing strength-training workflow, without porting the training method or making a public cloud service a prerequisite. Start with an ordinary, connected strength session. Add offline capture, HealthKit, and Apple Intelligence only after the smaller client proves useful and reliable.
 
@@ -357,16 +367,17 @@ R (rollback dry run) were confirmed in the same run, so no Phase 6 follow-ups re
 (`StrengthWatchUITests`) now passes end to end (fetch → start → log → finish) against a disposable
 server, so the flow has automated evidence as well as the physical sign-off.
 
-**Scope.** The phone requests a plan with an explicit `execution_target` (`phone` or `watch`);
-the watch fetches the plan targeted for it, starts the session, logs sets, rest, form ratings and
-finish with sRPE, shows heart rate, and writes exactly one HealthKit strength workout. It has its
-own paired device token, minted by the phone, and is pinned to the phone's **home** server via
-`homeBaseURL` + `configVersion`; it never follows the Away route. Start is the only online gate in
-v1; after it, every set/form/telemetry/finish is local-first with opportunistic partial flushes and
-backoff, and HealthKit is local. Plan fetch and start need connectivity, and a watch session
-requires HealthKit workout authorisation so the app can stay alive. During a watch session the
-watch is the only set writer; the phone edits the plan and shows a read-only mirror with a
-take-over action. Readiness, history, progress, settings and the exercise library stay on the phone.
+**Scope (Phase 6 record; superseded in part 2026-11-23).** The phone requested a plan with an
+explicit `execution_target` (`phone` or `watch`); the watch fetched the plan targeted for it,
+started the session, logged sets, rest, form ratings and finish with sRPE, showed heart rate, and
+saved its HealthKit workout. It has its own paired device token, minted by the phone, and is pinned
+to the phone's **home** server via `homeBaseURL` + `configVersion`; it never follows the Away route.
+Every set/form/telemetry/finish is local-first with opportunistic partial flushes and backoff, and
+HealthKit is local. A watch session requires HealthKit workout authorisation so the app can stay
+alive. Readiness, history, progress, settings and the exercise library stay on the phone. **Since
+2026-11-23** the target, the online start gate and the phone mirror are gone: either device starts
+the pairing's plan (the watch offline from its cached plan), both may log, and the phone commits
+the watch's execution writes.
 
 **Shared core.** `StrengthCore` is extracted in five reviewable stages, each keeping the iPhone
 suite green: S1 models, S2 API client, S3 persistence/credentials, S4 session engine one operation
@@ -452,11 +463,13 @@ read-only state, HealthKit finish retry without duplication, clock skew and orig
 execution-target enforcement, patchy Wi-Fi with partial flushes and an offline finish, home
 `configVersion` refresh, the watchOS 27.0 deployment/CI build, and the 6.6 active-session
 corrections (Plan/navigation lock, refresh and reconnect, idle/abandoned messaging, Session
-contents and the phone mirror form lock).
+contents and the phone mirror form lock). Scenarios 5, 6 and 10 record the Phase 6 acceptance of
+take-over, read-only mirroring and the execution target; those behaviours were removed on
+2026-11-23 and the rows stay as history.
 
-**Deferred:** the pending-session shell for offline start remains deferred. The “Send to iPhone”
-relay was implemented in WP8 on 2026-11-21 (contract §21) and does not make start possible when
-both devices are offline.
+**Closed 2026-11-23:** the pending-session shell and offline start are implemented, and the WP8
+phone relay is superseded by the phone-commit transport (contract §14.1). Start needs a downloaded
+plan, not a connection, and the watch's execution writes are committed by the phone.
 
 ## 5. Offline behavior — explicit contract
 
@@ -464,7 +477,7 @@ both devices are offline.
 |---|---|---|
 | View previously fetched status/history | May show cache, clearly labelled with refresh time and stale state. | Same. |
 | Enter readiness | Requires an online server acknowledgement; an unsent form is not recorded/scored. | May queue a clearly labelled manual entry if included in the outbox; it is not scored until Python receives it. |
-| Start a workout or request a fresh prescription | Requires server connectivity. | Still requires server connectivity and a current server-issued plan. |
+| Start a workout or request a fresh prescription | Requires server connectivity. | A fresh prescription requires the server; a start uses the downloaded plan with no connection and binds the execution at first sync (offline execution, 2026-11-23). |
 | Log an in-progress set / finish | Requires server acknowledgement; do not claim saved on failure. | Can be durably captured locally and queued; show pending until server acknowledgement. |
 | Synchronize pending changes | Immediate request/response; no offline queue guarantee. | Ordered, idempotent retry/reconciliation. |
 | Readiness score/prescription while offline | Not available as a fresh result. | Still unavailable; no on-device substitute. |
@@ -610,7 +623,7 @@ manual sRPE precedence stands.
 | Rubric use | Reuse server's current review payload and rubric version. Marks are human optional feedback; do not implement scoring or calibration logic in Swift. |
 | HealthKit scope | HRV/RHR/bodyweight first; all other types later by explicit scope. No sleep/sleep score in this plan. |
 | PCC privacy and availability | Specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7.3; disabled by default, user-invoked, context preview/consent, no health data by default, no core dependency, no automatic fallback from on-device. |
-| Offline complexity | Defer durable offline mutation until an online session loop is proven. Cached reads do not imply the ability to prescribe or sync offline. |
+| Offline complexity | Durable offline mutation was deferred until the online session loop was proven; it shipped as [unified offline execution](UNIFIED-OFFLINE-EXECUTION.md) on 2026-11-23. Cached reads still do not imply the ability to prescribe offline. |
 
 ## 11. Status and next task
 
@@ -629,8 +642,8 @@ Phase 6.2 (watchOS companion) has a completed plan and contract
 ([`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md)). Its 6.0 shared-core extraction,
 6.1 server contract, 6.2a watch target, 6.2b credential handoff and 6.2c read-only Today are
 complete, and 6.3's execution lifecycle closed 2026-11-11. 6.4 (offline conflicts), 6.5 (heart
-rate and HealthKit) and 6.6 (phone mirror, plan revisions and active-session corrections) are
-complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
+rate and HealthKit) and 6.6 (plan revisions and active-session corrections; its phone mirror was
+removed on 2026-11-23) are complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
 the R rollback dry run all confirmed; no Phase 6 follow-ups remain.
 
 Phase 3B (Apple Workout summaries and related cardio data) was retired on 2026-11-18 as superseded

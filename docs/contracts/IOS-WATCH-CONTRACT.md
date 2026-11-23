@@ -48,9 +48,10 @@ upload of raw motion, and this contract is otherwise unchanged by that attempt.
 ## 1. Purpose
 
 The watch fetches the server-issued plan, starts the workout, logs sets and rest, shows heart
-rate, finishes with sRPE, and writes exactly one HealthKit strength workout. The phone keeps
-readiness, prescription requests and execution substitutions/additions, and shows a read-only
-mirror while the watch owns the session.
+rate, finishes with sRPE, and saves its HealthKit strength workout. The phone keeps readiness and
+prescription requests, may declare execution substitutions/additions, and may log, rate and finish
+the same pairing session; it commits the watch's execution writes with its own credential. The
+phone is not a read-only mirror (S5, 2026-11-23).
 
 ## 2. Scope
 
@@ -74,9 +75,9 @@ mirror while the watch owns the session.
   heart rate, active energy and the effort rating derived from sRPE.
 - Plan-revision propagation so a substitution made on the phone reaches the watch without
   disturbing a set in progress.
-- A phone mirror mode for a watch-owned session: execution substitutions/additions allowed,
-  set/form/velocity logging
-  blocked and a take-over action available.
+- The phone as a full participant in a watch-started session: execution substitutions/additions,
+  set/form/velocity logging and finish are allowed, and it commits the watch's queued operations.
+  No mirror mode and no take-over.
 - Active-session Set, Session and Plan destinations, with refresh and reconnect reconciliation,
   idle-warning visibility during execution, and explicit completed/abandoned-elsewhere messaging.
 - Idle detection and automatic abandonment of forgotten sessions. The 24h hard threshold is
@@ -86,14 +87,14 @@ mirror while the watch owns the session.
 
 No readiness entry, prescription request, history, progress, settings or exercise library on the
 watch. No heart-rate zones, no Shortcuts automation, no Apple Intelligence/PCC, no complications,
-no watch-side pairing UI, no cellular or away-server support, and no second HealthKit writer on
-the phone. The watch is a home-gym device on the same LAN as the server.
+no watch-side pairing UI, no cellular or away-server support, and no app-side HealthKit cleanup:
+if both devices save a workout, the athlete deletes a duplicate in Health. The watch is a home-gym
+device on the same LAN as the server.
 
-The watch does not notify the phone for session events: there is no watch→phone event channel and
-no attempt to auto-open the phone app. The phone discovers a watch-started session through its
-normal foreground refresh. WatchConnectivity carries the phone→watch credential/config handoff,
-the plan nudge in section 10, and the WP8 relay request/reply when the watch cannot reach the
-server directly.
+The watch sends its queued execution operations to the phone over WatchConnectivity for commit
+(phone-commit transport); it does not notify the phone to auto-open the app. The phone discovers
+a watch-started session through its normal foreground refresh. WatchConnectivity also carries the
+phone→watch credential/config handoff and the plan nudge in section 10.
 
 Offline start is implemented: the watch starts from its cached plan and binds the execution at
 first sync. The phone-commit transport lets the phone perform set/event/finish with its own token;
@@ -105,17 +106,17 @@ follows the phone's Away route.
 | # | Decision |
 |---|---|
 | D1 | The watch is its own server device (`kind = watch`), with its own token and independent revocation. |
-| D2 | Plan fetch and start require the server or a reachable phone relay; logging and finish work offline and replay. |
-| D3 | During a watch session the watch is the only set writer. The phone may declare execution substitutions/additions and mirrors state, but cannot log sets or edit the plan. |
+| D2 | Plan fetch requires the server (or a cached plan); start works offline from the cached plan, and logging and finish work offline and replay. Execution writes commit through the phone. |
+| D3 | **Amended 2026-11-23.** Both devices of the pairing may log sets, rate form and finish a session, subject to the merge rules; the phone declares execution substitutions/additions. Ownership is provenance only. |
 | D4 | iOS and watchOS share a `StrengthCore` Swift package; views stay per-platform. |
 | D5 | `issued_plan_ttl_seconds` becomes 14400 (4h). The same-server-date rule is unchanged, so a plan still cannot cross midnight. |
 | D6 | Idle warning at 3h without activity; automatic abandonment at 24h. Sets are preserved. |
-| D7 | Heart rate is displayed; zones are not. HealthKit is written once, from the watch. |
+| D7 | Heart rate is displayed; zones are not. Each device that saves a workout writes it once; duplicates are accepted (D11). |
 | D8 | The watch never computes training numbers; it displays server values and sends user input. |
 | D9 | Deployment targets: iOS 27.0 and watchOS 27.0; the package declares both. |
-| D10 | A watch session requires an `HKWorkoutSession`. Exactly one HealthKit workout is saved per session, keyed by a stable external UUID; a session with no saved workout is possible only on an unrecoverable HealthKit failure and is reported. |
+| D10 | A watch session requires an `HKWorkoutSession`. The watch saves one HealthKit workout per session it ran, keyed by a stable external UUID; a session with no saved workout is possible only on an unrecoverable HealthKit failure and is reported. The phone may save its own workout for the same session (D11). |
 | D11 | Credential handoff is state, not events: one `updateApplicationContext` payload with a server-issued epoch and an acknowledgement. No queued event copying of tokens. |
-| D12 | Execution-view updates never overwrite: the watch applies only a watermark at least as new as its own, and a replayed set from a legacy plan edit is preserved as an off-plan set rather than dropped. |
+| D12 | Execution-view updates never overwrite: the watch applies only a watermark at least as new as its own, and a replayed set from a legacy plan edit is preserved as an off-plan set rather than dropped (legacy replay only; a new client sends `substitutes_plan_item_index`). |
 | D13 | **Superseded 2026-11-23 by S5.** A plan belongs to the device pairing, not to a target kind: either non-revoked device may start it, and `execution_target`/`wrong_execution_target` no longer exist. See §9 and §14. |
 | D14 | The watch is pinned to `homeBaseURL`; config changes carry a monotonic `configVersion` and apply only between sessions with an empty outbox. No Home/Away switching. |
 | D15 | Offline-first after start: sets, forms, telemetry, finish and HealthKit are local-first; the network is opportunistic and partially flushed. |
@@ -422,6 +423,10 @@ When the watch regains connectivity with pending work:
 
 ### 10.4 Mismatch policy
 
+> **Retired for new clients 2026-11-23.** A new client sends `substitutes_plan_item_index` on the
+> set, and a stale `plan_item_index` is kept as extra work with its provenance. The `409`
+> fallback below applies only to a replayed plan issued before the change.
+
 - A replayed set carries the `exercise_id` actually performed and the `plan_item_index` it was
   logged against. If the phone swapped that item while the watch was offline, the server rejects
   the set with `409 plan_item_mismatch` rather than silently attributing it to the new exercise.
@@ -529,8 +534,7 @@ On launch, the watch reads its session store and `GET .../execution`:
 
 | Local | Server | Behaviour |
 |---|---|---|
-| active | in_progress, owner = this watch | Resume: restore the snapshot, restart the HK session, flush pending operations. |
-| active | in_progress, owner = phone | Read-only; show “Logging moved to the phone”; offer to clear local state. |
+| active | in_progress | Resume: restore the snapshot, restart the HK session, flush pending operations; `owner_device_id` is provenance only, so there is no read-only case (S5, 2026-11-23). |
 | active with pending finish | completed/abandoned | Flush nothing; show the conflict and the preserved summary; do not recreate the workout. |
 | active | no active workout | Show explicit “completed elsewhere” / “abandoned elsewhere” wording, keep the local sets and summary, offer clear. |
 | finishing | in_progress | Resume finalisation: retry the server finish and the HealthKit save (section 12). |
@@ -558,18 +562,20 @@ acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index
   not recorded and matches the phone input.
 - All of it is captured local-first in the existing ordered outbox; a rating is never inferred, and
   **Not recorded** is a valid outcome everywhere.
-- The watch does not correct a set after acknowledgement. The phone mirror remains read-only for
-  these fields. Post-workout correction happens in the server's History edit (append-only VBT
-  overrides), not on the watch.
+- The watch does not correct a set after acknowledgement; the phone corrects a set with one
+  `update-set` call (S5 removed the mirror lock). Post-workout correction still happens in the
+  server's History edit (append-only VBT overrides), not on the watch.
 
 ## 12. HealthKit idempotency and recovery
 
-### 12.1 One workout per session
+### 12.1 One workout per saving device
 
 - At start, generate a `sessionUUID`, persist it **before** starting the HK session, and use it
   as the HK workout metadata external UUID (`HKMetadataKeyExternalUUID`). The workout is
   `traditionalStrengthTraining` with the real start and end dates.
-- The phone never saves a workout for the same session; the watch is the only writer.
+- The watch saves one workout when it ran the session. The phone saves one when it finishes a
+  session. Both may save, and the athlete deletes a duplicate in Health. The app never deletes,
+  merges or rewrites HealthKit records automatically (D11).
 
 ### 12.2 Finish protocol
 
@@ -602,7 +608,7 @@ acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index
 - If authorisation is revoked mid-session, HR collection stops; the finish save may fail. The app
   reports it once, keeps the server session intact, and does not retry in a loop.
 - Abandon ends the HK session without saving a workout; if a workout was already saved (only
-  possible after a finish), it is left as the single saved workout.
+  possible after a finish), it is left saved.
 
 ## 13. Watch UI contract
 
@@ -634,7 +640,7 @@ the selected exercise, active set or execution state, and closing it restores th
 - End flow: summary, sRPE picker (Digital Crown, 1–10), productivity (1–5 or **Not recorded**),
   **Finish**. Productivity defaults to “not recorded” and is a real input, matching the phone.
 - Persistent states: offline banner with pending count (“offline · 4 pending”), “Plan updated”,
-  “Logging moved to phone”, plan-expired/regenerate, “credentials missing”, “resume session”,
+  plan-expired/regenerate, “credentials missing”, “resume session”,
   “finish saved on watch — syncing”.
 - The watch never labels itself online because cellular is available; only a successful home-server
   call does. It never offers a server switch.
@@ -650,11 +656,11 @@ first and then fetches the authoritative execution snapshot; it never requires r
 exercise list and never bypasses the exercise-navigation lock. A failed flush leaves local state
 and the queue intact and does not apply a snapshot.
 
-**Phone mirror.** A watch-owned session opens on the phone in the existing active-workout view with
-set, form, velocity and finish controls disabled, plan editing enabled, a banner naming the watch,
-and one take-over confirmation. The form section says the rating is recorded on the watch; a
-phone-side form mutation is rejected before any online or offline-queue branch. No watch→phone
-message is involved; the phone discovers the session on its next foreground refresh.
+**Phone during a watch session.** The phone opens the same active-workout view with every control
+enabled; S5 removed mirror mode, the disabled controls, the take-over confirmation and the banner.
+The phone commits the watch's queued start, set, form and finish operations with its own
+credential, either device may log and finish, and abandon is available on both. The watch stays
+editable throughout.
 
 ## 14. Server API changes
 
@@ -744,9 +750,9 @@ runs lazily on start, today and execution reads and preserves every set.
 | Workout already active | Show recovery: resume, or abandon then start. |
 | Set write fails offline | Queued; pending badge; retry with the same key. |
 | Finish fails offline | Queued; server still shows in-progress until replay. |
-| Phone opens mid-session | Read-only mirror; plan edits allowed. |
+| Phone opens mid-session | Editable; both devices may log and the sets merge (S5 removed mirror mode). |
 | Phone closed when the watch starts | Nothing is signalled; the phone shows the session on its next foreground refresh. |
-| Phone swaps an unstarted item offline | Replayed set hits `409 plan_item_mismatch`; preserved as off-plan and flagged. |
+| Phone substitutes an item offline | An execution event; the replayed set carries `substitutes_plan_item_index`, and a stale `plan_item_index` is kept as extra work (mismatch retired for new clients). |
 | Watch relaunch with pending ops | Store reload, ordered replay, HK recovery; UI shows pending until acked. |
 | HealthKit save fails at finish | Retry on launch; if the builder is gone, save the minimal persisted workout once; else report unsaved. |
 | Watch stolen/lost | Any device of the pairing may finish or abandon; revoke the watch device. |
@@ -830,6 +836,11 @@ happens before the snapshot. Exercise the idle warning with a lowered test thres
 and confirm the watch says “Workout abandoned elsewhere” while keeping its local set count; check
 the phone mirror form section is disabled.
 
+**Historical record (Phase 6.7, 2026-11-14).** The mirror, take-over and legacy-mismatch clauses
+in scenario 4, scenario 13 and the physical script above describe the pre-S5 contract; they are
+retained as the Phase 6.7 acceptance record. Current offline execution acceptance is the
+[unified plan §16](../plans/UNIFIED-OFFLINE-EXECUTION.md).
+
 ## 18. CI and distribution
 
 - Add a watch scheme to the existing `ios-ci` workflow: build the watch app for a watchOS 27.0
@@ -889,9 +900,8 @@ Edit session, including mean and per-rep VBT overrides, with an append-only audi
 exposes that history read-only; adding an edit screen would reuse the existing service and is not
 part of this contract.
 
-Recovery of an offline session that outlives the abandonment window; a richer hand-back from phone
-to watch after take-over; automatic phone-side surfacing of watch events (there is no
-WatchConnectivity event channel); heart-rate zones; Shortcuts automation; complications;
+Recovery of an offline session that outlives the abandonment window; heart-rate zones; Shortcuts
+automation; complications;
 away-server/cellular support and watch-side Home/Away switching; watch-side readiness or history;
 Apple Intelligence. Each needs a separate decision.
 

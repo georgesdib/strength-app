@@ -45,7 +45,8 @@ deployed as an independent process that never imports `strength_coach.web`.
 independent: no web imports, read-only database handle, own configuration. A future split remains
 possible because the module only depends on `strength_coach` core.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (plan §13, decision 1); implemented as the separately
+deployable `strength-intelligence-mcp` entry point in this repository.
 
 ## ADR-INT-002 — A provider-neutral intelligence package, not `agents/context.py`
 
@@ -72,7 +73,8 @@ proposal path and is imported by `intelligence/model/`, not by `intelligence/cap
 headings preserved). The layering table in `ARCHITECTURE.md` gains one row in INT-1. The one-context-
 builder rule (`DEC-LLM-08`) is preserved: there is still exactly one builder, in a different place.
 
-**Status.** Proposed. **Open question:** does the owner accept moving the planned path?
+**Status.** **Accepted 2026-11-15** (decision 2). The capability layer lives in
+`strength_coach/intelligence/`, so the open question is resolved.
 
 ## ADR-INT-003 — MCP protocol revision 2026-07-28 with the official Python SDK 2.x
 
@@ -101,7 +103,7 @@ transport, sampling, roots or logging.
 `json_response=True` for v1 because no tool streams progress. The server is stateless on the modern
 path, so deployment does not need sticky routing; legacy clients would.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 3).
 
 ## ADR-INT-004 — Static per-client bearer tokens for MVP; OAuth 2.1 is a later decision
 
@@ -129,10 +131,11 @@ document, because no authorization server exists. Do not accept a tailnet addres
 
 **Consequences.** Hosted clients that require OAuth discovery cannot connect; this is an accepted,
 documented limitation. Moving to OAuth is a contained change at the auth wrapper, and the capability
-layer is unaffected. **Open question for the owner:** which MCP host will be used first? That answer
-decides whether a static token is sufficient for INT-1 acceptance.
+layer is unaffected. The host question was answered on 2026-11-15: the Python client is the only
+MCP host, so the static token is sufficient for INT-1 acceptance.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 4); OAuth remains a later decision if a hosted client
+or a non-owner user is added.
 
 ## ADR-INT-005 — Tools and resources only; no MCP prompts
 
@@ -147,7 +150,7 @@ also owns model selection and UX.
 `intelligence/model/` or in the app. A host that wants a review prompt writes one; nothing in the
 server needs to know.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 5).
 
 ## ADR-INT-006 — MCP tools return facts, never narration
 
@@ -172,7 +175,7 @@ explanation capability.
 tool returns facts and the app narrates. Server-side narration remains available through INT-5 without
 changing the MCP surface.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 6).
 
 ## ADR-INT-007 — The iOS app consumes REST envelopes, not MCP
 
@@ -198,7 +201,7 @@ FoundationModels, SwiftUI, UIKit, HealthKit or WatchKit import. Model-specific c
 envelope models. If Apple ever ships first-party MCP support, the adapter can become another client of
 the same capabilities without moving business logic.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 7); implemented as INT-3.
 
 ## ADR-INT-008 — In-process capability calls by default, MCP parity in CI
 
@@ -215,7 +218,7 @@ envelopes.
 CI run and by external hosts. If the MCP server is ever deployed on another machine, the client
 choice becomes a configuration flag.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 8).
 
 ## ADR-INT-009 — `get_programme_block_summary` is a derived reporting window
 
@@ -238,7 +241,9 @@ invent a block id, block dates or a planned-session denominator.
 **Consequences.** The tool answers "how is this stretch of the programme going?" without implying a
 stored block. Any future block entity would extend the capability, not invalidate it.
 
-**Status.** Proposed. **Open question:** owner preference on the name.
+**Status.** **Accepted 2026-11-15** (decision 9). The name stays
+`get_programme_block_summary`; it is a reporting window with the mandatory limitation, so the open
+question is resolved.
 
 ## ADR-INT-010 — No intelligence cache in INT-1 or INT-2
 
@@ -423,8 +428,8 @@ Apple-platform proposal amends this plan and adds an ADR. The proposer is explic
 it cannot be started by momentum. The supersession is recorded in the backend Superseded table for
 `DEC-LLM-12` and `DEC-LLM-13` (item 7), and as a status banner in the LLM plan itself.
 
-**Status.** Proposed; takes effect on owner approval of this plan. **Open question:** confirm that the
-constrained proposer should be deferred/unscheduled rather than kept as a parallel workstream.
+**Status.** **Accepted 2026-11-15** (decision 13); in force with this plan. The constrained proposer
+was withdrawn on 2026-11-17, so the open question is resolved.
 
 ## ADR-INT-014 — Scoped MCP tokens for sensitive readiness (retained, not adopted 2026-11-15)
 

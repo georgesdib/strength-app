@@ -65,7 +65,7 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D7 | The plan is immutable once started. Plan editing is removed; there is no plan swap, add, remove, reorder or set-count edit. |
 | D8 | Substitution and addition are execution concepts, not plan edits: an append-only execution event plus a per-set attribution field. The performed set is the durable record. |
 | D9 | The watch does not originate substitutions. It renders the phone-authored execution view and logs sets against it. |
-| D10 | The watch is offline-capable only while the phone is online. There is no pending-session shell and no start without a reachable phone or server. |
+| D10 | **Superseded 2026-11-23** by [unified offline execution](UNIFIED-OFFLINE-EXECUTION.md): the watch starts offline from its cached plan and binds the execution at first sync, so it no longer needs the phone or server to be online. Retained as the historical decision. |
 | D11 | Set-role input is removed from every logging surface. Legacy role columns and values remain read-only provenance and are not used for matching or decisions. |
 | D12 | The programme header is a server-computed reporting model reused by Today and intelligence facts; it labels trained week and calendar deload week separately and is not an evaluator input. |
 | D13 | Evaluation is a deterministic, role-aware hierarchy, not a composite score, and reuses the existing intensity, exposure, volume, suitability and tie-break definitions. |
