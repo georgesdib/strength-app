@@ -147,6 +147,8 @@ accounting, `performed_at` is display.
 
 ## 8. Late reconciliation (D8)
 
+**Server implemented 2026-11-23** (`strength_coach/reconciliation.py`); the client half is C2.
+
 - A phone that cannot reach the watch after finishing uploads with a `late_reconciliation` event
   carrying `pending_devices` and `closes_at = ended_at + 7 days`. It does not ask the athlete to
   choose between waiting and losing data; nothing is lost.
@@ -415,6 +417,15 @@ device result from a simulator run.
 **Acceptance for C2** (physical devices, from §16): watch-only with the phone powered off; both
 logging while partitioned then reconciled; terminate each app mid-set; and a version-1 capture
 upgraded mid-workout.
+
+**C2 additions for late reconciliation (server ready):**
+
+1. On finish, send `pending_devices` naming the devices whose events have not arrived (the phone
+   knows: it is the one that could not reach the watch). An empty list opens no window.
+2. Do not present the finished session as final while `reconciliation.state` is `open`; show
+   "Apple Watch data pending" and refresh the summary when the watch syncs.
+3. When a late set is refused with `409 reconciliation_window_closed`, keep the device's own copy
+   and show it as unsent — the server has preserved it, but only for audit.
 
 ## 19. Status and change control
 

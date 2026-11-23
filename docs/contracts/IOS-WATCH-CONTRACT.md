@@ -681,6 +681,9 @@ message is involved; the phone discovers the session on its next foreground refr
 | `POST /api/workout/start` (web UI) | `409 plan_pending_for_phone` when an unexpired phone plan is outstanding for today; `start_anyway: true` proceeds. **Implemented 2026-11-23.** |
 | `GET /api/ios/v1/plans/current` | Adds `load_catalogue` (`load-catalogue/v1`): one entry per taxonomy exercise, built by the resolver (`engine.build_item`) with `base_load_kg`, `accessory_load_kg`, `increment_kg` and flags, so a substitution can be prefilled offline. Null on a plan built before the column existed. **Implemented 2026-11-23.** |
 | `POST /api/ios/v1/workouts/{id}/execution` | Accepts `prefill_load_kg`, `prefill_catalogue_version` and `prefill_as_of`; verifies the value against the snapshot the plan shipped and records `prefill_verified`, `prefill_expected_load_kg` and a mismatch reason without rejecting the change. `prefill_requested` stays as a legacy path. **Implemented 2026-11-23.** |
+| `POST /api/ios/v1/workouts/{id}/complete` | Accepts `pending_devices`; a non-empty list opens a `reconciliation_window_days` (default 7) window recorded as a `late_reconciliation` event with the deadline. **Implemented 2026-11-23.** |
+| `POST /api/ios/v1/workouts/{id}/sets` | A set may arrive after completion inside the open window: it is applied with its original timestamp, written into `clean_set` and the session totals are recomputed, with a `late_set` event. After the window the arrival is preserved as a `late_rejected` event and the response is `409 reconciliation_window_closed`. **Implemented 2026-11-23.** |
+| `GET /api/ios/v1/workouts/{id}/summary` | Gains `reconciliation: {state: none|open|closed, pending_devices, closes_at}`. **Implemented 2026-11-23.** |
 
 ### 14.1 Agreed amendments for offline execution (approved 2026-11-23)
 
@@ -688,8 +691,6 @@ Recorded here so the contract and the plan do not diverge; **not yet in force**.
 slice named, and this subsection shrinks as it does. Canonical statement:
 [Unified offline workout execution](../plans/UNIFIED-OFFLINE-EXECUTION.md).
 
-- **S4** — the summary carries `reconciliation {state, pending_devices, closes_at}`; late events
-  are accepted for seven days and preserved as `late_rejected` afterwards.
 - **S5** — §9's ownership gate, take-over and mirror mode are removed; the watch's direct execution
   writes are retired. §21's pending-session deferral is removed when offline start lands.
 
