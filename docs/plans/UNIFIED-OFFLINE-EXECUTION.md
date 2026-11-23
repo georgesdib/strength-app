@@ -384,8 +384,9 @@ is gone, and the server now enforces the rule: a watch token gets `403 watch_rea
 execution write. Abandon stays open to any device as the safety valve, and reads are unchanged.
 
 Everything else is in: `execution_target` and its index are gone, `pairing_device_id`
-(migration `0078`) is the plan's scope, `owner_device_id` is provenance, and takeover and mirror
-mode no longer exist in either client.
+(migration `0078`) is the plan's scope, migration `0079` drops the legacy target columns,
+`owner_device_id` is provenance, and takeover and mirror mode no longer exist in either client.
+The watch may still start a pairing plan; only its execution writes are read-only.
 
 Each slice: own branch, its own acceptance, and a rollback that returns to the previous behaviour
 without data loss.

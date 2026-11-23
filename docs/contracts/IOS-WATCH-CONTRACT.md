@@ -711,7 +711,9 @@ Migration `0058_watch_companion.sql` (additive, no data rewrite):
 - Partial unique index: one active watch per parent
   (`(parent_device_id) WHERE kind = 'watch' AND revoked_at IS NULL`)
 - `ios_issued_plan.target_device_id TEXT REFERENCES ios_device(device_id)` (backfilled to `device_id`)
-- `ios_issued_plan.execution_target TEXT` — **legacy, unused since S5**; kept only so a rollback does not have to drop a column. `pairing_device_id` is the live scope (migration `0078`).
+- `ios_issued_plan.pairing_device_id TEXT` — the plan's live scope (migration `0078`). Migration
+  `0079` drops the legacy `target_device_id` and `execution_target` columns after all rows are
+  backfilled.
 - Target-scoped live index on
   `(COALESCE(target_device_id, device_id)) WHERE consumed_at IS NULL AND superseded_at IS NULL`
 - `workout_session.owner_device_id TEXT` (nullable; NULL keeps legacy permissive behaviour)
