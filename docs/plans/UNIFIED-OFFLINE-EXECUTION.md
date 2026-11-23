@@ -1,10 +1,12 @@
 # Unified offline workout execution
 
-**Status:** 2026-11-23. Server side implemented and green (full suite 2467 passed, 1 skipped at
-`82d5092`); the audit is closed on the server. S5's ownership, target, picker and mirror removals
+**Status:** 2026-11-23. Server side implemented and green (full suite 2469 passed, 1 skipped at
+`e5ebdbc`); the audit is closed on the server. S5's ownership, target, picker and mirror removals
 are implemented on both sides. The client ledger (C1/C2) is implemented on
-`StrengthApp/offline-execution`; physical-device acceptance and the release are outstanding. The
-S5 is complete on both sides.
+`StrengthApp/offline-execution`. Follow-up findings 1, 2, 3 and 5 are fixed: completed start
+replays acknowledge the same execution, optimistic offline changes are persisted and visible,
+the catalogue's dose/VBT contract is applied locally, and set origin is durable. Physical-device
+acceptance and the release are outstanding.
 **Gate:** this document is the WP0 record required by `AGENTS.md` before the refactor; the work
 packages below record what was built and what is still open.
 **Owner decisions are recorded in §4.** Anything marked *proposed* has not been applied to a canonical document.
