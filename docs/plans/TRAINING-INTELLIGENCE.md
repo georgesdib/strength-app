@@ -4,10 +4,11 @@
 **Status:** delivered 2026-11-15, extended 2026-11-16. INT-1 to INT-8 are delivered (INT-8 closed with
 no scope), INT-4c is parked on Apple's PCC entitlement, and **INT-9 (the Siri AI adoption pass) is
 deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and INT-13 (the Today summary
-card) were added on 2026-11-16 and are implemented on the iOS client**, with physical-device
-acceptance outstanding. **INT-11 (Explain the System, local knowledge retrieval) was implemented and
-closed on 2026-11-16 with documented limitations; INT-12 (web search and RAG) is deferred; the
-constrained proposer is withdrawn 2026-11-17.** This plan document itself changes no runtime, API,
+card) were added on 2026-11-16 and are implemented on the iOS client**, with their
+physical-device acceptance waived by owner decision (INT-13 on 2026-11-17, INT-10 on 2026-11-18).
+**INT-11 (Explain the System, local knowledge retrieval) was implemented and closed on 2026-11-16
+with documented limitations; INT-12 (web search and RAG) is deferred; the constrained proposer is
+withdrawn 2026-11-17.** This plan document itself changes no runtime, API,
 schema, dependency, prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
@@ -26,6 +27,11 @@ unchanged. INT-11 is implemented and closed: a local docs/code explainer, not we
 INT-12 consolidates the former web-search and RAG candidates into one deferred later step. INT-13
 (decision 20, `ADR-INT-022`) adds the two-part summary at the top of Today from the configured chat
 model, extending INT-4d's chat-only boundary to that one surface; it is client-only like INT-10.
+
+Amended 2026-11-18: the owner waived INT-10's remaining physical-device acceptance — delivery
+timing, tap routing and Focus behaviour — as INT-13's had been waived on 2026-11-17. INT-10 is
+closed and shipped in StrengthApp v1.2 on 2026-11-18. Its documented residual gap (a watch-only
+session the phone never observes cannot suppress that day's nudge) is unchanged.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
@@ -1550,9 +1556,10 @@ contract.
 **Status.** **Accepted 2026-11-16** (decision 17, `ADR-INT-019`) at the owner's request.
 **Implemented 2026-11-16** on the iOS client: the scheduler, the on-device composer and template, the
 settings section, the shared authorisation helper and the tap routing are in place, with 18 automated
-tests passing and the iOS scheme building. **Physical-device acceptance is outstanding** — delivery
-timing, tap routing and Focus behaviour are not proven by the simulator. iOS-only, with no backend
-change.
+tests passing and the iOS scheme building. **Closed 2026-11-18** by owner decision: the remaining
+physical-device acceptance (delivery timing, tap routing, Focus behaviour) was waived rather than run,
+and the nudge shipped in StrengthApp v1.2 on 2026-11-18. The watch-only suppression gap recorded
+above remains a documented limitation. iOS-only, with no backend change.
 
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
 
@@ -1564,8 +1571,9 @@ checking, explain/status endpoints, background startup indexing and web/iOS Expl
 A 15-question evaluation is complete. Known limitations: programme-block answers include some
 archive/contract context; no direct outcome evidence is cited for the reactive trigger counts. The
 owner closed the remaining device-acceptance and release-tag items on 2026-11-17 by decision: no
-separate physical-device run was made and no dedicated tag was cut, so Explain ships with the next
-tagged release. No follow-up context, web search or RAG is included.
+separate physical-device run was made and no dedicated tag was cut. Explain shipped in the backend
+1.7.0 release and carried the iOS Explain tab in StrengthApp v1.2, both on 2026-11-18. No follow-up
+context, web search or RAG is included.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
 what evidence supports the injury-deload rule — from the project's own documentation, source code and
@@ -1730,8 +1738,8 @@ the footer states the model so the athlete can see when words came from off the 
 displayed, never stored as a prescription, session or measurement.
 
 **Status.** **Implemented 2026-11-16** (decision 20, `ADR-INT-022`) at the owner's request; iOS-only.
-**Closed 2026-11-17** by owner decision: the physical-device acceptance was waived rather than run,
-and the card ships with the next tagged client release.
+**Closed 2026-11-17** by owner decision: the physical-device acceptance was waived rather than run.
+The card shipped in StrengthApp v1.2 on 2026-11-18.
 
 ## 12. Dependencies and sequencing
 
@@ -1750,11 +1758,13 @@ INT-7b-1  closed (automation executor + Shortcuts)
 INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
-INT-10    implemented 2026-11-16 — local daily reminder nudge (iOS only; device acceptance outstanding)
+INT-10    closed 2026-11-18 — local daily reminder nudge (iOS only; device acceptance waived;
+          shipped in StrengthApp v1.2)
 INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval; device/release items
-          owner-closed 2026-11-17
+          owner-closed 2026-11-17; shipped in backend 1.7.0 and StrengthApp v1.2
 INT-12    deferred — web search and RAG; after INT-11, new provider/ADR
-INT-13    closed 2026-11-17 — Today summary card (iOS only; owner-closed without a device run)
+INT-13    closed 2026-11-17 — Today summary card (iOS only; owner-closed without a device run;
+          shipped in StrengthApp v1.2)
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    parked — needs paid developer access + the PCC entitlement
 ```

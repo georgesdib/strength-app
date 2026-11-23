@@ -27,7 +27,9 @@ HealthKit heart-rate-variability (HRV), resting-heart-rate (RHR) and bodyweight 
 **Explicitly separate:** Phase 3B (Apple Workout summaries, cardio imports, Apple effort values
 and any associated workout/session changes) is out of scope and requires its own contract and
 approval. This contract does not authorize Phase 3B, Phase 4 offline capture, HealthKit write
-access, sleep imports, a new score or any training-rule change.
+access, sleep imports, a new score or any training-rule change. **Phase 3B was retired on
+2026-11-18**, superseded by the cardio stage plan; its Apple-effort-to-sRPE rule is closed, with
+manual sRPE the only source.
 
 **Owner decisions approved 2026-11-08:**
 

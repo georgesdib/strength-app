@@ -4,8 +4,8 @@
 test is `and`, not `or` (§4), because coverage alone admitted sparse series. v3 split the timeline
 between the export and HealthKit; v2 moved golf to analytics and replaced the samples-per-minute gate.
 See §10.
-**Status:** active policy for C2–C5. Nothing is implemented yet; this document is the specification the
-implementation reads.
+**Status:** active policy for C2–C5. Implemented and deployed at backend release 1.6.0; this document
+remains the specification the implementation reads, and changing any number here is a version bump.
 **Owner:** the athlete. Every number here is derived from [the C0 audit](CARDIO-C0-AUDIT.md); changes
 require a version bump under §9, not an edit in place.
 

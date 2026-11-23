@@ -2,6 +2,19 @@
 
 # iOS Phase 2 — Online Strength Workflow: implementation contract
 
+**Amendment, 2026-11-22 (additive, no owner approval required):** `GET /api/ios/v1/history/<id>`
+gains an optional `heart_rate` object, `{avg_bpm, max_bpm, activity_type, source}`, carrying
+Apple's own average and peak for the workout currently linked to the session, and `null` when no
+workout is linked. Each set in the same response gains `hrr60_bpm` — the heart-rate drop 60 s
+after that set, or `null` — and the session gains `hr_recovery` with the number of measured sets,
+its caveat, and `final_set` (`hr_end_bpm`, `hrr60_bpm`, `hrr120_bpm`) anchored to the last set's
+completion, not to the workout's finish tap. Nothing is read back into a prescription, readiness or adherence; the recovery
+value is display-only because it was measured to track set effort rather than recovery. See the
+backend's `docs/HR-RECOVERY-PROBE.md` and [`IOS-WATCH-CONTRACT.md`](IOS-WATCH-CONTRACT.md); the
+phone shows both on History detail only and the watch remains out of scope. **Status: released
+2026-11-22, display only** — shipped to production without a version tag; the backend changelog entry
+remains under `[Unreleased]`.
+
 **Status:** approved by the owner, implemented, remediated and accepted on 2026-11-07. Server work
 was implemented on `iOS-app` and merged to `development`; client work is on `main` in the separate
 `StrengthApp` repository. Phase 1 is complete (see
@@ -725,8 +738,8 @@ mutations. These are config/contract values, not new training rules.
   replays attempted operations with the original UUID/body and is not an offline queue. R3
   explicit plan-item selection and R5 workout recovery/reconciliation UX were implemented and
   closed on 2026-11-07. R2 is closed as absorbed by R7's `plans/current` read; R7 is implemented
-  and simulator-verified; R8 is implemented; R4 remains deferred in roadmap
-  §4.30 and is not a Phase 2 closure blocker.
+  and simulator-verified; R8 is implemented; R4 was implemented and closed on 2026-11-08
+  (client plan §R4) and is not a Phase 2 closure blocker.
 
 ## 17. References
 

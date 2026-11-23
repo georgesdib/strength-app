@@ -30,6 +30,16 @@ contract as follows; where they differ, this block wins.
   acknowledgement and receipt deduplication described there. Offline start remains deferred.
 - `substitutes_plan_item_index` is added to the set payload; an added exercise is an off-plan set.
 
+## 2026-11-22 note — per-rep motion capture withdrawn
+
+The [watch motion metrics plan](../plans/WATCH-MOTION-METRICS.md) proposed an amendment adding
+100 Hz accelerometer, gyroscope and gravity capture per rep. It was approved and implemented on
+unmerged branches, then withdrawn when the plan closed as a failed project: rep segmentation could
+not be validated without labelled captures. **No motion-capture amendment is in force.** The
+proposed payload fields (`lower_ms`, `lift_ms`, `pause_ms`, `rom_m`, `steadiness`,
+`confidence`, `method_version`) are not part of this contract, nothing here authorises capture or
+upload of raw motion, and this contract is otherwise unchanged by that attempt.
+
 ## 1. Purpose
 
 The watch fetches the server-issued plan, starts the workout, logs sets and rest, shows heart
@@ -193,6 +203,12 @@ of the extraction.
   transaction the server revokes the parent's active watch (if any), inserts the new device with
   `credential_epoch = max(prior epochs for the parent, 0) + 1`, and returns
   `{device_id, label, epoch, token}` once; only the digest is stored.
+- The same transaction supersedes any live plan whose execution target is the replaced watch. A
+  plan is bound to the device id it was issued to and is retired, never re-targeted: `plans/current`
+  reports `none` instead of advertising a ready plan the watch can no longer start. Without it the
+  phone (which resolves the plan by requester) and the watch (which resolves it by target) could
+  disagree about the same row — "requested for Apple Watch" on the phone, "No workout for Apple
+  Watch" on the watch, for a workout that already existed.
 - Minting is **identity-idempotent**, not receipt-idempotent: a lost response produces a new
   epoch and device, and the previous watch token is revoked. There is never a second active watch
   and no plaintext token is stored for replay. Mint is rate-limited per phone.
@@ -273,6 +289,8 @@ of the extraction.
 - Revoking a phone also revokes its active child watch in the same transaction; the DELETE response
   includes `revoked_watch_ids` so a legacy stranded watch is visible. This prevents a replaced
   phone from leaving an independently usable watch token behind.
+- Revoking a watch, directly or through its phone's cascade, supersedes its live plan in the same
+  transaction. A repeat revocation also retires a plan left behind by an older server build.
 - Re-pairing the phone itself does not resurrect a watch token; the phone mints a new watch device
   after its own pairing succeeds.
 
@@ -525,11 +543,13 @@ On launch, the watch reads its session store and `GET .../execution`:
 ### 11.6 Execution telemetry (watch)
 
 The watch emits only what it observes: `set_started`, `set_completed`, `rest_started`,
-`rest_completed`, `rest_extended`, `exercise_started` and `exercise_completed`. It never
-emits `rest_skipped` (a rest ends through one deliberate action, and the server derives duration
-and deviation from the timestamps), `workout_paused`/`workout_resumed` (the watch has no pause),
-or an event for a set or exercise that never started. A rest closes on an explicit end (the watch's −15s
-control ends it once that is all that remains), or at the instant the next set starts. `set_completed` gains `set_id` only after the matching add-set is
+`rest_completed`, `rest_skipped`, `rest_extended`, `exercise_started` and
+`exercise_completed`. It never emits `workout_paused`/`workout_resumed` (the watch has no
+pause), or an event for a set or exercise that never started. A rest closes exactly once:
+`rest_skipped` when the lifter ends it early — the −15 s control bound for zero is that command,
+matching the phone's Skip — or `rest_completed` when it runs out or the next set starts. A skip
+is a deliberate end, not a pause: the server derives duration and deviation from the timestamps,
+and the time after the skip is outside the interval. `set_completed` gains `set_id` only after the matching add-set is
 acknowledged; without a mapping it sends none. Payloads stay minimal: `set_index`,
 `prescribed_rest_s`, `added_s`.
 
