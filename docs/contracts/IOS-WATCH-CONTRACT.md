@@ -369,28 +369,18 @@ of the extraction.
   `performed_at` and `ended_at` with server-adjusted time. The server rejects a timestamp more
   than a minute in the future, so a fast watch clock must not surface as a server error.
 
-## 9. Ownership and phone mirror
+## 9. Ownership and phone mirror (superseded by S5)
 
-`workout_session.owner_device_id` is set at start:
+> **S5 applied 2026-11-23.** `workout_session.owner_device_id` is provenance only. There is no
+> `409 not_owner` gate, no take-over endpoint, no mirror mode and no target picker. Any
+> non-revoked device of the pairing may write, start, finish or abandon a session; plan edits
+> remain phone-only. The text below is retained for history only.
 
-- **Owner** may add sets, forms and finish/abandon.
-- **Non-owner** receives `409 not_owner` for set, form and finish writes. Plan edits are exempt
-  and remain available to the phone (existing R8 rules).
-- Workouts with `owner_device_id IS NULL` (legacy rows and pre-upgrade clients) keep today's
-  permissive behaviour.
-- `POST /api/ios/v1/workouts/{id}/takeover` transfers ownership to the caller and appends an
-  event. The phone offers it in mirror mode when the watch is unavailable or the owner wants to
-  log on the phone; the watch, on its next refresh, becomes read-only and shows “Logging moved to
-  the phone”.
-- The phone opens a watch-owned session in **mirror mode**: the existing active-workout view with
-  set, form, velocity and finish controls disabled, plan editing enabled, a “Logging on Apple
-  Watch” banner, and one **Take over logging** confirmation. The recovery card is labelled
-  “started on Apple Watch”. The form section states that ratings are recorded on the watch; a
-  phone-side form mutation is rejected before any online or offline-queue branch, and the server
-  ownership check remains authoritative.
-- Take-over ships in v1 with that button and the endpoint; a richer hand-back from phone to watch
-  is deferred (section 21).
-- Abandon is allowed from any authenticated device, so a lost watch cannot strand a workout.
+- Owner and non-owner both write; the server sets `owner_device_id` at start for audit.
+- `POST /api/ios/v1/workouts/{id}/takeover` is removed and returns 404.
+- The phone does not disable set, form or finish controls for a watch-started session.
+- The watch does not become read-only when the phone owns the session.
+- Abandon is allowed from any authenticated device.
 
 ## 10. Plan revision and offline conflicts
 
@@ -667,14 +657,14 @@ message is involved; the phone discovers the session on its next foreground refr
 | `POST /api/ios/v1/devices/watch` | New. Phone-authenticated; revokes the previous watch, mints a new epoch, returns the token once. |
 | `GET /api/ios/v1/devices` | New. Lists devices with kind, label, epoch, created/last-seen/revoked. |
 | `DELETE /api/ios/v1/devices/{device_id}` | New. Revokes the watch from phone or itself. Revoking a phone also revokes its active child watch and returns `revoked_watch_ids`. |
-| `POST /api/ios/v1/prescriptions` | Accepts `execution_target` (`phone` or `watch`); for `watch` resolves the phone's active watch into `target_device_id` and returns `409 watch_not_paired` when there is none. Absent means `phone` for older clients. |
-| `GET /api/ios/v1/plans/current` | Returns `execution_target`, `execution_id` and `load_catalogue`; matches the requester or the target so the watch can see a phone-requested plan. |
-| `POST /api/ios/v1/workouts` | Rejects a start unless the caller is the target and its kind matches, with `409 wrong_execution_target`; sets `owner_device_id`, `plan_revision = 0` and `last_activity_at`; response includes them. |
+| `POST /api/ios/v1/prescriptions` | No execution target. Issues one plan for the pairing (the phone and its active watch); a request from either device supersedes the pairing's previous live plan. |
+| `GET /api/ios/v1/plans/current` | Returns `execution_id` and `load_catalogue`; a watch resolves the pairing's plan through its parent phone. No `execution_target`. |
+| `POST /api/ios/v1/workouts` | Any non-revoked device of the plan's pairing starts it; no target check. Sets `owner_device_id` (provenance), `plan_revision = 0` and `last_activity_at`; response includes them. |
 | `GET /api/ios/v1/workouts/{id}/execution` | Adds `owner_device_id`, `plan_revision`, `last_activity_at`, `stale`, the frozen `plan`, and the `execution` block `{workout_id, watermark, substitutions, additions}`. |
 | `POST /api/ios/v1/workouts/{id}/execution` | New, phone token only (`403 not_phone` from a watch): appends one `substitution` or `addition`; the server solves the prefill or records `prefilled_load_kg: null` with `prefill_reason`, and the response is the same `execution` block. Idempotent by the body `event_id`. |
-| Existing set/form/finish routes | Owner check (`409 not_owner`); a set may carry `substitutes_plan_item_index`. A stale `plan_item_index` is kept as extra work instead of returning `409 plan_item_mismatch`, which is retired for new clients. |
+| Existing set/form/finish routes | No owner check; any pairing device writes. A set may carry `substitutes_plan_item_index`. A stale `plan_item_index` is kept as extra work instead of returning `409 plan_item_mismatch`, which is retired for new clients. |
 | Plan-edit routes | Removed. All five R8 routes return `404`; a substitution or addition is the only mid-session change. |
-| `POST /api/ios/v1/workouts/{id}/takeover` | New. Transfers ownership and appends an event. |
+| `POST /api/ios/v1/workouts/{id}/takeover` | Removed. Returns 404. |
 | Existing abandon route | Allowed by any device; records the device. |
 | `POST /api/ios/v1/prescriptions` settings | Adds `technique_throttle` (boolean, main-work scope): MOD-TECH-001 is applied when the plan is built and frozen into it. Omitted by a client that does not send it. **Implemented 2026-11-23.** |
 | `POST /api/ios/v1/workouts` | Binds the plan's `execution_id` as the workout id (minted at issue, migration `0076`); accepts the athlete's `started_at` and binds by the plan's issue window with `for_date` today or yesterday; identity and state decide a start, never elapsed time — the same `execution_id` returns the running session and a different execution may run beside an open one; a different `execution_id` for the same plan is `409 execution_id_mismatch`. **Implemented 2026-11-23.** |
@@ -696,10 +686,13 @@ Recorded here so the contract and the plan do not diverge; **not yet in force**.
 slice named, and this subsection shrinks as it does. Canonical statement:
 [Unified offline workout execution](../plans/UNIFIED-OFFLINE-EXECUTION.md).
 
-- **S5** — §9's ownership gate, take-over and mirror mode are removed; `execution_target` and the
-  per-target live-plan rule are removed so a plan belongs to the pairing, and the iPhone/watch
-  target picker goes with them; the watch's direct execution writes and the WP8 relay are retired.
-  §21's pending-session deferral is removed when offline start lands.
+- **S5 (partially applied 2026-11-23)** — §9's ownership gate, take-over and mirror mode are
+  removed; `execution_target` and the per-target live-plan rule are removed so a plan belongs to
+  the pairing, and the iPhone/watch target picker goes with them. `owner_device_id` is provenance
+  only; migration `0078` scopes one live plan per pairing and either non-revoked device may start
+  or write. Still outstanding in S5: the watch's direct execution writes and the WP8 relay are
+  retired only when the phone-commit transport lands. §21's pending-session deferral is removed
+  when offline start lands.
 
 `config/ios.v1.yaml` gains `idle_warn_seconds` (10800), `idle_abandon_seconds` (86400) and
 `watch_enabled` (tracked `true`; the code default remains `false` so a missing or malformed config fails closed; gates device minting), and
