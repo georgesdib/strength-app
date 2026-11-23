@@ -93,6 +93,10 @@ prescription is never rewritten, and no later read may imply that it was.
   `workout.start` refuses to create any second in-progress session.
 - Binding is judged by the athlete's start, not by the sync: a plan binds when the recorded local
   start falls inside `created_at…expires_at` and `for_date` is today or yesterday (D13).
+- **WP5 implemented 2026-11-23:** the two-minute elapsed-time heuristic is gone. A start is decided
+  by identity and state — the same execution id returns the running session, a different one may
+  start beside an open session — so a delayed offline sync is never distinguished by how old its
+  timestamp looks.
 
 ## 6. The ledger, and what it does not replace
 
@@ -165,6 +169,14 @@ accounting, `performed_at` is display.
   response says `reconciliation_window_closed`. It is visible in the event stream and excluded from
   aggregates.
 - The UI must not show a completed session as final while reconciliation is open.
+- **WP2a implemented 2026-11-23:** a late form rating is written to both the draft and the durable
+  `session_form_rating` inside the window; execution telemetry stays observational and is bounded
+  by the session's own timestamps, so a completed session accepts it without a window; and a
+  rejected late set now preserves its per-rep velocities with the rest of its payload, so refusal
+  never discards sensor data.
+- Late **corrections and removals** are still refused after completion. That is WP2b, deliberately
+  separate because it must repair the materialised `clean_set` row and the session totals, and it
+  is the only remaining piece that can disturb existing history.
 
 ## 9. Load catalogue (D9)
 
@@ -230,6 +242,10 @@ Rounding uses decimal arithmetic from the decimal string, matching `loads.round_
 - A substitution outside the catalogue, or one with no base, records a reason such as
   `no_catalogue_base`. It is never retro-solved and never falls back to the original exercise's
   load.
+- **The event carries the replacement's own set count and source** (`sets`, `prefill_source`), so
+  a live erector dose that caps sets is visible to the client rather than silently discarded
+  (WP1.2). Warm-up ramps and VBT provenance are deliberately not carried: a mid-session substitute
+  is defined by the load, reps, RIR and set count the athlete acts on.
 - **Back-flare alignment implemented 2026-11-23:** `resolve_replacement` now applies the per-item
   effort hold and erector dose before attaching warm-ups, so a replacement performed during a flare
   gets the same treatment as a planned item.
