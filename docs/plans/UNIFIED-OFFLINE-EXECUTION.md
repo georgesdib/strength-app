@@ -490,7 +490,9 @@ upgraded mid-workout.
 3. There is no `prefill_requested` flag. Send `prefill_load_kg` when you applied the catalogue;
    send `prefill_catalogue_version` with no value to record a catalogue miss; send neither and the
    server solves.
-4. A late removal is accepted inside the window; a late correction of a removed set returns
+4. Correct a set with **one** `update-set` call — never remove-and-re-add. The correction keeps
+   the set's `set_id`, which the merge's `local_set_id → set_id` map and the telemetry links depend
+   on. A late removal is accepted inside the window; a late correction of a removed set returns
    `409 late_event_rejected` — keep it unsent and show it, don't retry.
 5. The server no longer mints an execution id for a plan issued before the column existed; a plan
    without one answers `409 plan_not_bindable`, and the fix is to request a fresh plan.
