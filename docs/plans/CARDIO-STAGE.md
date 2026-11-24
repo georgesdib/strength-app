@@ -721,7 +721,12 @@ verified backup and one restore drill before the first such migration.
 
 - **O-1** What the export actually contains (metadata, dense HR, `AverageMETs`, VO₂max coverage) —
   answered by C0, and it can invalidate C5's tier order.
-- **O-2** HR retention resolution, chosen against the audited volume rather than in advance.
+- **O-2** *Closed.* `cardio-policy/v4` §4 fixes retention from the audited volume: workout-window
+  samples plus the 10-minute recovery tail (≈52 k samples, ≈6 MB) are kept, ≈502 k background
+  samples are dropped, and samples are stored at full recorded resolution with no downsampling.
+  The policy reviews resolution only above a 250 MB canonical store; the first promotion measured
+  222 MB after the 32-byte key change, under the trigger, so no retention change was needed
+  (C5 storage note).
 - **O-3** *Closed.* History is a one-time file import and the app carries only incremental sync; no
   staging upload endpoint was added (C1 policy §7).
 - **O-4** *Closed.* C0 answered it: the export carries the identifier on only 27 workouts and the

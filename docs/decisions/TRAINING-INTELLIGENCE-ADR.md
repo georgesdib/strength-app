@@ -1,13 +1,14 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
 **Status:** every record is accepted, deferred or superseded as of 2026-11-16. ADR-INT-001 to
-ADR-INT-021 are implemented, retained or deferred as recorded, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
+ADR-INT-021 are implemented, retained, deferred or withdrawn as recorded, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
 by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
 (INT-10, the local daily reminder nudge) is accepted 2026-11-16, as are ADR-INT-020 (INT-11, Explain the
-System) and ADR-INT-022 (INT-13, the Today summary card); ADR-INT-021 (INT-12, web search and RAG) is
-deferred. The one open item is INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
+System) and ADR-INT-022 (INT-13, the Today summary card); ADR-INT-021 (INT-12, web search and RAG) was
+**withdrawn on 2026-11-24** at the owner's request. The one open item is INT-9's adoption pass, which
+needs a new ADR once iOS 27.3 lands.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -730,42 +731,33 @@ retrieved snippets.
 **Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
 local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
 Private permitted text, including personal details, is sent to DeepSeek; secrets filtering is
-best-effort and reviewed by the allowlist. INT-11 is single-question; session-only follow-up context is deferred with INT-12. Retrieval
-quality, substantive citation accuracy and staleness are accepted as personal-use risks, not release
-gates; only the structural citation sanity check above is enforced.
+best-effort and reviewed by the allowlist. INT-11 is single-question; session-only follow-up context
+was withdrawn with INT-12. Retrieval quality, substantive citation accuracy and staleness are
+accepted as personal-use risks, not release gates; only the structural citation sanity check above is
+enforced.
 
 **Rejected alternatives.** Web search/browsing now (separate, higher-risk proposal); unrestricted
 filesystem access (secrets and traversal); vector RAG before keyword retrieval is measured; bundling
 the docs in the iOS app (size, staleness, secret risk); strict citation validation as a release gate
 (owner accepts best-effort).
 
-## ADR-INT-021 — Web search and RAG deferred (2026-11-16)
+## ADR-INT-021 — Web search and RAG (withdrawn 2026-11-24)
 
-**Status.** Deferred 2026-11-16. Not approved or scheduled; no implementation. INT-12 is the single
-record for the former separate web-access and RAG candidates, plus deferred follow-up context.
+**Status.** Deferred 2026-11-16; **withdrawn on 2026-11-24 at the owner's request.** Not approved,
+not implemented, not scheduled and no longer planned. The provider, quota, privacy, SSRF, query
+retention, page-fetch and citation-evaluation questions are closed with it.
 
-**Context.** INT-11 provides single-question local docs/code explanation. The owner wants a later step
-for web search, session-only follow-up context and, if measured necessary, retrieval-augmented
-generation. The existing MCP server provides
-transport, authentication and a facts-only tool boundary but is not a search engine and has no web
-access. External content is untrusted; search queries leave the server; RAG can add an embedding
-store without improving exact structured facts.
+**Context (historical).** INT-11 provides single-question local docs/code explanation. A later step
+for web search, session-only follow-up context and retrieval-augmented generation was considered and
+deferred on 2026-11-16; the owner has since declined that direction entirely.
 
-**Decision.** Keep these items deferred behind INT-11. Follow-up context, if approved, is capped
-session-only history with query rewriting and no transcript persistence. The first web slice, if
-approved, uses one
-fixed search provider, opt-in per question, bounded snippets and URL citations; page fetching is a
-separate step with an allowlist and SSRF controls. RAG is permitted only after the INT-11 FTS5
-baseline is measured insufficient. Web content and retrieved sources never compute or override a
-training value and never become a rule. MCP remains facts-only; exposing knowledge search or web
-research over MCP requires a new ADR and contract revision.
+**Decision.** No web search, browsing, URL fetch, web citation or retrieval-augmented generation is
+approved or planned. The MCP server stays transport and facts-only, INT-11 stays a local keyword/FTS5
+explainer, and no component reads external content. Reintroducing any of it needs a new owner request
+and a new ADR.
 
-**Consequences.** No code, provider key, endpoint, network policy, MCP tool or contract change now.
-Provider, quota, privacy, SSRF, query retention, page-fetch policy and citation evaluation remain
-open decisions for the later phase.
-
-**Rejected now.** Automatic search on every message; arbitrary model-run URLs or shell commands;
-scraping Google HTML; vector RAG before the keyword baseline; MCP as a search transport.
+**Consequences.** No code, provider key, endpoint, network policy, MCP tool or contract change was
+ever made, and none is expected.
 
 ## ADR-INT-022 — Today summary card (accepted 2026-11-16)
 
@@ -832,7 +824,7 @@ StrengthApp v1.2 on 2026-11-18.
 | APNs push for a daily reminder | a push key, token registry, scheduler and a live home server at delivery time — infrastructure for a reminder (ADR-INT-019) |
 | Background refresh to render the reminder on time | opportunistic by contract; would silently fail and fall back to the same precomputed text |
 | Unrestricted filesystem/RAG-for-everything explainer | secrets, traversal and a much larger index; ADR-INT-020 uses a named local allowlist |
-| Web search or RAG in the same slice as INT-11 | different provider, privacy, SSRF and evaluation risks; ADR-INT-021 defers them |
+| Web search or RAG in the same slice as INT-11 | different provider, privacy, SSRF and evaluation risks; ADR-INT-021 withdrew them on 2026-11-24 |
 
 ## Questions resolved by delivery (2026-11-15)
 
