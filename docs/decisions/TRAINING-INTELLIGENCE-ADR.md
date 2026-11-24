@@ -401,7 +401,7 @@ read-only workstream.
 **Context.** Three documents described overlapping future work: `strength-training-app/docs/LLM-INTEGRATION-PLAN.md`
 (analyst, explainer, constrained proposer, context builder, MCP as a conditional Iteration-2
 candidate), `ROADMAP.md` §4.24 (the same workstream in status form) and
-`docs/plans/IOS-CLIENT-PLAN.md` §5 (Apple Intelligence and PCC as unscheduled optional enhancements).
+`docs/plans/IOS-CLIENT-PLAN.md` §5 (Apple Intelligence and PCC, then unscheduled optional enhancements; PCC was later withdrawn on 2026-11-24).
 Keeping four forward descriptions means four sets of phases, statuses and acceptance criteria that
 drift the moment one changes. Two of the old items are still binding: the outbound-data inventory and
 the evaluation gates, plus the minimal-selector retirement.

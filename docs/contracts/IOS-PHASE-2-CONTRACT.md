@@ -697,9 +697,11 @@ Owner-approved for this contract (2026-11-07):
 3. Corrected against the live code: nutrition, hydration, body fat and grip are **not** readiness
    inputs (`DEC-READINESS-20`, `DEC-MEASURE-02`, `DEC-GRIP-01`). The accepted readiness fields
    are the ones in §5.1.
-4. Deferred: rubric/review screen, per-rep VBT, HealthKit, offline queue and reconciliation,
-   Apple Intelligence/PCC, sleep features and web authentication. Productivity capture was added
-   later as an additive completion field. Each remaining feature needs its own approval.
+4. Deferred at Phase 2: rubric/review screen, per-rep VBT, HealthKit, offline queue and
+   reconciliation, Apple Intelligence, sleep features and web authentication. Apple Intelligence was
+   later delivered under the Training Intelligence plan; PCC was withdrawn on 2026-11-24.
+   Productivity capture was added later as an additive completion field. Each remaining feature
+   needs its own approval.
 
 Settled defaults for this contract: 60-minute issued-plan TTL; 30-day receipt retention; 8-week
 Progress default with 1–52 selection; one active issued plan per device; 503 for disabled

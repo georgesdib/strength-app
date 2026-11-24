@@ -246,8 +246,8 @@ The intelligence layer should be a **composition layer**, exactly as AFC is (`DE
   an internal build and region availability, and Apple states the App Intents API "may change" during
   the preview. Nothing here depends on it.
 - Private Cloud Compute access: `PrivateCloudComputeLanguageModel` is documented for iOS 27, but use
-  requires Apple's managed entitlement and a per-day quota. Entitlement status is not knowable from
-  the repositories.
+  requires Apple's managed entitlement and a per-day quota. Entitlement status was not knowable from
+  the repositories; PCC was later withdrawn (INT-4c, 2026-11-24), so nothing depends on it.
 - Production latency of the heavier analytical calls (VBT analysis, adherence analytics, a 365-day
   e1RM series) on the ODROID host: no benchmark was run in this audit and none was added.
 - Whether any hosted MCP client the owner uses accepts a static bearer token instead of OAuth

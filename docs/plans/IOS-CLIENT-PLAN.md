@@ -6,9 +6,10 @@
 > `strength-training-app/`. Shared iOS phase contracts are indexed in the portfolio
 > `docs/contracts/` directory.
 >
-> **Apple Intelligence and PCC (2026-11-14):** the two Apple-platform items in §5 are superseded
-> by the portfolio [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7 (INT-4/INT-5). All
-> completed phases, the watch contract and the rest of this plan are unchanged.
+> **Apple Intelligence and PCC (2026-11-14; PCC withdrawn 2026-11-24):** the two Apple-platform
+> items in §5 are superseded by the portfolio [Training Intelligence plan](TRAINING-INTELLIGENCE.md)
+> §7 (INT-4/INT-5). PCC is not planned. All completed phases, the watch contract and the rest of
+> this plan are unchanged.
 
 **Status:** Phase 0 complete 2026-11-07 (owner-confirmed); **Phase 1 complete 2026-11-07**
 (owner-confirmed on the physical iPhone); **Phase 2 complete and closed 2026-11-07**
@@ -75,7 +76,7 @@ Form ratings and the post-session review use existing server review/form contrac
 
 ### Explicitly not a first-release prerequisite
 
-HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) was **retired 2026-11-18** as superseded by the cardio stage; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
+HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) was **retired 2026-11-18** as superseded by the cardio stage; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC was withdrawn (INT-4c) on 2026-11-24 and is not planned. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
 
 ## 2. Architectural invariants
 
@@ -83,7 +84,7 @@ HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-rele
 - **No duplicate methodology.** Swift may validate form presentation (required fields, sensible number formatting), but the server repeats all domain validation. It must not reproduce training calculations.
 - **No AI training decisions.** Apple Intelligence or any LLM may not generate/alter readiness scores, prescriptions, loads, RIR, exercise selections, form/rubric ratings, or other training decisions.
 - **Keep existing clients compatible.** Add a versioned facade incrementally; do not change existing unversioned routes in a way that breaks the web UI or CLI.
-- **Local-first, not cloud-dependent.** The normal product path is the owner's local server. No public endpoint, account, remote database, analytics, telemetry, or third-party exporter is required. PCC is a separate optional future AI exception, never a core dependency.
+- **Local-first, not cloud-dependent.** The normal product path is the owner's local server. No public endpoint, account, remote database, analytics, telemetry, or third-party exporter is required. There is no Apple cloud model: PCC was withdrawn (INT-4c), and the only optional external AI call is the owner-selected DeepSeek chat path.
 - **No transport-security claim.** The first release speaks plain HTTP on the owner's trusted home LAN and does not terminate TLS. LAN traffic, including the per-device credential, is unencrypted; the deployment assumes a trusted network and no public exposure. TLS is a separate decision if that threat model changes.
 - **HealthKit is opt-in and read-only.** It is a measurement source, not a training authority. Preserve source, date/time, units and coverage. Python applies only its already documented readiness rules.
 - **Manual values win.** When HealthKit is added, a manual value takes precedence per field and cannot be erased by a later import. Keep both values and provenance where correction/audit requires them.
@@ -527,7 +528,7 @@ The present home-LAN server has no authentication and uses HTTP (`LIM-57`). The 
   general egress test programs as release gates. Basic tests still verify authentication and
   revocation, that no secret is logged, and that the app talks only to the paired LAN address
   rather than a public server.
-- No analytics, telemetry, advertising SDK, remote crash reporting, cloud database, or automatic Internet fallback. Core features use the local Python server. The optional later PCC AI call is the only app-level non-local exception in scope, and is fully separate from core API traffic.
+- No analytics, telemetry, advertising SDK, remote crash reporting, cloud database, or automatic Internet fallback. Core features use the local Python server. The owner-selected DeepSeek chat call is the only app-level non-local exception in scope, and is fully separate from core API traffic.
 
 **Stop condition:** if the home network cannot be treated as trusted, or the server must be reachable from outside it, stop at the disposable Phase 1 spike and revisit transport (TLS or a private tunnel) before sending personal data. Do not invent custom cryptography.
 
