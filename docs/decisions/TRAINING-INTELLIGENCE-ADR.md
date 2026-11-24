@@ -1,7 +1,8 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
-**Status:** every record is accepted, deferred or superseded as of 2026-11-16. ADR-INT-001 to
-ADR-INT-021 are implemented, retained, deferred or withdrawn as recorded, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
+**Status:** every record is accepted, deferred, withdrawn or superseded as of 2026-11-24. ADR-INT-001
+to ADR-INT-021 are implemented, retained, deferred or withdrawn as recorded: ADR-INT-015 (INT-4c) and
+ADR-INT-021 (INT-12) were withdrawn on 2026-11-24, and ADR-INT-016 is accepted as recorded.
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
 by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
@@ -465,45 +466,27 @@ coverage and direction only.
 **Owner decision (2026-11-15).** Keep as is: no health-scoped token; raw readiness stays local-only
 permanently unless a new decision reopens it.
 
-## ADR-INT-015 — User-selectable Private Cloud Compute model (deferred 2026-11-15)
+## ADR-INT-015 — User-selectable Private Cloud Compute model (withdrawn 2026-11-24)
 
-**Context.** INT-4 and INT-4b run entirely on the device. The owner asked for a user choice between
-on-device and Apple Private Cloud Compute (PCC). The Foundation Models framework exposes
+**Status.** Deferred 2026-11-15; **withdrawn on 2026-11-24 at the owner's request.** PCC will not be
+integrated: no entitlement is sought, no picker is added, no Private Cloud path exists, and the
+earlier scope is not planned work.
+
+**Context (historical).** INT-4 and INT-4b run entirely on the device. A user choice between
+on-device and Apple Private Cloud Compute was considered; the Foundation Models framework exposes
 `PrivateCloudComputeLanguageModel` on iOS 27, but Apple requires the managed entitlement
-`com.apple.developer.private-cloud-compute` and eligibility approval; without it the model is
-unavailable. The plan previously required explicit consent and a context preview for PCC. The owner
-has asked us not to over-engineer the privacy layer.
+`com.apple.developer.private-cloud-compute` and eligibility approval.
 
-**Decision.** Add INT-4c: one app-wide model choice, **On-device (default)** or **Private Cloud**,
-used by the single-shot explanations and Chat. PCC is offered only when the entitlement is present,
-the model is available, and the required capabilities (tool calling for chat, guided generation for
-explanations) are supported. There is **no silent fallback**: a PCC failure stops with a short
-message and the deterministic review stays intact. Model choice is stored in UserDefaults.
-
-**Privacy.** A single Settings picker with one line: “Private Cloud sends your question and training
-facts to Apple's private cloud; On-device keeps them on this iPhone.” No per-request consent modal,
-no context preview, no audit log, no telemetry. Transcripts remain session-only.
-
-**Entitlement.** The phase is blocked until Apple grants access to
-[Private Cloud Compute](https://developer.apple.com/private-cloud-compute/) and the entitlement is
-added to the app profile. A device spike must verify availability, capabilities, context size and
-quota before UI work. If access is not granted, INT-4c does not ship and no dead picker is added.
-
-**Consequences.** One model-choice setting and a session factory across both generators; error
-mapping for network, quota and service failures; a device acceptance matrix on both models; no
-backend change. The privacy boundary becomes user-selectable, so the UI must always show which
-model is active. INT-4b's on-device path remains the default.
-
-**Status.** Deferred 2026-11-15: PCC needs a paid Apple Developer Program membership and the managed
-entitlement, which are not available. The decision is parked, not rejected; the scope stays in the
-plan as the future definition and is revisited only if access is obtained.
+**Decision.** Withdrawn. The app stays on-device (Apple Foundation Models) or, in Chat only, on the
+DeepSeek key path (`ADR-INT-016`). No third model, no cloud fallback and no model picker.
+Reintroducing PCC needs a new owner request and a new ADR.
 
 ## ADR-INT-016 — External chat model via a user API key (DeepSeek, accepted 2026-11-15)
 
-**Context.** PCC is parked because it needs a paid Apple Developer Program membership and the managed
-entitlement. The owner wants the option to use another model with their own API key, specifically
-DeepSeek, and has clarified that it applies to **Chat only** — the weekly and overview explanations
-stay on-device. DeepSeek exposes an OpenAI-compatible `/chat/completions` API with tool calls.
+**Context.** PCC is unavailable and was withdrawn on 2026-11-24 (`ADR-INT-015`); it needed a paid
+Apple Developer Program membership and the managed entitlement. The owner wants the option to use
+another model with their own API key, specifically DeepSeek, and has clarified that it applies to
+**Chat only** — the weekly and overview explanations stay on-device. DeepSeek exposes an OpenAI-compatible `/chat/completions` API with tool calls.
 
 **Decision.** Add INT-4d: a Settings **Chat model** choice, On-device (default) or DeepSeek. With
 DeepSeek selected, the iPhone calls `https://api.deepseek.com` directly using `deepseek-chat` and
@@ -640,9 +623,9 @@ server feature:
   would freeze one body forever.
 - **On-device only.** The message is rendered by a dedicated two-field on-device shape that reuses the
   narrative path's availability handling over facts the app already holds — `TodayResponse` plus the
-  issued plan. No capability is fetched for the reminder. The DeepSeek and PCC paths are unreachable
-  from this code path by construction: the scheduler is wired to the on-device generator and offers no
-  provider choice.
+  issued plan. No capability is fetched for the reminder. The DeepSeek path is unreachable from this
+  code path by construction, and the withdrawn PCC path (`ADR-INT-015`) does not exist: the scheduler
+  is wired to the on-device generator and offers no provider choice.
 - **Numbers are allowed (owner decision, 2026-11-16).** The reminder enforces only length. An
   encouragement is not an explanation, and a numeral in a nudge — "five minutes", "two sets" — is not
   a training claim; the strict `NarrativeValidator` grounding check stays on the weekly review and

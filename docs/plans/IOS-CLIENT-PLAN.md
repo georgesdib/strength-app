@@ -333,8 +333,9 @@ Only pursue after the core app is useful and stable, with a separate scope/appro
 **Superseded in part (2026-11-14).** The **Apple Intelligence** and **PCC** bullets below are
 superseded by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7 (INT-4/INT-5), which
 specifies the capability envelopes, the five-tool on-device adapter, availability checks, the token
-budget and the no-silent-cloud-fallback rule. The bullets stay as the original scope record and their
-privacy conditions are carried forward unchanged. The HealthKit, cardio and Longevity items in this
+budget and the no-silent-cloud-fallback rule. The PCC bullet is now withdrawn entirely (2026-11-24,
+INT-4c): the app has no Private Cloud path, no picker and no entitlement request. The bullets stay as
+the original scope record and their privacy conditions are carried forward unchanged. The HealthKit, cardio and Longevity items in this
 phase are unaffected.
 
 **Siri and surface automation (2026-11-15).** Siri, App Intents and Shortcuts are specified in the
@@ -343,11 +344,11 @@ here; the watch Action button and the HomeKit scenes on workout start and end ar
 plan with `ADR-INT-018`. This client plan does not restate them.
 
 - **Apple Intelligence:** optional tools may parse a spoken/typed set entry into an uncommitted draft, explain a server-produced prescription, summarize completed training, or structure free-text notes. The user reviews/accepts any draft before it reaches server validation. The model never controls training decisions or computes numbers.
-- **PCC:** an explicitly selected Apple Private Cloud Compute option for a user-invoked AI task; disabled by default, visibly identified as Apple server processing, with a preview of the context and consent before personal workout/health data is included. It is not used by pairing, readiness, prescription, capture, or sync; no automatic fallback from on-device mode; core functionality remains available with PCC disabled or offline.
+- **PCC (withdrawn 2026-11-24):** an explicitly selected Apple Private Cloud Compute option for a user-invoked AI task; disabled by default, visibly identified as Apple server processing, with a preview of the context and consent before personal workout/health data is included. It is not used by pairing, readiness, prescription, capture, or sync; no automatic fallback from on-device mode; core functionality remains available with PCC disabled or offline.
 - HealthKit observations beyond the current set — bodyweight (readiness), VO₂max, steps per day and sitting time (a completed-week mean, derived from Apple Watch stand time, written as a `device`-sourced measurement) — plus richer cardio imports, richer but descriptive Longevity views, background delivery, or historical XML backfill, only when a concrete use case justifies their added privacy/schema/testing cost. The watchOS companion is Phase 6, not part of this bucket.
 - Do not add sleep duration, sleep stages, or Apple Sleep Score under this plan.
 
-**Acceptance:** each enhancement is independently disableable and does not become a dependency of pairing, readiness, prescription, workout capture, or review. On-device AI and PCC outputs are suggestions/text only; all numeric training data still pass through explicit user review and existing server validation.
+**Acceptance:** each enhancement is independently disableable and does not become a dependency of pairing, readiness, prescription, workout capture, or review. AI outputs (on-device, or DeepSeek chat when the owner selects it) are suggestions/text only; all numeric training data still pass through explicit user review and existing server validation.
 
 ### Phase 6 — watchOS companion (6.0–6.7 complete)
 
@@ -607,7 +608,8 @@ manual sRPE precedence stands.
 
 ### Phase 5
 
-- Apple Intelligence is disabled by default. On-device and PCC choices are explicit; PCC requires a user action and context consent, has no automatic fallback, and is unnecessary for all core flows.
+- Apple Intelligence is disabled by default. The on-device model is the only explanation path; **PCC
+  was withdrawn on 2026-11-24** (INT-4c), so there is no Apple cloud model and no model picker.
 - Model-generated text/drafts cannot write a prescription, set, readiness score, RIR, form rating, rubric mark, or policy value without explicit user action and normal server validation.
 
 ## 10. Risks and decisions to settle during implementation
@@ -622,7 +624,7 @@ manual sRPE precedence stands.
 | Session RPE source | **Decided:** sRPE is always entered by hand (`DEC-SRPE-01`); the HealthKit effort value is derived *from* sRPE, never the reverse, so no provenance column is added. An Apple-supplied effort would need its own decision. |
 | Rubric use | Reuse server's current review payload and rubric version. Marks are human optional feedback; do not implement scoring or calibration logic in Swift. |
 | HealthKit scope | HRV/RHR/bodyweight first; all other types later by explicit scope. No sleep/sleep score in this plan. |
-| PCC privacy and availability | Specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7.3; disabled by default, user-invoked, context preview/consent, no health data by default, no core dependency, no automatic fallback from on-device. |
+| PCC privacy and availability | **Withdrawn 2026-11-24** (`ADR-INT-015`): no Private Cloud path, no picker and no entitlement request. Nothing to specify. |
 | Offline complexity | Durable offline mutation was deferred until the online session loop was proven; it shipped as [unified offline execution](UNIFIED-OFFLINE-EXECUTION.md) on 2026-11-23. Cached reads still do not imply the ability to prescribe offline. |
 
 ## 11. Status and next task
@@ -655,7 +657,7 @@ the server's post-workout History edit). R11 (rest timer Live Activity) was drop
 reinstated on 2026-11-17 for phone-owned sessions and **closed 2026-11-18**: +15 s and Skip act from
 the Lock Screen and the expanded Island, and the physical-device acceptance was waived.
 
-Do not begin PCC work without separate approval. Phase 4 is closed; Phase 3B is retired; Phase 6.7
+PCC is withdrawn (2026-11-24); no PCC work will begin. Phase 4 is closed; Phase 3B is retired; Phase 6.7
 is fully confirmed (W1–W12 and R).
 
 ## 12. References

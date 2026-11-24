@@ -2,10 +2,11 @@
 
 **Canonical location:** this file, in the portfolio repository.
 **Status:** delivered 2026-11-15, extended 2026-11-16. INT-1 to INT-8 are delivered (INT-8 closed with
-no scope), INT-4c is parked on Apple's PCC entitlement, and **INT-9 (the Siri AI adoption pass) is
-deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and INT-13 (the Today summary
-card) were added on 2026-11-16 and are implemented on the iOS client**, with their
-physical-device acceptance waived by owner decision (INT-13 on 2026-11-17, INT-10 on 2026-11-18).
+no scope), INT-4c was withdrawn on 2026-11-24 because PCC will not be integrated, and **INT-9 (the
+Siri AI adoption pass) is deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and
+INT-13 (the Today summary card) were added on 2026-11-16 and are implemented on the iOS client**,
+with their physical-device acceptance waived by owner decision (INT-13 on 2026-11-17, INT-10 on
+2026-11-18).
 **INT-11 (Explain the System, local knowledge retrieval) was implemented and closed on 2026-11-16
 with documented limitations; INT-12 (web search and RAG) was withdrawn on 2026-11-24 at the owner's
 request; the constrained proposer is withdrawn 2026-11-17.** This plan document itself changes no
@@ -63,8 +64,8 @@ It exists in three forms that share one core:
 1. a **capability layer** in Python that composes the existing services into versioned,
    evidence-linked fact packages;
 2. a **standalone MCP server** that exposes those packages as tools and resources to any MCP host;
-3. a set of **native adapters** so the iPhone can use the same packages with Apple Foundation Models,
-   Private Cloud Compute, or no model at all.
+3. a set of **native adapters** so the iPhone can use the same packages with Apple Foundation Models
+   or no model at all.
 
 The core never calls a model, the MCP server never calculates, the app never calculates, and no part
 of the system can change a prescription, a readiness score, a load or a training plan.
@@ -567,11 +568,11 @@ reads `contextSize` at runtime rather than hard-coding either number.
 
 `PrivateCloudComputeLanguageModel` (iOS 27.0+) provides a **32K** context and reasoning levels, uses
 the same `LanguageModelSession` API, needs a network, has a **per-day quota** and requires Apple's
-managed entitlement. It is a stable API in a released OS but **gated access**, so it cannot be the
-default or a dependency. Its privacy story is Apple-mediated, not owner-mediated, and it must be
-presented as server processing with a single Settings choice and a one-line disclosure. The owner
-waived the earlier context preview and per-request consent flow (2026-11-15). Quota errors
-(`.quotaLimitReached`) are a normal state with a clear message, never a retry loop.
+managed entitlement. It is a stable API in a released OS but **gated access**.
+
+**Withdrawn (2026-11-24).** The owner will not integrate PCC: no entitlement is sought, no picker is
+added and no Private Cloud path exists. This section is retained only as the framework record; the
+earlier design (a Settings choice, a one-line disclosure and no context preview) is not planned work.
 
 ### 7.4 Backend LLM
 
@@ -719,7 +720,7 @@ changes, outside this workstream entirely.
 | Prompt injection via data | free-text notes excluded by default; all strings treated as data; instruction text says so; adversarial fixtures in CI; no tool returns arbitrary user-authored text unless a capability explicitly requires it and labels it `untrusted_text` |
 | Model-supplied arguments | schema validation + server-side range/bounds + identifier existence checks; the model cannot widen a window or name a user |
 | Health-data minimisation | field-level outbound inventory (reuse `LLM-INTEGRATION-PLAN.md` §8.1) before any model path is enabled; injuries/symptoms/measurements excluded unless the capability needs them, and then listed in `privacy` |
-| Local vs server inference | the UI states which model runs where; on-device never silently becomes cloud; PCC requires explicit consent and a context preview |
+| Local vs server inference | the UI states which model runs where; on-device never silently becomes cloud; PCC was withdrawn (INT-4c), so no Apple cloud model exists |
 | Logging and retention | metadata only, no payloads, no tokens, 30-day operational log retention; model transcripts not persisted |
 | Rate limiting and resource limits | per-token bucket, concurrency cap, timeout, body cap, window caps, result-size cap |
 | Model output validation | schema + grounding + numeric checks + refusal to persist as an artifact |
@@ -1000,62 +1001,17 @@ by the owner.
 **Exclusions.** No Siri AI Developer Preview, no PCC/cloud fallback, no server narration, no write,
 no new analytical capability, and no INT-5 work.
 
-### INT-4c — User-selectable model: on-device or Private Cloud (parked 2026-11-15)
+### INT-4c — User-selectable model: on-device or Private Cloud (withdrawn 2026-11-24)
 
-**Status.** **Parked 2026-11-15; not scheduled.** PCC requires a paid Apple Developer Program
-membership plus the managed entitlement `com.apple.developer.private-cloud-compute` and Apple's
-eligibility approval. Until that access exists the model is unavailable, so this phase does not
-ship and no picker is added. Revisit only if the owner obtains access; the scope below is retained
-as the future definition.
+**Status.** Parked 2026-11-15 (PCC needs a paid Apple Developer Program membership, the managed
+`com.apple.developer.private-cloud-compute` entitlement and Apple's eligibility approval).
+**Withdrawn on 2026-11-24 at the owner's request:** PCC will not be integrated, no entitlement will
+be sought, no model picker is added and no Private Cloud path exists in the app.
 
-**Goal.** One app-wide setting: **On-device (default)** or **Private Cloud Compute**, applied to the
-weekly/overview explanations and Chat. Each surface states which model produced the answer.
-
-**Privacy — deliberately simple.** One picker plus one line: “Private Cloud sends your question and
-training facts to Apple's private cloud; On-device keeps them on this iPhone.” No per-request
-consent modal, no context preview, no audit log, no telemetry. The transcript stays session-only.
-The owner waived the earlier context-preview requirement.
-
-**Prerequisite spike (must pass before UI work).** Apply for access and add the entitlement to the
-app profile, then on the iPhone verify:
-- `PrivateCloudComputeLanguageModel().isAvailable`;
-- `.capabilities` contains `.toolCalling` and `.guidedGeneration`;
-- `contextSize` (expected 32K);
-- `quotaUsage.status`;
-- one chat turn and one explanation.
-If any check fails, stop and report; do not ship a partial picker.
-
-**Implementation.**
-- `NarrativeModelChoice` (`onDevice`, `privateCloud`) persisted in UserDefaults; default on-device.
-- A small session factory switches on the choice; both generators take it. Tools, budgets,
-  grounding, soft verification and session-only transcripts are unchanged.
-- Settings picker with the one-line disclosure. The PCC option appears only when entitled,
-  available and capable; otherwise the surface stays on-device with a clear reason.
-- Errors: `.networkFailure`, `.quotaLimitReached` and `.serviceUnavailable` map to short
-  messages; quota includes the reset date when Apple provides it; no retry loop and **no silent
-  fallback**.
-- Chat requires `.toolCalling`; explanations require `.guidedGeneration`. If either is missing, that
-  surface stays on-device with a clear line.
-
-**Acceptance.**
-- Default remains on-device; changing the picker persists and both surfaces use it.
-- PCC is offered only when entitled, available and capable; otherwise a clear reason, no dead
-  control.
-- No silent fallback; a PCC failure stops with a message and leaves the deterministic review intact.
-- Grounding/soft verification, sources, refusal behaviour and session-only transcript are identical.
-- Quota, network and service errors are differentiated.
-- Device matrix on both models: weekly explanation, overview explanation, chat with the five tools,
-  refusal, transcript clearing.
-
-**Tests.** Model-choice persistence and factory selection; availability/error mapping; a stub
-generator confirms both surfaces pass the choice through. No UI tests (owner). PCC itself is
-device-only.
-
-**Out of scope.** No backend/MCP change, no Siri, no streaming, no per-conversation model switch, no
-cost dashboard, no cloud fallback.
-
-**Estimate.** Small once access exists (2–3 focused sessions); entitlement and eligibility are the
-schedule risk.
+**Record.** The model surface stays on-device (Apple Foundation Models) or the existing DeepSeek chat
+path; there is no third choice and nothing to switch. The earlier scope — one app-wide model setting,
+the disclosure line, the availability/capability spike, the error mapping and the two-model device
+matrix — is not planned work and must not be picked up without a new owner request.
 
 ### INT-4d — Chat with an external model via API key (DeepSeek; delivered 2026-11-15)
 
@@ -1200,13 +1156,14 @@ matrix are delivered. **Model tool calling is deferred/closed**: the provider st
 deterministic dossier covers the six core capabilities plus latest duration. Streaming is not planned. Chat tokens are
 persisted in `run.llm_tokens` and count against the daily budget.
 
-**Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
-INT-4c. This phase covered the server/web conversation only.
+**Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice INT-4c
+was withdrawn on 2026-11-24 (PCC will not be integrated). This phase covered the server/web
+conversation only.
 
 **Scope (historical).** A web chat panel over the read-only capabilities, with an explicit context
 budget, turn cap, and a hard rule that answers use only facts in the supplied snapshot.
 
-**Dependencies.** INT-5. The iOS surface is INT-4b/4c. Transcript retention is session-only; no
+**Dependencies.** INT-5. The iOS surface is INT-4b; INT-4c was withdrawn. Transcript retention is session-only; no
 server transcript is stored.
 
 **Files/repos.** Optional web panel; server conversation orchestration. The iOS `ChatView` is no
@@ -1719,7 +1676,7 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
                                       └──▶ INT-7
 INT-4d (external chat model): delivered; chat only
 INT-4e (plan-aware chat): delivered
-INT-4c (PCC model choice): parked — needs paid developer access + entitlement
+INT-4c (PCC model choice): withdrawn 2026-11-24 — the owner will not integrate PCC
 INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
 
 INT-7     closed (read-only intents, phone and watch)
@@ -1735,13 +1692,13 @@ INT-12    withdrawn 2026-11-24 — web search and RAG; owner declined the featur
 INT-13    closed 2026-11-17 — Today summary card (iOS only; owner-closed without a device run;
           shipped in StrengthApp v1.2)
 INT-9     deferred — starts only after iOS 27.3 lands
-INT-4c    parked — needs paid developer access + the PCC entitlement
+INT-4c    withdrawn 2026-11-24 — PCC will not be integrated
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
 - INT-4b (on-device chat) and INT-4d (DeepSeek chat) are delivered. INT-4e (plan-aware chat and
-  suggestions) is delivered. INT-4c (PCC model choice) is parked
-  until paid developer access and the entitlement exist; INT-5 delivered the server narrative track.
+  suggestions) is delivered. INT-4c (PCC model choice) was withdrawn on 2026-11-24 because the owner
+  will not integrate PCC; INT-5 delivered the server narrative track.
   INT-6 is closed (2026-11-15): its iOS surface is INT-4b and its server/web chat uses the deterministic dossier; tool calling and streaming are deferred.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
@@ -1749,8 +1706,8 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
 - **Delivery complete 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-7c all closed and
-  owner-confirmed. INT-11 is closed with documented limitations; INT-9 remains gated on iOS 27.3, plus the
-  parked INT-4c.
+  owner-confirmed. INT-11 is closed with documented limitations; INT-9 remains gated on iOS 27.3, and
+  INT-4c is withdrawn.
 - **Why this order.** INT-7 first: it is the smallest phase, it is what December's adoption annotates,
   and built to §7.6 it leaves nothing behind. 7b-1 next: the cheapest real channel proves the trigger,
   ordering, dedupe and failure isolation that the heavier channels reuse. 7b-2 then adds the HomeKit
@@ -1884,7 +1841,7 @@ described here and nowhere else.
 | §9.2 MCP server over Tailscale (Iteration 2 candidate) | superseded | §5, `ADR-INT-003`, `ADR-INT-004` |
 | §10 phases 1, 2 and 3 | superseded | INT-1 to INT-5 |
 | §11 future areas for context, analyst, explainer and `mcp/` | superseded | §3.2 |
-| `docs/plans/IOS-CLIENT-PLAN.md` §5 Apple Intelligence and PCC bullets | superseded | §7.2–§7.3, INT-4/INT-5 |
+| `docs/plans/IOS-CLIENT-PLAN.md` §5 Apple Intelligence and PCC bullets | superseded | §7.2, INT-4/INT-5; the PCC part was withdrawn 2026-11-24 |
 | `ROADMAP.md` §4.24 phases 1–3 and the Iteration-2 MCP clause; §4.18 forward idea | superseded | §12, INT-1 to INT-8 |
 | Any earlier uncommitted Apple Intelligence or MCP scope | superseded | this plan |
 
@@ -1911,8 +1868,9 @@ retained items in §16.3.
   (`ADR-INT-003`), still read-only and still reusing the existing core.
 - **The context and evidence builder moves** from the planned `agents/context.py` to the
   provider-neutral `strength_coach/intelligence/context.py` (`ADR-INT-002`).
-- **Apple Intelligence and PCC move** from an unscheduled Phase 5 bullet to a specified, independently
-  disableable INT-4/INT-5 scope with no silent cloud fallback (`ADR-INT-007`).
+- **Apple Intelligence moves** from an unscheduled Phase 5 bullet to a specified, independently
+  disableable INT-4/INT-5 scope with no silent cloud fallback (`ADR-INT-007`). **PCC is withdrawn**
+  (2026-11-24) and is not planned.
 - **The constrained proposer is withdrawn.** The CLI `run --propose` path was removed on
   2026-11-17 because it broke CLI/UI parity, so `DEC-LLM-09` is closed rather than deferred. Its
   requirements remain as historical record; any future write capability needs a new decision.
