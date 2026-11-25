@@ -1,9 +1,9 @@
 # READINESS METRIC REGISTRY — PLAN
 
-**Status:** **implemented and verified 2026-11-25** on the backend `readiness-registry` branch,
-WP1–WP8: 1,021 live readiness/override dates produced zero differences against the pre-registry
-engine, the post-implementation audit is remediated, brand-new metric keys have a validated
-creation surface, and the full suite passes (**2,549 tests**). The owner approved the plan and all
+**Status:** **implemented, verified and released 2026-11-25** on `development` (backend,
+portfolio and iOS), WP1–WP8: 1,021 live readiness/override dates produced zero differences
+against the pre-registry engine, the post-implementation audit is remediated, brand-new metric
+keys have a validated creation surface, and the full suite passes (**2,549 tests**). The owner approved the plan and all
 decisions below. Canonical location: this file, in the portfolio repository.
 **Decision owner:** the athlete.
 **Related:** [READINESS-SCORE.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/READINESS-SCORE.md),
@@ -190,7 +190,7 @@ endpoint/UI fields are removed (breaking change, accepted).
 | WP5 | Schema-driven web readiness form | done (`e19fb7f`) |
 | WP6 | Settings panel: edit, preview, history; remove the old settings surface | done (`a542a30`) |
 | WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
-| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,549 passed**; release checklist pending |
+| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,549 passed**; released 2026-11-25 (backup, migrations 0081/0082, service restart and registry check); iOS physical acceptance outstanding |
 
 iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
 
@@ -245,6 +245,18 @@ rejection, the two extras, and the rebuild.
   and web surfaces share the validation. `POST /api/readiness/registry/metrics` is the API route.
 - **Remaining limitations:** core normalisation still uses `value / scale_max` (min–max was not
   adopted; a 2–6 scale maps 2 to 0.33) and core values remain whole numbers.
+
+### Release record (2026-11-25)
+
+- Merged backend, portfolio and iOS `readiness-registry` into `development` and deleted the
+  feature branches and temporary worktrees.
+- Production backend database backed up before migration to
+  `/home/dsh/coach-db-backups/coach-20261125T223532-pre-readiness-registry.db`; migrations
+  **0081** and **0082** applied on restart; `PRAGMA integrity_check` returned `ok`.
+- Web service restarted; health returned 200; `/api/readiness/schema` returned registry v1 with
+  seven metrics and `/api/readiness/registry/history` returned one version.
+- iOS merged, but its physical-device acceptance remains outstanding (simulator acceptance
+  passed).
 
 ## 12. Risks
 
