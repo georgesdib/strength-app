@@ -43,8 +43,9 @@ a code change.
 - No new daily inputs shipped now; the registry is seeded with today's eight inputs.
 - No change to per-lift readiness, the injury ceiling, category overrides, factor bands or any
   prescription behaviour.
-- No iOS dynamic form in this workstream: the iPhone readiness screen is a separate MacBook
-  session. The backend contract is built for it.
+- No iOS dynamic form in this workstream: the iPhone readiness screen was a separate MacBook
+  session and was delivered on 2026-11-25 (simulator live acceptance; physical acceptance waived
+  by the owner).
 - No multi-user, auth or per-user isolation.
 
 ## 4. Storage
@@ -151,7 +152,10 @@ endpoint/UI fields are removed (breaking change, accepted).
   rollback lists are read-only.
 - **CLI:** `readiness registry list|show|set|history|preview`, matching the Settings operations
   and validation (CLI/UI parity rule).
-- **iOS:** out of scope here; the schema endpoint is the contract for the separate session.
+- **iOS:** delivered separately on 2026-11-25 against the schema endpoint: registry-ordered form,
+  required-one-of marks, units and direction, cached/fallback offline rendering and server field
+  errors. Simulator live acceptance passed; physical acceptance was waived by the owner. See
+  `StrengthApp/docs/READINESS-REGISTRY.md` and its acceptance record.
 
 ## 9. Migration, deployment, rollback
 
@@ -192,10 +196,15 @@ endpoint/UI fields are removed (breaking change, accepted).
 | WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
 | WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,549 passed**; released 2026-11-25 (backup, migrations 0081/0082, service restart and registry check); iOS physical acceptance waived by owner |
 
-iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
+iOS dynamic form: delivered 2026-11-25 on the client (`295b416`) using the schema endpoint;
+simulator live acceptance passed and physical acceptance was waived by the owner (record:
+`StrengthApp/docs/acceptance/device/15-readiness-registry.md`).
 
 ### Implementation record
 
+- **iOS form:** the client renders the form from `/api/ios/v1/readiness/schema`, caches the last
+  schema and falls back to the fixed seven fields offline. It was merged on 2026-11-25; simulator
+  live acceptance passed and the owner waived the physical run.
 - **Breaking changes, accepted:** `POST /api/readiness/settings`, the `readiness settings` CLI
 action/flags, the `readiness_setting` overlay, the `settings` block in readiness payloads and the
 old panel are removed. `readiness_setting` rows remain as history but nothing writes them

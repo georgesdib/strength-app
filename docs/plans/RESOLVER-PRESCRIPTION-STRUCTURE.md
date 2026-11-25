@@ -97,7 +97,8 @@ in §6 and the backend ROADMAP.
 - `GET /api/ios/v1/today` returns date, readiness, score, active workout and plan state, but
   not trained week, DUP, deload or competition.
 - The watch start gate requires the server or a reachable phone relay; offline start with both
-  devices offline is deferred. Idempotency receipts are scoped `(device_id, operation_id)`, and a
+  devices offline was deferred here and was later implemented by unified offline execution on
+  2026-11-23 (`UNIFIED-OFFLINE-EXECUTION.md`). Idempotency receipts are scoped `(device_id, operation_id)`, and a
   plan is readable by its requester or its execution target.
 
 ## 5. Target model
