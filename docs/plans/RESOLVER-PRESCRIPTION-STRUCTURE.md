@@ -508,7 +508,7 @@ overlap; the server foundation precedes every client step.
   ROADMAP tracking entry. **Exit:** config approved, fixtures committed, no real
   data. **Evidence:** `config/resolver-role-quality.v1.yaml`,
   `tests/fixtures/resolver_structure/`, `tests/test_resolver_role_quality_config.py`,
-  `DEC-RESOLVER-21`, ROADMAP §4.37.
+  `DEC-RESOLVER-21`, ROADMAP-DONE.md §4.37.
 - **WP1a — server ordered groups (done 2026-11-19).** `group_index`, serializers omit role,
   internal build-time role retained, validation 1..N, warm-up from the heaviest group,
   set-weighted intensity, persistence, legacy rows read by order. **Evidence:**

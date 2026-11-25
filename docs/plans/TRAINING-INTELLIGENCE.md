@@ -871,7 +871,7 @@ and MCP clients.
 
 **Files/repos.** `intelligence/capabilities/*`, `intelligence/context.py` (baseline package used by
 overview and review), `tests/intelligence/`. Backend docs: `docs/API.md` gets the MCP surface under
-a new section (it is a backend implementation doc); `ROADMAP.md` §4.24 pointer.
+a new section (it is a backend implementation doc); `ROADMAP-RETIRED.md` §4.24 pointer.
 
 **Acceptance.** Every catalogue tool returns an envelope whose fact blocks name their owning module;
 each has at least one golden test; ranges and limits enforced; no metric constant in
@@ -1842,7 +1842,7 @@ described here and nowhere else.
 | §10 phases 1, 2 and 3 | superseded | INT-1 to INT-5 |
 | §11 future areas for context, analyst, explainer and `mcp/` | superseded | §3.2 |
 | `docs/plans/IOS-CLIENT-PLAN.md` §5 Apple Intelligence and PCC bullets | superseded | §7.2, INT-4/INT-5; the PCC part was withdrawn 2026-11-24 |
-| `ROADMAP.md` §4.24 phases 1–3 and the Iteration-2 MCP clause; §4.18 forward idea | superseded | §12, INT-1 to INT-8 |
+| `ROADMAP-RETIRED.md` §4.24 phases 1–3 and the Iteration-2 MCP clause; §4.18 forward idea | superseded | §12, INT-1 to INT-8 |
 | Any earlier uncommitted Apple Intelligence or MCP scope | superseded | this plan |
 
 The superseded documents remain in place as **historical and requirements records**. They are not

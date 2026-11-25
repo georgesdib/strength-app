@@ -8,7 +8,7 @@ of the AFC-2i report and its observation was owner-confirmed 2026-11-14. AFC-5 i
 
 documentation only beyond AFC-2 — no runtime behaviour, prompt, API, schema, dependency or
 training-rule change is included in this plan.
-**Roadmap workstream:** [ROADMAP §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
+**Roadmap workstream:** delivered record in [ROADMAP-DONE.md §4.33](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP-DONE.md); the remaining AFC-5 work is [ROADMAP §4.33a](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md).
 **Owner:** the athlete. AFC-2i, AFC-3 and AFC-4 are implemented; any further scope and AFC-5
 require explicit approval before implementation.
 **Scope:** composition over the backend services in section 2, rendered by the server's browser

@@ -6,7 +6,7 @@ and integration hardening; no product-decision change). Implemented as one
 golden fixtures, and the `get_longevity_assessment` capability behind MCP tool 11, the iOS
 intelligence route and the chat dossier. The iOS Today section, the health-consent toggle, the time-in-zone panel and the web panel are
 implemented (web prose is on demand, not automatic). This plan supersedes the v1.6.x cardio-impulse
-deliverable (ROADMAP §4.13a A2/A3).
+deliverable (ROADMAP-RETIRED.md §4.13a A2/A3).
 
 **One sentence:** three questions get one deterministic answer each, one consent switch guards the
 sensitive part, and a model may say what to do about it without the app ever prescribing.
@@ -52,7 +52,7 @@ consent.
 ### DEC-LONGEVITY-03 — the cardio impulse is retired, not deferred
 
 TRIMP, sRPE-impulse, acute:chronic ratios, cardio readiness scores and unified fatigue scores are
-closed as product direction. §4.13a A2/A3 is superseded. Time-in-zone classification of stored heart
+closed as product direction. ROADMAP-RETIRED.md §4.13a A2/A3 is superseded. Time-in-zone classification of stored heart
 rate samples is **not** an impulse: it adds no load model, no cumulative score and no time constant,
 and it is the only cardio computation this plan adds.
 

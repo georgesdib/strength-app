@@ -12,7 +12,7 @@ delivered, including the retired impulse (A2/A3), not left implicit. The measure
 implemented: C1 to C7 are gated on the C1 decision record, and no runtime behaviour, API, schema,
 dependency, contract or training rule changes until a workstream is implemented and tested.
 
-**Roadmap workstream:** [ROADMAP §4.13a](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md)
+**Roadmap workstream:** [ROADMAP-RETIRED.md §4.13a](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP-RETIRED.md)
 (v1.6, cardio depth). This plan delivered its A0/A1 evidence; A2/A3 were deferred and then retired —
 see [DEC-CARDIO-08](#dec-cardio-08--413a-a2a3-were-deferred-then-retired) and §11.
 
@@ -226,9 +226,9 @@ deletes the athlete's own entry.
 **Decision.** This stage delivered the §4.13a A0 (data audit) and A1 (capture completion) evidence.
 Impulse (A2) and shadow load (A3) were deferred to v1.6 proper at the time. The owner **retired** them
 as product direction on 2026-11-18 (`DEC-LONGEVITY-03`), so they are no longer a v1.6.x deliverable and
-`ROADMAP.md` §4.13a is amended to match; the 2026-11-16 deferral stands only as history.
+`ROADMAP-RETIRED.md` §4.13a is amended to match; the 2026-11-16 deferral stands only as history.
 
-**Consequences.** The retirement is recorded in `ROADMAP.md` §4.13a and in the longevity plan; this
+**Consequences.** The retirement is recorded in `ROADMAP-RETIRED.md` §4.13a and in the longevity plan; this
 decision stands as the record of the earlier deferral (see §12).
 
 ### DEC-CARDIO-09 — Workout uniqueness is the HealthKit object UUID, not device-scoped
@@ -744,7 +744,7 @@ integration PRs #27, #8 and #2, deployed at backend 1.6.0 and released through 1
 | Repository | Change | Commits |
 |---|---|---|
 | Portfolio | This plan, the plan-index entry and the documentation registration | `5e473cf`, `efc3e0c`, `6909d1b` |
-| Backend | `ROADMAP.md` §4.13a status note: A0/A1 evidence is scoped here; A2/A3 were later retired (`DEC-LONGEVITY-03`) | `9ac0a67`, `9a9a39e` |
+| Backend | `ROADMAP-RETIRED.md` §4.13a status note: A0/A1 evidence is scoped here; A2/A3 were later retired (`DEC-LONGEVITY-03`) | `9ac0a67`, `9a9a39e` |
 | iOS | `docs/README.md` index pointer, `docs/HEALTHKIT.md` (current read/write scope and privacy limits), and the widened `NSHealthShareUsageDescription` | `a2e84e6`, `359baf4`, `2c644d6`, `ded27d4` |
 
 Cross-repository links now point at the portfolio `main` branch, which contains this plan. The
@@ -770,7 +770,7 @@ owner closed the three test items on 2026-11-18 rather than scheduling them.
 | Golden-number analytics fixtures | not built; **closed by owner decision 2026-11-18** as accepted debt | plan §C7 |
 | METs and `srpe` on a *new* upload | unobserved; owner-accepted | LIM-68 |
 | Manual cardio entry | retired, not deferred | `DEC-CARDIO-19`, LIM-66 |
-| Cardio impulse / shadow load (§4.13a A2–A3) | **retired 2026-11-18**, not deferred: no TRIMP, sRPE impulse, ACWR or unified fatigue score ships | `DEC-LONGEVITY-03`; ROADMAP §4.13a |
+| Cardio impulse / shadow load (§4.13a A2–A3) | **retired 2026-11-18**, not deferred: no TRIMP, sRPE impulse, ACWR or unified fatigue score ships | `DEC-LONGEVITY-03`; ROADMAP-RETIRED.md §4.13a |
 
 **Release numbering caveat.** 1.6.0 shipped this stage while the roadmap's v1.6 milestone still named
 the impulse model. The impulse did not ship and will not: it was retired on 2026-11-18
@@ -785,4 +785,4 @@ the impulse model. The impulse did not ship and will not: it was retired on 2026
   [Athlete Feedback & Coaching](AFC.md) ·
   [Training Intelligence](TRAINING-INTELLIGENCE.md)
 - Canonical contracts: [contract index](../contracts/README.md)
-- Backend roadmap: [ROADMAP §4.13](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md)
+- Backend roadmap: [ROADMAP-RETIRED.md §4.13](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP-RETIRED.md)
