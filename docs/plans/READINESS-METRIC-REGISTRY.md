@@ -2,7 +2,7 @@
 
 **Status:** **implemented and verified 2026-11-25** on the backend `readiness-registry` branch,
 WP1–WP8: 1,021 live readiness/override dates produced zero differences against the pre-registry
-engine, and the full suite passes (**2,530 tests**). The owner approved the plan and all
+engine, and the full suite passes (**2,534 tests**). The owner approved the plan and all
 decisions below. Canonical location: this file, in the portfolio repository.
 **Decision owner:** the athlete.
 **Related:** [READINESS-SCORE.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/READINESS-SCORE.md),
@@ -189,7 +189,7 @@ endpoint/UI fields are removed (breaking change, accepted).
 | WP5 | Schema-driven web readiness form | done (`e19fb7f`) |
 | WP6 | Settings panel: edit, preview, history; remove the old settings surface | done (`a542a30`) |
 | WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
-| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,530 passed**; release checklist pending |
+| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,534 passed**; release checklist pending |
 
 iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
 
@@ -216,6 +216,12 @@ fresh seeds as a row conflict. The two transfer tests were the only suite regres
 baseline?" still lands on the readiness view.
 - **Phase 5A guard:** re-captured on 2026-11-25 with the 2026-11-24 volume-target changes; the
 full suite is green.
+- **Validation gap closed:** readiness writes accept exactly the enabled registry metrics plus
+`bodyweight_kg` and `wearable_score`; unknown, disabled and legacy fields are rejected across the
+repository, CLI, web and iOS paths. Migration **0082** opens `readiness_entry.field` (the closed
+CHECK was the last barrier to a registry-added metric) and rebuilds the append-only triggers and
+index with every row copied. Tests cover a new metric accepted and scored, unknown/disabled
+rejection, the two extras, and the rebuild.
 
 ## 12. Risks
 
