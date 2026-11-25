@@ -2,10 +2,8 @@
 
 **Status:** **implemented and verified 2026-11-25** on the backend `readiness-registry` branch,
 WP1–WP8: 1,021 live readiness/override dates produced zero differences against the pre-registry
-engine. The full suite passes except the pre-existing Phase 5A locked-config guard, which fails
-identically at base `288fac8` in a clean checkout (the production checkout skips it because a
-local config overlay exists). The owner approved the plan and all decisions below. Canonical
-location: this file, in the portfolio repository.
+engine, and the full suite passes (**2,530 tests**). The owner approved the plan and all
+decisions below. Canonical location: this file, in the portfolio repository.
 **Decision owner:** the athlete.
 **Related:** [READINESS-SCORE.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/READINESS-SCORE.md),
 [API.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/API.md),
@@ -191,7 +189,7 @@ endpoint/UI fields are removed (breaking change, accepted).
 | WP5 | Schema-driven web readiness form | done (`e19fb7f`) |
 | WP6 | Settings panel: edit, preview, history; remove the old settings surface | done (`a542a30`) |
 | WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
-| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2529 passed, 1 pre-existing failure** (Phase 5A guard, fails at base too); release checklist pending |
+| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,530 passed**; release checklist pending |
 
 iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
 
@@ -216,9 +214,8 @@ version is byte-identical across databases; without it the database-transfer mer
 fresh seeds as a row conflict. The two transfer tests were the only suite regressions and now pass.
 - **Search:** the panel keeps "baseline" in its heading/help so "where do I change the readiness
 baseline?" still lands on the readiness view.
-- **Pre-existing failure, not from this branch:** `test_locked_configuration_revision_is_unchanged`
-fails at base `288fac8` in a clean worktree (the locked hash predates later config drift); the
-Phase 5A constant was left untouched because changing it is a methodology decision.
+- **Phase 5A guard:** re-captured on 2026-11-25 with the 2026-11-24 volume-target changes; the
+full suite is green.
 
 ## 12. Risks
 
