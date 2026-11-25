@@ -7,7 +7,8 @@ A/B remains owner-accepted from 2026-11-20. The production ODROID service was de
 `development` at `5a3c1df` on 2026-11-21 after a verified database backup. The owner chose a
 direct development pull; backend, iOS and portfolio histories were subsequently merged into
 `main` through PRs #27, #8 and #2. No release tag was created by those merges. The WP4 real-data
-latency check remains deferred; the WP6 ODROID benchmark is recorded below. Work packages and release trains
+latency check was closed by owner decision on 2026-11-25 (the existing read latency is
+acceptable and no measurement is planned); the WP6 ODROID benchmark is recorded below. Work packages and release trains
 are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -556,7 +557,8 @@ overlap; the server foundation precedes every client step.
   target. **Evidence:** `tests/test_programme_header.py`, `tests/test_nudges.py`,
   `tests/test_intelligence_weekly.py`, `tests/test_web.py`, `tests/test_ios_workflow.py`,
   `StrengthAppTests/Phase2ClientTests`; `DEC-RESOLVER-25`, `DEC-RESOLVER-26`. The real-data
-  p50 measurement is deferred by the owner.
+  p50 measurement was closed by owner decision on 2026-11-25: the existing read latency is
+  acceptable and no measurement is planned.
 - **WP5 — actual data (done 2026-11-20).** Order matcher shared by adherence, VBT and structure
   analysis; substitution attribution; the RIR-6 warm-up invariant; config-backed segmented
   derived structure with ordinal confidence; role branches removed from matching. **Depends on:**
