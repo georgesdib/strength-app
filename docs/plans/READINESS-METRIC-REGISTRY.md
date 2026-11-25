@@ -1,8 +1,11 @@
 # READINESS METRIC REGISTRY — PLAN
 
-**Status:** **implemented 2026-11-25** on the backend `readiness-registry` branch, WP1–WP6;
-**WP8 (real-data comparison and release checklist) is pending.** The owner approved the plan and
-all five decisions below. Canonical location: this file, in the portfolio repository.
+**Status:** **implemented and verified 2026-11-25** on the backend `readiness-registry` branch,
+WP1–WP8: 1,021 live readiness/override dates produced zero differences against the pre-registry
+engine. The full suite passes except the pre-existing Phase 5A locked-config guard, which fails
+identically at base `288fac8` in a clean checkout (the production checkout skips it because a
+local config overlay exists). The owner approved the plan and all decisions below. Canonical
+location: this file, in the portfolio repository.
 **Decision owner:** the athlete.
 **Related:** [READINESS-SCORE.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/READINESS-SCORE.md),
 [API.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/API.md),
@@ -188,7 +191,7 @@ endpoint/UI fields are removed (breaking change, accepted).
 | WP5 | Schema-driven web readiness form | done (`e19fb7f`) |
 | WP6 | Settings panel: edit, preview, history; remove the old settings surface | done (`a542a30`) |
 | WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
-| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | pending |
+| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2529 passed, 1 pre-existing failure** (Phase 5A guard, fails at base too); release checklist pending |
 
 iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
 
@@ -203,6 +206,19 @@ refactor and still passes: status, score, components, normalised values, weights
 overrides, category factors, flags and suppression.
 - **Scores are unchanged** by the seeded version; the registry is the only source for inputs,
 weights and the minimum-field rule.
+- **Real-data verification:** a read-only copy of the live database at migration 0080 (0
+`readiness_setting` rows) was assessed by the pre-registry engine and the registry engine on
+**1,021** readiness/override/context dates. Status, score, components, basis, overrides, category
+scores/factors, flags and suppression were identical on every date. The copy was deleted after
+the comparison.
+- **Transfer/tests:** the seed row carries a fixed `created_at` (1970-01-01) so the baseline
+version is byte-identical across databases; without it the database-transfer merge treated two
+fresh seeds as a row conflict. The two transfer tests were the only suite regressions and now pass.
+- **Search:** the panel keeps "baseline" in its heading/help so "where do I change the readiness
+baseline?" still lands on the readiness view.
+- **Pre-existing failure, not from this branch:** `test_locked_configuration_revision_is_unchanged`
+fails at base `288fac8` in a clean worktree (the locked hash predates later config drift); the
+Phase 5A constant was left untouched because changing it is a methodology decision.
 
 ## 12. Risks
 
