@@ -1,7 +1,8 @@
 # READINESS METRIC REGISTRY — PLAN
 
-**Status:** proposed 2026-11-25, awaiting owner approval. No code, schema change or migration has
-been written. Canonical location: this file, in the portfolio repository.
+**Status:** **implemented 2026-11-25** on the backend `readiness-registry` branch, WP1–WP6;
+**WP8 (real-data comparison and release checklist) is pending.** The owner approved the plan and
+all five decisions below. Canonical location: this file, in the portfolio repository.
 **Decision owner:** the athlete.
 **Related:** [READINESS-SCORE.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/READINESS-SCORE.md),
 [API.md](https://github.com/georgesdib/strength-training-app/blob/development/docs/API.md),
@@ -177,19 +178,31 @@ endpoint/UI fields are removed (breaking change, accepted).
 
 ## 11. Work packages
 
-| WP | Content |
-|---|---|
-| WP0 | Plan approval (this document) |
-| WP1 | Migration, table, triggers, seed defaults, store queries, migration tests |
-| WP2 | Registry model, payload validation, effective-version selection, CLI |
-| WP3 | Score-engine refactor, `validate` by date, equivalence harness and fixtures |
-| WP4 | Schema endpoint (web and iOS), response version, API tests |
-| WP5 | Schema-driven web readiness form |
-| WP6 | Settings panel: edit, preview, history, rollback |
-| WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37 note, this plan status; portfolio contract/index |
-| WP8 | Verification: real-data comparison on a copy, full suite, release checklist |
+| WP | Content | Status |
+|---|---|---|
+| WP0 | Plan approval (this document) | approved 2026-11-25 |
+| WP1 | Migration, table, triggers, seed defaults, store queries, migration tests | done (`18a0230`) |
+| WP2 | Registry model, payload validation, effective-version selection, CLI | done (`dfb078d`) |
+| WP3 | Score-engine refactor, `validate` by date, equivalence harness and fixtures | done (`c7b7189`); 19-scenario golden fixture bit-exact |
+| WP4 | Schema endpoint (web and iOS), response version, API tests | done (`01771b5`) |
+| WP5 | Schema-driven web readiness form | done (`e19fb7f`) |
+| WP6 | Settings panel: edit, preview, history; remove the old settings surface | done (`a542a30`) |
+| WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
+| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | pending |
 
 iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
+
+### Implementation record
+
+- **Breaking changes, accepted:** `POST /api/readiness/settings`, the `readiness settings` CLI
+action/flags, the `readiness_setting` overlay, the `settings` block in readiness payloads and the
+old panel are removed. `readiness_setting` rows remain as history but nothing writes them
+(`DEC-READINESS-21`).
+- **Equivalence:** the golden fixture was captured from the pre-registry engine before the
+refactor and still passes: status, score, components, normalised values, weights, basis,
+overrides, category factors, flags and suppression.
+- **Scores are unchanged** by the seeded version; the registry is the only source for inputs,
+weights and the minimum-field rule.
 
 ## 12. Risks
 
@@ -206,11 +219,14 @@ iOS dynamic form: separate plan and session (MacBook), using the schema endpoint
 - **Migration on the production database.** Additive only, backup first, never run from the
   worktree.
 
-## 13. Decisions needed to start
+## 13. Decisions (approved 2026-11-25)
 
-1. Slopes and `min_readings` move into the registry (recommended) or stay in config?
-2. Remove the old readiness-settings fields and UI in this release (recommended) or keep them
-   read-only?
-3. New metrics must exist in `metric_definition` (recommended) — no free-text keys?
-4. `effective_from` defaults to today, no backdating (recommended)?
-5. Weight bound 0-2 per metric (recommended)?
+1. **Yes** — slopes and `min_readings` move into the registry, one source per metric.
+2. **Yes** — the old readiness-settings API, CLI, overlay, payload block and panel are removed in
+   this branch rather than kept read-only.
+3. **Yes** — a metric key must exist in `metric_definition`; no free-text keys.
+4. **Yes** — `effective_from` defaults to today and the API/CLI reject backdating.
+5. **Yes, with role-aware bounds:** core 0.05–2.0, device 0.05–1.0, wearable blend 0–0.5. Zero is
+   not a weight; disabling is the off switch. The bounds stop one input from dominating a gate.
+6. **No backward compatibility and no kill switch** — the server and iPhone must ship together, and
+   rollback is a deploy.
