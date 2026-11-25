@@ -190,7 +190,7 @@ endpoint/UI fields are removed (breaking change, accepted).
 | WP5 | Schema-driven web readiness form | done (`e19fb7f`) |
 | WP6 | Settings panel: edit, preview, history; remove the old settings surface | done (`a542a30`) |
 | WP7 | Docs: READINESS-SCORE, API, DATA-MODEL, UI-MAP, LIM-37, decisions, this plan; portfolio index | done with this status update |
-| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,549 passed**; released 2026-11-25 (backup, migrations 0081/0082, service restart and registry check); iOS physical acceptance outstanding |
+| WP8 | Verification: real-data comparison on a copy, full suite, release checklist | done: 1,021 dates / 0 differences; full suite **2,549 passed**; released 2026-11-25 (backup, migrations 0081/0082, service restart and registry check); iOS physical acceptance waived by owner |
 
 iOS dynamic form: separate plan and session (MacBook), using the schema endpoint.
 
@@ -255,8 +255,8 @@ rejection, the two extras, and the rebuild.
   **0081** and **0082** applied on restart; `PRAGMA integrity_check` returned `ok`.
 - Web service restarted; health returned 200; `/api/readiness/schema` returned registry v1 with
   seven metrics and `/api/readiness/registry/history` returned one version.
-- iOS merged, but its physical-device acceptance remains outstanding (simulator acceptance
-  passed).
+- iOS merged; the owner waived physical-device acceptance on 2026-11-25 (simulator acceptance
+  passed and is the recorded evidence).
 
 ## 12. Risks
 
