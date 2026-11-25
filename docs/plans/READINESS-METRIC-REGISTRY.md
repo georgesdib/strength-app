@@ -66,7 +66,8 @@ Effective registry for a date = the latest row with `effective_from <= date` (th
 `settings_profile` semantic). The migration seeds **version 1, effective 1970-01-01**, containing
 today's defaults, so historical prescriptions resolve to the same inputs they used.
 
-Payload (validated in code, never trusted):
+Payload (validated in code, never trusted). Label, scale and direction live in
+`metric_definition`, so the registry carries only the operational fields:
 
 ```json
 {
@@ -75,22 +76,22 @@ Payload (validated in code, never trusted):
   "require_any_of": ["sleep", "energy"],
   "wearable_weight": 0.10,
   "metrics": [
-    {"key": "sleep",    "role": "core", "enabled": true, "weight": 1.0,
-     "scale": [1, 5], "baseline_days": 0, "counts_as_core": true, "order": 1},
-    {"key": "energy",   "role": "core", "enabled": true, "weight": 1.0,
-     "scale": [1, 5], "baseline_days": 0, "counts_as_core": true, "order": 2},
-    {"key": "mood",     "role": "core", "enabled": true, "weight": 1.0,
-     "scale": [1, 5], "baseline_days": 0, "counts_as_core": true, "order": 3},
-    {"key": "stress",   "role": "core", "enabled": true, "weight": 1.0,
-     "scale": [1, 5], "baseline_days": 0, "counts_as_core": true, "order": 4},
-    {"key": "soreness", "role": "core", "enabled": true, "weight": 1.0,
-     "scale": [1, 5], "baseline_days": 0, "counts_as_core": true, "order": 5},
+    {"key": "sleep",    "role": "core",   "enabled": true, "weight": 1.0,
+     "baseline_days": 0,  "counts_as_core": true,  "order": 1},
+    {"key": "energy",   "role": "core",   "enabled": true, "weight": 1.0,
+     "baseline_days": 0,  "counts_as_core": true,  "order": 2},
+    {"key": "mood",     "role": "core",   "enabled": true, "weight": 1.0,
+     "baseline_days": 0,  "counts_as_core": true,  "order": 3},
+    {"key": "stress",   "role": "core",   "enabled": true, "weight": 1.0,
+     "baseline_days": 0,  "counts_as_core": true,  "order": 4},
+    {"key": "soreness", "role": "core",   "enabled": true, "weight": 1.0,
+     "baseline_days": 0,  "counts_as_core": true,  "order": 5},
     {"key": "hrv_ms",   "role": "device", "enabled": true, "weight": 0.5,
-     "baseline_days": 28, "min_readings": 7, "transform": "baseline_ratio",
-     "slope": 0.5, "direction": "higher"},
+     "baseline_days": 28, "counts_as_core": false, "min_readings": 7,
+     "slope": 0.5, "order": 6},
     {"key": "rhr_bpm",  "role": "device", "enabled": true, "weight": 0.5,
-     "baseline_days": 28, "min_readings": 7, "transform": "baseline_ratio",
-     "slope": 0.5, "direction": "lower"}
+     "baseline_days": 28, "counts_as_core": false, "min_readings": 7,
+     "slope": 0.5, "order": 7}
   ]
 }
 ```
