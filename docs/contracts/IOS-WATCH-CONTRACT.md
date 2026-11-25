@@ -12,7 +12,7 @@ Decisions locked 2026-11-09; design remediation 2026-11-09. Target platforms: **
 execution replaces the target/ownership gate and the phone relay: a plan belongs to the pair, either
 device may start, execution writes are phone-committed, and the watch token is read-only for them.
 See §14.1 for the applied amendments and the canonical
-[plan](../plans/UNIFIED-OFFLINE-EXECUTION.md). Physical acceptance was closed by owner decision.
+[plan](../plans/UNIFIED-OFFLINE-EXECUTION.md). Physical-device user testing was done and owner-confirmed 2026-11-25.
 
 ## 2026-11-19 amendment — frozen plan and execution substitutions
 
@@ -892,7 +892,7 @@ queued start/set/event/finish operations over WatchConnectivity; the phone commi
 own credential, and the watch operation id remains the idempotency key. The server refuses
 execution writes from a watch token, so the old watch-token replay is retired. Offline start is
 implemented separately: the watch starts from its cached plan and binds the execution at first
-sync. Physical acceptance was closed by owner decision on 2026-11-23; see
+sync. Physical-device user testing was done and owner-confirmed 2026-11-25; see
 `StrengthApp/docs/WATCH-GATEWAY.md` for the historical WP8 record.
 
 **iOS post-workout correction.** The server already corrects a completed session from History →

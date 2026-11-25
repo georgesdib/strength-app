@@ -2,11 +2,10 @@
 
 **Status:** **Closed 2026-11-23.** Server `development` at `34e7f29` is deployed on the
 ODROID (2469 passed, 1 skipped); client `development` at `4032561` passes `scripts/ci.sh`
-(569 tests, 1 skipped), with the watch Today readiness fix at `cfb4ca2` built and pending tests.
-C1, C2, S5 and the audit are implemented on both sides. Follow-up findings 1, 2, 3 and 5 are
-fixed. Physical-device acceptance was closed by owner decision on 2026-11-23 (record:
-`StrengthApp/docs/acceptance/device/14-offline-execution.md`). The release is an operational
-handoff: the **server was deployed first**; the app build remains.
+(569 tests, 1 skipped). C1, C2, S5 and the audit are implemented on both sides. Follow-up
+findings 1, 2, 3 and 5 are fixed. Physical-device user testing was done and owner-confirmed on
+2026-11-25 (record: `StrengthApp/docs/acceptance/device/14-offline-execution.md`); the server was
+deployed first on 2026-11-23.
 **Gate:** this document is the WP0 record required by `AGENTS.md` before the refactor; the work
 packages below record what was built and why.
 **Owner decisions are recorded in §4.** The contract amendments in §13 are applied; the watch contract §14.1 is the canonical statement.
@@ -425,10 +424,10 @@ both the ceiling and the size coupling.
 **Server-side walking skeleton implemented 2026-11-23:** one HTTP conversation covers adopt → log →
 finish with a pending device → late set with its original instant → totals recomputed → device
 resolved → window closed (`tests/test_ios_workflow.py::test_the_whole_offline_flow_reconciles_end_to_end`).
-It is the reference the Swift work was written against. **Owner decision 2026-11-23: the matrix
-is closed as accepted, not separately executed.** The record is
-`StrengthApp/docs/acceptance/device/14-offline-execution.md`; it does not claim each scenario was
-individually observed. Simulator success alone remains not acceptance.
+It is the reference the Swift work was written against. **Owner-confirmed 2026-11-25:
+physical-device user testing was done.** The record is
+`StrengthApp/docs/acceptance/device/14-offline-execution.md`; the matrix below is retained as the
+reference rather than as an itemised pass/fail log.
 
 The matrix, retained as the reference:
 
@@ -577,15 +576,14 @@ involvement.
 
 ## 20. Release sequencing (server deployed first, 2026-11-23)
 
-**Status:** the server is deployed; the app build is the remaining release step. The owner chose
-app-first, but the server was deployed first during the offline close-out. That decision is now
-historical; the actual sequence and its window are recorded here.
+**Status:** released. The server was deployed on 2026-11-23; the app build was installed and
+physically user-tested, owner-confirmed 2026-11-25. The owner chose app-first, but the server was
+deployed first during the offline close-out; that decision is now historical.
 
 The server branch and the old app are incompatible in both directions: the old app sends
 `prefill_requested` and `execution_target`, which the server no longer accepts; a new app sends
-`execution_id` and `prefill_load_kg`. **The live server is already new.** Until the app ships, the
-old app cannot request a new plan or substitute; it can still log, correct, rate form and finish an
-open session. Keep this window short.
+`execution_id` and `prefill_load_kg`. **The live server is new**, so old app builds cannot request
+a new plan or substitute; keep old installs short-lived.
 
 **Verified state**
 
@@ -595,21 +593,11 @@ open session. Keep this window short.
 3. Pre-deploy database backup: `coach-before-offline-execution-20261123T231714Z.db`,
    `quick_check = ok`.
 
-**Remaining order**
+**Release record**
 
-1. Ship the app build carrying the client changes. Install phone and watch from the same build;
-   the watch Today readiness fix is at `cfb4ca2` and must be included.
-2. Smoke-test against the deployed server: pair, request a plan, phone start, set, finish; then
-   watch start, offline set, reconnect and late reconciliation.
-3. Verify one substitution returns `prefill_verified: true`, one set carries `origin_device_id`,
-   and a summary returns the reconciliation block.
-4. Record the app build/version and the verification result in the release notes.
-
-**During the remaining window**
-
-- Do not advertise offline execution until the app build is live.
-- The old app cannot request a new plan; keep the deploy-to-app-update window to hours.
-- A plan issued before the server deploy can return `plan_not_bindable`; request a fresh plan.
+The phone and watch were installed from the same build and user-tested against the deployed
+server. Physical-device user testing was owner-confirmed on 2026-11-25; no itemised scenario log
+is retained here.
 
 **Rollback**
 
