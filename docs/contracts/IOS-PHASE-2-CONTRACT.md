@@ -698,7 +698,8 @@ Owner-approved for this contract (2026-11-07):
    inputs (`DEC-READINESS-20`, `DEC-MEASURE-02`, `DEC-GRIP-01`). The accepted readiness fields
    are the ones in §5.1.
 4. Deferred at Phase 2: rubric/review screen, per-rep VBT, HealthKit, offline queue and
-   reconciliation, Apple Intelligence, sleep features and web authentication. Apple Intelligence was
+   reconciliation, Apple Intelligence, sleep features and web authentication (withdrawn 2026-11-25,
+   `DEC-WEB-04`). Apple Intelligence was
    later delivered under the Training Intelligence plan; PCC was withdrawn on 2026-11-24.
    Productivity capture was added later as an additive completion field. Each remaining feature
    needs its own approval.

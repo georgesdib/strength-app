@@ -401,10 +401,10 @@ Recommendation for MVP, subject to approval (`ADR-INT-004`):
 - **Interoperability cost, accepted:** a hosted MCP client that insists on OAuth discovery cannot
   connect. Moving to OAuth 2.1 + a real authorization server is a separate, later decision and the
   only path to a non-owner user.
-- **Single-athlete by construction.** No tool accepts an athlete, user or database parameter. A future
-  tenant model (ROADMAP §4.19) must thread an authenticated subject through the capability layer; the
-  envelope already reserves `subject` for that, and the current value is a fixed
-  `{"athlete": "self"}`.
+- **Single-athlete by construction.** No tool accepts an athlete, user or database parameter. A
+  tenant model is not planned (`DEC-WEB-04`); if one ever existed it would have to thread an
+  authenticated subject through the capability layer. The envelope already reserves `subject` for
+  that, and the current value is a fixed `{"athlete": "self"}`.
 
 ### 5.4 Configuration (proposed `config/intelligence.v1.yaml`)
 
