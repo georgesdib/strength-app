@@ -252,8 +252,8 @@ rejection, the two extras, and the rebuild.
 - **New metric keys:** `readiness registry define` and **Settings → Readiness inputs → Add a new
   input** create the `metric_definition` row and the registry version in one transaction; the CLI
   and web surfaces share the validation. `POST /api/readiness/registry/metrics` is the API route.
-- **Remaining limitations:** core normalisation still uses `value / scale_max` (min–max was not
-  adopted; a 2–6 scale maps 2 to 0.33) and core values remain whole numbers.
+- **Core normalisation (closed):** `value / scale_max` is the decided mapping; min–max was not
+  adopted (a 2–6 scale maps 2 to 0.33). Core values remain whole numbers.
 
 ### Release record (2026-11-25)
 
