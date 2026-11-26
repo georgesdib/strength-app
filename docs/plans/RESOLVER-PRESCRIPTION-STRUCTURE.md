@@ -7,7 +7,8 @@ A/B remains owner-accepted from 2026-11-20. The production ODROID service was de
 `development` at `5a3c1df` on 2026-11-21 after a verified database backup. The owner chose a
 direct development pull; backend, iOS and portfolio histories were subsequently merged into
 `main` through PRs #27, #8 and #2. No release tag was created by those merges. The WP4 real-data
-latency check remains deferred; the WP6 ODROID benchmark is recorded below. Work packages and release trains
+latency check was closed by owner decision on 2026-11-25 (the existing read latency is
+acceptable and no measurement is planned); the WP6 ODROID benchmark is recorded below. Work packages and release trains
 are in §6.
 **Scope:** cross-repository. Backend prescription structure, top-set intent, evaluation and
 programme context; the shared plan/execution contract; iPhone and Watch execution surfaces.
@@ -65,7 +66,7 @@ periodisation engine, per-muscle volume targets, a composite strength score, or 
 | D7 | The plan is immutable once started. Plan editing is removed; there is no plan swap, add, remove, reorder or set-count edit. |
 | D8 | Substitution and addition are execution concepts, not plan edits: an append-only execution event plus a per-set attribution field. The performed set is the durable record. |
 | D9 | The watch does not originate substitutions. It renders the phone-authored execution view and logs sets against it. |
-| D10 | The watch is offline-capable only while the phone is online. There is no pending-session shell and no start without a reachable phone or server. |
+| D10 | **Superseded 2026-11-23** by [unified offline execution](UNIFIED-OFFLINE-EXECUTION.md): the watch starts offline from its cached plan and binds the execution at first sync, so it no longer needs the phone or server to be online. Retained as the historical decision. |
 | D11 | Set-role input is removed from every logging surface. Legacy role columns and values remain read-only provenance and are not used for matching or decisions. |
 | D12 | The programme header is a server-computed reporting model reused by Today and intelligence facts; it labels trained week and calendar deload week separately and is not an evaluator input. |
 | D13 | Evaluation is a deterministic, role-aware hierarchy, not a composite score, and reuses the existing intensity, exposure, volume, suitability and tie-break definitions. |
@@ -97,7 +98,8 @@ in §6 and the backend ROADMAP.
 - `GET /api/ios/v1/today` returns date, readiness, score, active workout and plan state, but
   not trained week, DUP, deload or competition.
 - The watch start gate requires the server or a reachable phone relay; offline start with both
-  devices offline is deferred. Idempotency receipts are scoped `(device_id, operation_id)`, and a
+  devices offline was deferred here and was later implemented by unified offline execution on
+  2026-11-23 (`UNIFIED-OFFLINE-EXECUTION.md`). Idempotency receipts are scoped `(device_id, operation_id)`, and a
   plan is readable by its requester or its execution target.
 
 ## 5. Target model
@@ -448,6 +450,11 @@ The resolver fills those slots only and never adds or removes a slot or a set.
 
 ### 5.8 Phone gateway and offline watch execution (later slice)
 
+> **Superseded 2026-11-23** by [Unified offline workout execution](UNIFIED-OFFLINE-EXECUTION.md),
+> which removes D10's limitation (the watch no longer requires the phone to be online) and replaces
+> this slice. The text below is retained as the historical record of the slice as scoped then;
+> WP8's "Send to iPhone" relay remains implemented as described.
+
 The watch is offline-capable only while the phone is online (D10). There is no pending-session
 shell, no offline start without a reachable phone, and no new server lifecycle state.
 
@@ -503,7 +510,7 @@ overlap; the server foundation precedes every client step.
   ROADMAP tracking entry. **Exit:** config approved, fixtures committed, no real
   data. **Evidence:** `config/resolver-role-quality.v1.yaml`,
   `tests/fixtures/resolver_structure/`, `tests/test_resolver_role_quality_config.py`,
-  `DEC-RESOLVER-21`, ROADMAP §4.37.
+  `DEC-RESOLVER-21`, ROADMAP-DONE.md §4.37.
 - **WP1a — server ordered groups (done 2026-11-19).** `group_index`, serializers omit role,
   internal build-time role retained, validation 1..N, warm-up from the heaviest group,
   set-weighted intensity, persistence, legacy rows read by order. **Evidence:**
@@ -550,7 +557,8 @@ overlap; the server foundation precedes every client step.
   target. **Evidence:** `tests/test_programme_header.py`, `tests/test_nudges.py`,
   `tests/test_intelligence_weekly.py`, `tests/test_web.py`, `tests/test_ios_workflow.py`,
   `StrengthAppTests/Phase2ClientTests`; `DEC-RESOLVER-25`, `DEC-RESOLVER-26`. The real-data
-  p50 measurement is deferred by the owner.
+  p50 measurement was closed by owner decision on 2026-11-25: the existing read latency is
+  acceptable and no measurement is planned.
 - **WP5 — actual data (done 2026-11-20).** Order matcher shared by adherence, VBT and structure
   analysis; substitution attribution; the RIR-6 warm-up invariant; config-backed segmented
   derived structure with ordinal confidence; role branches removed from matching. **Depends on:**

@@ -6,9 +6,10 @@
 > `strength-training-app/`. Shared iOS phase contracts are indexed in the portfolio
 > `docs/contracts/` directory.
 >
-> **Apple Intelligence and PCC (2026-11-14):** the two Apple-platform items in §5 are superseded
-> by the portfolio [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7 (INT-4/INT-5). All
-> completed phases, the watch contract and the rest of this plan are unchanged.
+> **Apple Intelligence and PCC (2026-11-14; PCC withdrawn 2026-11-24):** the two Apple-platform
+> items in §5 are superseded by the portfolio [Training Intelligence plan](TRAINING-INTELLIGENCE.md)
+> §7 (INT-4/INT-5). PCC is not planned. All completed phases, the watch contract and the rest of
+> this plan are unchanged.
 
 **Status:** Phase 0 complete 2026-11-07 (owner-confirmed); **Phase 1 complete 2026-11-07**
 (owner-confirmed on the physical iPhone); **Phase 2 complete and closed 2026-11-07**
@@ -34,11 +35,21 @@ Server contracts:
 [`design/IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) and
 [`design/IOS-R8-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R8-CONTRACT.md). Later phases remain proposals and need
 separate approval. **Phase 6.3 (watchOS companion) closed 2026-11-11; 6.4–6.6 are
-complete and 6.7 physical acceptance was owner-confirmed 2026-11-14**: the watch can start a watch-targeted plan,
+complete and 6.7 physical acceptance was owner-confirmed 2026-11-14**: the watch could start a watch-targeted plan,
 log sets with rest, form and velocity, finish with sRPE, replay offline work, reconcile plan
 revisions, mirror on the phone with take-over, and show the active Set, Session and Plan
-destinations. Physical Apple Watch acceptance was owner-run:
+destinations. The target, mirror and take-over behaviour was removed on 2026-11-23: the watch now
+starts the pairing's plan, including offline from its cached plan, and commits its execution
+writes through the phone. Physical Apple Watch acceptance was owner-run:
 [`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md).
+
+> **Offline execution supersession (2026-11-23):** the [unified offline execution plan](UNIFIED-OFFLINE-EXECUTION.md)
+> removes the execution target, the ownership gate, the phone mirror and take-over. A plan belongs to
+> the pairing; either device may start, the watch starts from its cached plan with no connection,
+> and the watch's execution writes are committed by the phone while its token stays read-only for
+> them. Where §4, §5 or the Phase 6 records below describe a target, mirror, take-over,
+> `409 plan_item_mismatch` or an online-only start, the offline plan and the
+> [watch contract](../contracts/IOS-WATCH-CONTRACT.md) §14.1 win.
 
 **Purpose:** deliver a practical iPhone interface for one person's existing strength-training workflow, without porting the training method or making a public cloud service a prerequisite. Start with an ordinary, connected strength session. Add offline capture, HealthKit, and Apple Intelligence only after the smaller client proves useful and reliable.
 
@@ -65,7 +76,7 @@ Form ratings and the post-session review use existing server review/form contrac
 
 ### Explicitly not a first-release prerequisite
 
-HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) was **retired 2026-11-18** as superseded by the cardio stage; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC remains parked (INT-4c) on Apple's entitlement. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
+HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-release prerequisites and are now closed. Apple Workout import (Phase 3B) was **retired 2026-11-18** as superseded by the cardio stage; manual cardio was **retired, not deferred** (`DEC-CARDIO-19`); advanced Longevity analytics and background processing remain deferred. Apple Intelligence was delivered through the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) (INT-4/INT-4b and the Siri intents), which supersedes the two Apple Intelligence/PCC bullets in §5; PCC was withdrawn (INT-4c) on 2026-11-24 and is not planned. Basic history/progress means read-only use of existing summaries, not a new dashboard or analytics engine. Keep the remaining items as later phases below rather than quietly adding them to the release gate.
 
 ## 2. Architectural invariants
 
@@ -73,7 +84,7 @@ HealthKit readiness (Phase 3A) and offline capture (Phase 4) were not first-rele
 - **No duplicate methodology.** Swift may validate form presentation (required fields, sensible number formatting), but the server repeats all domain validation. It must not reproduce training calculations.
 - **No AI training decisions.** Apple Intelligence or any LLM may not generate/alter readiness scores, prescriptions, loads, RIR, exercise selections, form/rubric ratings, or other training decisions.
 - **Keep existing clients compatible.** Add a versioned facade incrementally; do not change existing unversioned routes in a way that breaks the web UI or CLI.
-- **Local-first, not cloud-dependent.** The normal product path is the owner's local server. No public endpoint, account, remote database, analytics, telemetry, or third-party exporter is required. PCC is a separate optional future AI exception, never a core dependency.
+- **Local-first, not cloud-dependent.** The normal product path is the owner's local server. No public endpoint, account, remote database, analytics, telemetry, or third-party exporter is required. There is no Apple cloud model: PCC was withdrawn (INT-4c), and the only optional external AI call is the owner-selected DeepSeek chat path.
 - **No transport-security claim.** The first release speaks plain HTTP on the owner's trusted home LAN and does not terminate TLS. LAN traffic, including the per-device credential, is unencrypted; the deployment assumes a trusted network and no public exposure. TLS is a separate decision if that threat model changes.
 - **HealthKit is opt-in and read-only.** It is a measurement source, not a training authority. Preserve source, date/time, units and coverage. Python applies only its already documented readiness rules.
 - **Manual values win.** When HealthKit is added, a manual value takes precedence per field and cannot be erased by a later import. Keep both values and provenance where correction/audit requires them.
@@ -299,7 +310,7 @@ interval stays the single source of truth: an intent writes it and the app appli
 so a locked phone shows the extension and the tab bar agrees once the app is looked at. Compact and
 minimal Island states cannot host buttons. **Physical-device acceptance was waived by owner
 decision on 2026-11-18** rather than run, so the locked tap, force-quit and Dynamic Island
-behaviours are unproven; the feature ships in v1.2.1 with that recorded. The watch's −15 s skip
+behaviours are unproven; the feature ships in v2.0 with that recorded. The watch's −15 s skip
 alignment is separate watch acceptance and is not part of this item. The original scope is kept
 below.
 
@@ -323,8 +334,9 @@ Only pursue after the core app is useful and stable, with a separate scope/appro
 **Superseded in part (2026-11-14).** The **Apple Intelligence** and **PCC** bullets below are
 superseded by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7 (INT-4/INT-5), which
 specifies the capability envelopes, the five-tool on-device adapter, availability checks, the token
-budget and the no-silent-cloud-fallback rule. The bullets stay as the original scope record and their
-privacy conditions are carried forward unchanged. The HealthKit, cardio and Longevity items in this
+budget and the no-silent-cloud-fallback rule. The PCC bullet is now withdrawn entirely (2026-11-24,
+INT-4c): the app has no Private Cloud path, no picker and no entitlement request. The bullets stay as
+the original scope record and their privacy conditions are carried forward unchanged. The HealthKit, cardio and Longevity items in this
 phase are unaffected.
 
 **Siri and surface automation (2026-11-15).** Siri, App Intents and Shortcuts are specified in the
@@ -333,11 +345,11 @@ here; the watch Action button and the HomeKit scenes on workout start and end ar
 plan with `ADR-INT-018`. This client plan does not restate them.
 
 - **Apple Intelligence:** optional tools may parse a spoken/typed set entry into an uncommitted draft, explain a server-produced prescription, summarize completed training, or structure free-text notes. The user reviews/accepts any draft before it reaches server validation. The model never controls training decisions or computes numbers.
-- **PCC:** an explicitly selected Apple Private Cloud Compute option for a user-invoked AI task; disabled by default, visibly identified as Apple server processing, with a preview of the context and consent before personal workout/health data is included. It is not used by pairing, readiness, prescription, capture, or sync; no automatic fallback from on-device mode; core functionality remains available with PCC disabled or offline.
+- **PCC (withdrawn 2026-11-24):** an explicitly selected Apple Private Cloud Compute option for a user-invoked AI task; disabled by default, visibly identified as Apple server processing, with a preview of the context and consent before personal workout/health data is included. It is not used by pairing, readiness, prescription, capture, or sync; no automatic fallback from on-device mode; core functionality remains available with PCC disabled or offline.
 - HealthKit observations beyond the current set — bodyweight (readiness), VO₂max, steps per day and sitting time (a completed-week mean, derived from Apple Watch stand time, written as a `device`-sourced measurement) — plus richer cardio imports, richer but descriptive Longevity views, background delivery, or historical XML backfill, only when a concrete use case justifies their added privacy/schema/testing cost. The watchOS companion is Phase 6, not part of this bucket.
 - Do not add sleep duration, sleep stages, or Apple Sleep Score under this plan.
 
-**Acceptance:** each enhancement is independently disableable and does not become a dependency of pairing, readiness, prescription, workout capture, or review. On-device AI and PCC outputs are suggestions/text only; all numeric training data still pass through explicit user review and existing server validation.
+**Acceptance:** each enhancement is independently disableable and does not become a dependency of pairing, readiness, prescription, workout capture, or review. AI outputs (on-device, or DeepSeek chat when the owner selects it) are suggestions/text only; all numeric training data still pass through explicit user review and existing server validation.
 
 ### Phase 6 — watchOS companion (6.0–6.7 complete)
 
@@ -357,16 +369,17 @@ R (rollback dry run) were confirmed in the same run, so no Phase 6 follow-ups re
 (`StrengthWatchUITests`) now passes end to end (fetch → start → log → finish) against a disposable
 server, so the flow has automated evidence as well as the physical sign-off.
 
-**Scope.** The phone requests a plan with an explicit `execution_target` (`phone` or `watch`);
-the watch fetches the plan targeted for it, starts the session, logs sets, rest, form ratings and
-finish with sRPE, shows heart rate, and writes exactly one HealthKit strength workout. It has its
-own paired device token, minted by the phone, and is pinned to the phone's **home** server via
-`homeBaseURL` + `configVersion`; it never follows the Away route. Start is the only online gate in
-v1; after it, every set/form/telemetry/finish is local-first with opportunistic partial flushes and
-backoff, and HealthKit is local. Plan fetch and start need connectivity, and a watch session
-requires HealthKit workout authorisation so the app can stay alive. During a watch session the
-watch is the only set writer; the phone edits the plan and shows a read-only mirror with a
-take-over action. Readiness, history, progress, settings and the exercise library stay on the phone.
+**Scope (Phase 6 record; superseded in part 2026-11-23).** The phone requested a plan with an
+explicit `execution_target` (`phone` or `watch`); the watch fetched the plan targeted for it,
+started the session, logged sets, rest, form ratings and finish with sRPE, showed heart rate, and
+saved its HealthKit workout. It has its own paired device token, minted by the phone, and is pinned
+to the phone's **home** server via `homeBaseURL` + `configVersion`; it never follows the Away route.
+Every set/form/telemetry/finish is local-first with opportunistic partial flushes and backoff, and
+HealthKit is local. A watch session requires HealthKit workout authorisation so the app can stay
+alive. Readiness, history, progress, settings and the exercise library stay on the phone. **Since
+2026-11-23** the target, the online start gate and the phone mirror are gone: either device starts
+the pairing's plan (the watch offline from its cached plan), both may log, and the phone commits
+the watch's execution writes.
 
 **Shared core.** `StrengthCore` is extracted in five reviewable stages, each keeping the iPhone
 suite green: S1 models, S2 API client, S3 persistence/credentials, S4 session engine one operation
@@ -452,11 +465,13 @@ read-only state, HealthKit finish retry without duplication, clock skew and orig
 execution-target enforcement, patchy Wi-Fi with partial flushes and an offline finish, home
 `configVersion` refresh, the watchOS 27.0 deployment/CI build, and the 6.6 active-session
 corrections (Plan/navigation lock, refresh and reconnect, idle/abandoned messaging, Session
-contents and the phone mirror form lock).
+contents and the phone mirror form lock). Scenarios 5, 6 and 10 record the Phase 6 acceptance of
+take-over, read-only mirroring and the execution target; those behaviours were removed on
+2026-11-23 and the rows stay as history.
 
-**Deferred:** the pending-session shell for offline start remains deferred. The “Send to iPhone”
-relay was implemented in WP8 on 2026-11-21 (contract §21) and does not make start possible when
-both devices are offline.
+**Closed 2026-11-23:** the pending-session shell and offline start are implemented, and the WP8
+phone relay is superseded by the phone-commit transport (contract §14.1). Start needs a downloaded
+plan, not a connection, and the watch's execution writes are committed by the phone.
 
 ## 5. Offline behavior — explicit contract
 
@@ -464,7 +479,7 @@ both devices are offline.
 |---|---|---|
 | View previously fetched status/history | May show cache, clearly labelled with refresh time and stale state. | Same. |
 | Enter readiness | Requires an online server acknowledgement; an unsent form is not recorded/scored. | May queue a clearly labelled manual entry if included in the outbox; it is not scored until Python receives it. |
-| Start a workout or request a fresh prescription | Requires server connectivity. | Still requires server connectivity and a current server-issued plan. |
+| Start a workout or request a fresh prescription | Requires server connectivity. | A fresh prescription requires the server; a start uses the downloaded plan with no connection and binds the execution at first sync (offline execution, 2026-11-23). |
 | Log an in-progress set / finish | Requires server acknowledgement; do not claim saved on failure. | Can be durably captured locally and queued; show pending until server acknowledgement. |
 | Synchronize pending changes | Immediate request/response; no offline queue guarantee. | Ordered, idempotent retry/reconciliation. |
 | Readiness score/prescription while offline | Not available as a fresh result. | Still unavailable; no on-device substitute. |
@@ -513,7 +528,7 @@ The present home-LAN server has no authentication and uses HTTP (`LIM-57`). The 
   general egress test programs as release gates. Basic tests still verify authentication and
   revocation, that no secret is logged, and that the app talks only to the paired LAN address
   rather than a public server.
-- No analytics, telemetry, advertising SDK, remote crash reporting, cloud database, or automatic Internet fallback. Core features use the local Python server. The optional later PCC AI call is the only app-level non-local exception in scope, and is fully separate from core API traffic.
+- No analytics, telemetry, advertising SDK, remote crash reporting, cloud database, or automatic Internet fallback. Core features use the local Python server. The owner-selected DeepSeek chat call is the only app-level non-local exception in scope, and is fully separate from core API traffic.
 
 **Stop condition:** if the home network cannot be treated as trusted, or the server must be reachable from outside it, stop at the disposable Phase 1 spike and revisit transport (TLS or a private tunnel) before sending personal data. Do not invent custom cryptography.
 
@@ -594,7 +609,8 @@ manual sRPE precedence stands.
 
 ### Phase 5
 
-- Apple Intelligence is disabled by default. On-device and PCC choices are explicit; PCC requires a user action and context consent, has no automatic fallback, and is unnecessary for all core flows.
+- Apple Intelligence is disabled by default. The on-device model is the only explanation path; **PCC
+  was withdrawn on 2026-11-24** (INT-4c), so there is no Apple cloud model and no model picker.
 - Model-generated text/drafts cannot write a prescription, set, readiness score, RIR, form rating, rubric mark, or policy value without explicit user action and normal server validation.
 
 ## 10. Risks and decisions to settle during implementation
@@ -609,8 +625,8 @@ manual sRPE precedence stands.
 | Session RPE source | **Decided:** sRPE is always entered by hand (`DEC-SRPE-01`); the HealthKit effort value is derived *from* sRPE, never the reverse, so no provenance column is added. An Apple-supplied effort would need its own decision. |
 | Rubric use | Reuse server's current review payload and rubric version. Marks are human optional feedback; do not implement scoring or calibration logic in Swift. |
 | HealthKit scope | HRV/RHR/bodyweight first; all other types later by explicit scope. No sleep/sleep score in this plan. |
-| PCC privacy and availability | Specified by the [Training Intelligence plan](TRAINING-INTELLIGENCE.md) §7.3; disabled by default, user-invoked, context preview/consent, no health data by default, no core dependency, no automatic fallback from on-device. |
-| Offline complexity | Defer durable offline mutation until an online session loop is proven. Cached reads do not imply the ability to prescribe or sync offline. |
+| PCC privacy and availability | **Withdrawn 2026-11-24** (`ADR-INT-015`): no Private Cloud path, no picker and no entitlement request. Nothing to specify. |
+| Offline complexity | Durable offline mutation was deferred until the online session loop was proven; it shipped as [unified offline execution](UNIFIED-OFFLINE-EXECUTION.md) on 2026-11-23. Cached reads still do not imply the ability to prescribe offline. |
 
 ## 11. Status and next task
 
@@ -629,8 +645,8 @@ Phase 6.2 (watchOS companion) has a completed plan and contract
 ([`design/IOS-WATCH-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-WATCH-CONTRACT.md)). Its 6.0 shared-core extraction,
 6.1 server contract, 6.2a watch target, 6.2b credential handoff and 6.2c read-only Today are
 complete, and 6.3's execution lifecycle closed 2026-11-11. 6.4 (offline conflicts), 6.5 (heart
-rate and HealthKit) and 6.6 (phone mirror, plan revisions and active-session corrections) are
-complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
+rate and HealthKit) and 6.6 (plan revisions and active-session corrections; its phone mirror was
+removed on 2026-11-23) are complete. Physical watch acceptance (6.7) was owner-confirmed 2026-11-14, with W1–W12 and
 the R rollback dry run all confirmed; no Phase 6 follow-ups remain.
 
 Phase 3B (Apple Workout summaries and related cardio data) was retired on 2026-11-18 as superseded
@@ -642,7 +658,7 @@ the server's post-workout History edit). R11 (rest timer Live Activity) was drop
 reinstated on 2026-11-17 for phone-owned sessions and **closed 2026-11-18**: +15 s and Skip act from
 the Lock Screen and the expanded Island, and the physical-device acceptance was waived.
 
-Do not begin PCC work without separate approval. Phase 4 is closed; Phase 3B is retired; Phase 6.7
+PCC is withdrawn (2026-11-24); no PCC work will begin. Phase 4 is closed; Phase 3B is retired; Phase 6.7
 is fully confirmed (W1–W12 and R).
 
 ## 12. References

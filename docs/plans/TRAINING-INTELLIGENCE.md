@@ -2,14 +2,15 @@
 
 **Canonical location:** this file, in the portfolio repository.
 **Status:** delivered 2026-11-15, extended 2026-11-16. INT-1 to INT-8 are delivered (INT-8 closed with
-no scope), INT-4c is parked on Apple's PCC entitlement, and **INT-9 (the Siri AI adoption pass) is
-deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and INT-13 (the Today summary
-card) were added on 2026-11-16 and are implemented on the iOS client**, with their
-physical-device acceptance waived by owner decision (INT-13 on 2026-11-17, INT-10 on 2026-11-18).
+no scope), INT-4c was withdrawn on 2026-11-24 because PCC will not be integrated, and **INT-9 (the
+Siri AI adoption pass) is deferred until iOS 27.3**. **INT-10 (the local daily reminder nudge) and
+INT-13 (the Today summary card) were added on 2026-11-16 and are implemented on the iOS client**,
+with their physical-device acceptance waived by owner decision (INT-13 on 2026-11-17, INT-10 on
+2026-11-18).
 **INT-11 (Explain the System, local knowledge retrieval) was implemented and closed on 2026-11-16
-with documented limitations; INT-12 (web search and RAG) is deferred; the constrained proposer is
-withdrawn 2026-11-17.** This plan document itself changes no runtime, API,
-schema, dependency, prompt or training rule.
+with documented limitations; INT-12 (web search and RAG) was withdrawn on 2026-11-24 at the owner's
+request; the constrained proposer is withdrawn 2026-11-17.** This plan document itself changes no
+runtime, API, schema, dependency, prompt or training rule.
 
 Amended 2026-11-15: §7.2 gained the iOS 27.0 framework facts and the measured context size, §7.5
 refreshed the Siri AI preview status, and §7.6 added the readiness design and recorded that MCP is not
@@ -20,26 +21,30 @@ and watch Siri, and the Shortcuts start/finish pair (decisions 15 and 16) — wi
 the shared intents module in 7b-3.
 
 Amended 2026-11-16: §1.2 narrowed the notification exclusion, §11 gained INT-10 (decision 17,
-`ADR-INT-019`), INT-11 (decision 18, `ADR-INT-020`) and INT-12 (decision 19, deferred), and §12
-records the phases. INT-10 is a local client-side surface — it adds no server call, endpoint, schema
+`ADR-INT-019`), INT-11 (decision 18, `ADR-INT-020`) and INT-12 (decision 19, withdrawn
+2026-11-24), and §12 records the phases. INT-10 is a local client-side surface — it adds no server call, endpoint, schema
 field, MCP tool or prompt contract, so the backend, the contract and the dependency graph are
 unchanged. INT-11 is implemented and closed: a local docs/code explainer, not web access or RAG.
-INT-12 consolidates the former web-search and RAG candidates into one deferred later step. INT-13
+INT-12 consolidated the former web-search and RAG candidates and was withdrawn on 2026-11-24. INT-13
 (decision 20, `ADR-INT-022`) adds the two-part summary at the top of Today from the configured chat
 model, extending INT-4d's chat-only boundary to that one surface; it is client-only like INT-10.
 
 Amended 2026-11-18: the owner waived INT-10's remaining physical-device acceptance — delivery
 timing, tap routing and Focus behaviour — as INT-13's had been waived on 2026-11-17. INT-10 is
-closed and shipped in StrengthApp v1.2 on 2026-11-18. Its documented residual gap (a watch-only
+closed and shipped in StrengthApp v2.0 on 2026-11-18. Its documented residual gap (a watch-only
 session the phone never observes cannot suppress that day's nudge) is unchanged.
+
+Amended 2026-11-24: the owner withdrew INT-12 (web search and RAG). No web search, page fetch or
+retrieval-augmented generation is planned; decision 19 and `ADR-INT-021` are retained as records
+only, and the provider, privacy, SSRF and evaluation questions listed there are closed.
 
 **Supersedes:** the forward-planning content of the earlier LLM and Apple Intelligence plans —
 `strength-training-app/docs/LLM-INTEGRATION-PLAN.md` (except the items retained in §16.3) and the
 Apple Intelligence/PCC items in `docs/plans/IOS-CLIENT-PLAN.md` §5. This plan is the single forward
 plan for training intelligence. See §16.
-**Owner:** the athlete. Decisions 1–18 are accepted; decision 19 (INT-12) is deferred. The plan is
-delivered and further work needs a new decision (INT-9's adoption ADR, INT-12's provider/privacy ADR,
-or a new proposal under §16.5).
+**Owner:** the athlete. Decisions 1–18 are accepted; decision 19 (INT-12) was withdrawn on 2026-11-24.
+The plan is delivered and further work needs a new decision (INT-9's adoption ADR, or a new proposal
+under §16.5).
 **Roadmap:** phases INT-1 to INT-13, section 12. Backend implementation status stays in
 [`ROADMAP.md`](https://github.com/georgesdib/strength-training-app/blob/development/ROADMAP.md);
 this plan does not restate it.
@@ -59,8 +64,8 @@ It exists in three forms that share one core:
 1. a **capability layer** in Python that composes the existing services into versioned,
    evidence-linked fact packages;
 2. a **standalone MCP server** that exposes those packages as tools and resources to any MCP host;
-3. a set of **native adapters** so the iPhone can use the same packages with Apple Foundation Models,
-   Private Cloud Compute, or no model at all.
+3. a set of **native adapters** so the iPhone can use the same packages with Apple Foundation Models
+   or no model at all.
 
 The core never calls a model, the MCP server never calculates, the app never calculates, and no part
 of the system can change a prescription, a readiness score, a load or a training plan.
@@ -396,10 +401,10 @@ Recommendation for MVP, subject to approval (`ADR-INT-004`):
 - **Interoperability cost, accepted:** a hosted MCP client that insists on OAuth discovery cannot
   connect. Moving to OAuth 2.1 + a real authorization server is a separate, later decision and the
   only path to a non-owner user.
-- **Single-athlete by construction.** No tool accepts an athlete, user or database parameter. A future
-  tenant model (ROADMAP §4.19) must thread an authenticated subject through the capability layer; the
-  envelope already reserves `subject` for that, and the current value is a fixed
-  `{"athlete": "self"}`.
+- **Single-athlete by construction.** No tool accepts an athlete, user or database parameter. A
+  tenant model is not planned (`DEC-WEB-04`); if one ever existed it would have to thread an
+  authenticated subject through the capability layer. The envelope already reserves `subject` for
+  that, and the current value is a fixed `{"athlete": "self"}`.
 
 ### 5.4 Configuration (proposed `config/intelligence.v1.yaml`)
 
@@ -563,11 +568,11 @@ reads `contextSize` at runtime rather than hard-coding either number.
 
 `PrivateCloudComputeLanguageModel` (iOS 27.0+) provides a **32K** context and reasoning levels, uses
 the same `LanguageModelSession` API, needs a network, has a **per-day quota** and requires Apple's
-managed entitlement. It is a stable API in a released OS but **gated access**, so it cannot be the
-default or a dependency. Its privacy story is Apple-mediated, not owner-mediated, and it must be
-presented as server processing with a single Settings choice and a one-line disclosure. The owner
-waived the earlier context preview and per-request consent flow (2026-11-15). Quota errors
-(`.quotaLimitReached`) are a normal state with a clear message, never a retry loop.
+managed entitlement. It is a stable API in a released OS but **gated access**.
+
+**Withdrawn (2026-11-24).** The owner will not integrate PCC: no entitlement is sought, no picker is
+added and no Private Cloud path exists. This section is retained only as the framework record; the
+earlier design (a Settings choice, a one-line disclosure and no context preview) is not planned work.
 
 ### 7.4 Backend LLM
 
@@ -715,7 +720,7 @@ changes, outside this workstream entirely.
 | Prompt injection via data | free-text notes excluded by default; all strings treated as data; instruction text says so; adversarial fixtures in CI; no tool returns arbitrary user-authored text unless a capability explicitly requires it and labels it `untrusted_text` |
 | Model-supplied arguments | schema validation + server-side range/bounds + identifier existence checks; the model cannot widen a window or name a user |
 | Health-data minimisation | field-level outbound inventory (reuse `LLM-INTEGRATION-PLAN.md` §8.1) before any model path is enabled; injuries/symptoms/measurements excluded unless the capability needs them, and then listed in `privacy` |
-| Local vs server inference | the UI states which model runs where; on-device never silently becomes cloud; PCC requires explicit consent and a context preview |
+| Local vs server inference | the UI states which model runs where; on-device never silently becomes cloud; PCC was withdrawn (INT-4c), so no Apple cloud model exists |
 | Logging and retention | metadata only, no payloads, no tokens, 30-day operational log retention; model transcripts not persisted |
 | Rate limiting and resource limits | per-token bucket, concurrency cap, timeout, body cap, window caps, result-size cap |
 | Model output validation | schema + grounding + numeric checks + refusal to persist as an artifact |
@@ -866,7 +871,7 @@ and MCP clients.
 
 **Files/repos.** `intelligence/capabilities/*`, `intelligence/context.py` (baseline package used by
 overview and review), `tests/intelligence/`. Backend docs: `docs/API.md` gets the MCP surface under
-a new section (it is a backend implementation doc); `ROADMAP.md` §4.24 pointer.
+a new section (it is a backend implementation doc); `ROADMAP-RETIRED.md` §4.24 pointer.
 
 **Acceptance.** Every catalogue tool returns an envelope whose fact blocks name their owning module;
 each has at least one golden test; ranges and limits enforced; no metric constant in
@@ -996,62 +1001,17 @@ by the owner.
 **Exclusions.** No Siri AI Developer Preview, no PCC/cloud fallback, no server narration, no write,
 no new analytical capability, and no INT-5 work.
 
-### INT-4c — User-selectable model: on-device or Private Cloud (parked 2026-11-15)
+### INT-4c — User-selectable model: on-device or Private Cloud (withdrawn 2026-11-24)
 
-**Status.** **Parked 2026-11-15; not scheduled.** PCC requires a paid Apple Developer Program
-membership plus the managed entitlement `com.apple.developer.private-cloud-compute` and Apple's
-eligibility approval. Until that access exists the model is unavailable, so this phase does not
-ship and no picker is added. Revisit only if the owner obtains access; the scope below is retained
-as the future definition.
+**Status.** Parked 2026-11-15 (PCC needs a paid Apple Developer Program membership, the managed
+`com.apple.developer.private-cloud-compute` entitlement and Apple's eligibility approval).
+**Withdrawn on 2026-11-24 at the owner's request:** PCC will not be integrated, no entitlement will
+be sought, no model picker is added and no Private Cloud path exists in the app.
 
-**Goal.** One app-wide setting: **On-device (default)** or **Private Cloud Compute**, applied to the
-weekly/overview explanations and Chat. Each surface states which model produced the answer.
-
-**Privacy — deliberately simple.** One picker plus one line: “Private Cloud sends your question and
-training facts to Apple's private cloud; On-device keeps them on this iPhone.” No per-request
-consent modal, no context preview, no audit log, no telemetry. The transcript stays session-only.
-The owner waived the earlier context-preview requirement.
-
-**Prerequisite spike (must pass before UI work).** Apply for access and add the entitlement to the
-app profile, then on the iPhone verify:
-- `PrivateCloudComputeLanguageModel().isAvailable`;
-- `.capabilities` contains `.toolCalling` and `.guidedGeneration`;
-- `contextSize` (expected 32K);
-- `quotaUsage.status`;
-- one chat turn and one explanation.
-If any check fails, stop and report; do not ship a partial picker.
-
-**Implementation.**
-- `NarrativeModelChoice` (`onDevice`, `privateCloud`) persisted in UserDefaults; default on-device.
-- A small session factory switches on the choice; both generators take it. Tools, budgets,
-  grounding, soft verification and session-only transcripts are unchanged.
-- Settings picker with the one-line disclosure. The PCC option appears only when entitled,
-  available and capable; otherwise the surface stays on-device with a clear reason.
-- Errors: `.networkFailure`, `.quotaLimitReached` and `.serviceUnavailable` map to short
-  messages; quota includes the reset date when Apple provides it; no retry loop and **no silent
-  fallback**.
-- Chat requires `.toolCalling`; explanations require `.guidedGeneration`. If either is missing, that
-  surface stays on-device with a clear line.
-
-**Acceptance.**
-- Default remains on-device; changing the picker persists and both surfaces use it.
-- PCC is offered only when entitled, available and capable; otherwise a clear reason, no dead
-  control.
-- No silent fallback; a PCC failure stops with a message and leaves the deterministic review intact.
-- Grounding/soft verification, sources, refusal behaviour and session-only transcript are identical.
-- Quota, network and service errors are differentiated.
-- Device matrix on both models: weekly explanation, overview explanation, chat with the five tools,
-  refusal, transcript clearing.
-
-**Tests.** Model-choice persistence and factory selection; availability/error mapping; a stub
-generator confirms both surfaces pass the choice through. No UI tests (owner). PCC itself is
-device-only.
-
-**Out of scope.** No backend/MCP change, no Siri, no streaming, no per-conversation model switch, no
-cost dashboard, no cloud fallback.
-
-**Estimate.** Small once access exists (2–3 focused sessions); entitlement and eligibility are the
-schedule risk.
+**Record.** The model surface stays on-device (Apple Foundation Models) or the existing DeepSeek chat
+path; there is no third choice and nothing to switch. The earlier scope — one app-wide model setting,
+the disclosure line, the availability/capability spike, the error mapping and the two-model device
+matrix — is not planned work and must not be picked up without a new owner request.
 
 ### INT-4d — Chat with an external model via API key (DeepSeek; delivered 2026-11-15)
 
@@ -1196,13 +1156,14 @@ matrix are delivered. **Model tool calling is deferred/closed**: the provider st
 deterministic dossier covers the six core capabilities plus latest duration. Streaming is not planned. Chat tokens are
 persisted in `run.llm_tokens` and count against the daily budget.
 
-**Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice is
-INT-4c. This phase covered the server/web conversation only.
+**Status.** The iOS multi-turn surface is delivered as INT-4b (2026-11-15); the model choice INT-4c
+was withdrawn on 2026-11-24 (PCC will not be integrated). This phase covered the server/web
+conversation only.
 
 **Scope (historical).** A web chat panel over the read-only capabilities, with an explicit context
 budget, turn cap, and a hard rule that answers use only facts in the supplied snapshot.
 
-**Dependencies.** INT-5. The iOS surface is INT-4b/4c. Transcript retention is session-only; no
+**Dependencies.** INT-5. The iOS surface is INT-4b; INT-4c was withdrawn. Transcript retention is session-only; no
 server transcript is stored.
 
 **Files/repos.** Optional web panel; server conversation orchestration. The iOS `ChatView` is no
@@ -1558,7 +1519,7 @@ contract.
 settings section, the shared authorisation helper and the tap routing are in place, with 18 automated
 tests passing and the iOS scheme building. **Closed 2026-11-18** by owner decision: the remaining
 physical-device acceptance (delivery timing, tap routing, Focus behaviour) was waived rather than run,
-and the nudge shipped in StrengthApp v1.2 on 2026-11-18. The watch-only suppression gap recorded
+and the nudge shipped in StrengthApp v2.0 on 2026-11-18. The watch-only suppression gap recorded
 above remains a documented limitation. iOS-only, with no backend change.
 
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
@@ -1572,7 +1533,7 @@ A 15-question evaluation is complete. Known limitations: programme-block answers
 archive/contract context; no direct outcome evidence is cited for the reactive trigger counts. The
 owner closed the remaining device-acceptance and release-tag items on 2026-11-17 by decision: no
 separate physical-device run was made and no dedicated tag was cut. Explain shipped in the backend
-1.7.0 release and carried the iOS Explain tab in StrengthApp v1.2, both on 2026-11-18. No follow-up
+2.0.0 release and carried the iOS Explain tab in StrengthApp v2.0, both on 2026-11-18. No follow-up
 context, web search or RAG is included.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
@@ -1631,9 +1592,9 @@ The feature is opt-in and does not query the training capabilities unless the qu
 mixes system explanation with training data.
 
 **Exclusions.** Web search, browsing, arbitrary URL fetch, vector embeddings/RAG, model-run shell
-commands, code execution, writes and filesystem tools are out of scope. Session-only follow-up context
-is deferred to INT-12; INT-11 answers one question at a time. Public fixtures, snapshots, generated
-output and test data are excluded; reviewed private evidence is included; test source is included
+commands, code execution, writes and filesystem tools are out of scope. Session-only follow-up
+context was withdrawn with INT-12 on 2026-11-24; INT-11 answers one question at a time. Public
+fixtures, snapshots, generated output and test data are excluded; reviewed private evidence is included; test source is included
 unless matched by the test exclusion list.
 
 **Acceptance.** Retrieval tests for readiness, injury-deload, personal-state and code-path questions;
@@ -1649,54 +1610,19 @@ provide the iOS chat shell. No new entitlement, backend schema or training rule 
 
 **MCP.** The existing MCP server stays facts-only and is not used by INT-11: it provides transport,
 authentication and a tool boundary, but no local knowledge index or search. Exposing Explain through
-MCP would be a later contract change, covered with INT-12's approval rather than this phase.
+MCP would be a later contract change with its own ADR rather than this phase.
 
-### INT-12 — Web search and RAG (deferred; later step)
+### INT-12 — Web search and RAG (withdrawn 2026-11-24)
 
-**Status.** Deferred 2026-11-16. Not approved, not implemented, not scheduled. It starts only after
-INT-11 is delivered and evaluated. This is the consolidated home for the former separate web-access
-and RAG candidates.
+**Status.** Deferred 2026-11-16; **withdrawn on 2026-11-24 at the owner's request.** Not approved,
+not implemented, not scheduled and no longer a future step: the owner does not want web search, page
+fetching or retrieval-augmented generation. The provider, quota, privacy, SSRF, retention, page-fetch
+and evaluation questions listed in the earlier draft are closed with it.
 
-**Dependencies.** INT-11 for the local corpus, allowlist, chunking, citation format and evaluation
-habits. It needs a new provider decision and ADR before code.
-
-**Follow-up context slice.** Deferred with web search. If added later, the client sends a capped
-session-only history (no transcript persistence), retrieval rewrites the query using the previous
-topic, and prior sources/citations are not automatically treated as current. INT-11 remains
-single-question until this is approved.
-
-**Web search slice.** Opt-in per question, never automatic. The server calls one fixed search
-provider (for example Brave or Google Programmable Search) and returns a bounded set of title/url/
-snippet results. The first slice does not fetch arbitrary pages. If page fetch is added later it
-needs an explicit allowlist, SSRF protection (no loopback/private/metadata endpoints), redirect and
-size limits, content-type checks, timeouts and prompt-injection isolation. Web content is untrusted
-data, always cited by URL and access date, and visibly separate from training facts and project
-sources. Queries must not carry health details, names or tokens. iOS reaches the same server tool
-through the paired server; the on-device model has no network path.
-
-**RAG slice.** Only after the INT-11 FTS5 baseline is measured and found insufficient. Retrieval
-would add embeddings/vector search over the same reviewed allowlist, with citation precision/recall,
-staleness and unsupported-claim evaluation. It may add sources, never compute or override a training
-value, never become a rule or hard constraint, and never open a write path. A deterministic
-keyword/BM25 baseline stays the fallback and the stop rule prefers it.
-
-**MCP.** The existing MCP server is useful transport, authentication and tool-boundary reuse, but it
-is not a search engine and does not provide web access. Its current contract is facts-only
-(ADR-INT-006). Exposing local knowledge search or web research through MCP would need a new ADR and
-contract revision; it is not part of this phase. The first web slice remains an internal server tool
-used by the web and iOS surfaces.
-
-**Exclusions.** Automatic search on every message, arbitrary model-run URLs or shell commands,
-unreviewed page content, scraping Google HTML, vector RAG before the FTS baseline is measured, and
-mixing external claims into training rules.
-
-**Acceptance.** Provider failure/no-results handling; URL citations; injection fixtures; blocked
-localhost/private endpoints; privacy review; rate/budget caps; iOS opt-in; a pre-registered evaluation
-set. RAG additionally needs the INT-11 baseline comparison and citation metrics.
-
-**Owner decisions needed.** Search provider and plan/quota; snippets only or allowlisted page fetch;
-whether health-adjacent queries are allowed; retention of queries/results; whether MCP exposure is
-wanted at all; and whether follow-up context lands with the web slice or separately.
+**Record.** Nothing was built: no provider key, search client, embedding store, endpoint, network
+policy, MCP tool or contract change exists. The MCP server stays facts-only, INT-11 stays a local
+keyword/FTS5 explainer, and no component reads external content. Reintroducing any web access or RAG
+would need a new owner request and a new ADR, not a revival of this phase.
 
 ### INT-13 — Today summary card (owner-requested 2026-11-16)
 
@@ -1739,7 +1665,7 @@ displayed, never stored as a prescription, session or measurement.
 
 **Status.** **Implemented 2026-11-16** (decision 20, `ADR-INT-022`) at the owner's request; iOS-only.
 **Closed 2026-11-17** by owner decision: the physical-device acceptance was waived rather than run.
-The card shipped in StrengthApp v1.2 on 2026-11-18.
+The card shipped in StrengthApp v2.0 on 2026-11-18.
 
 ## 12. Dependencies and sequencing
 
@@ -1750,7 +1676,7 @@ INT-1 ──▶ INT-1b ──▶ INT-2 ──▶ INT-3 ──┬──▶ INT-4 
                                       └──▶ INT-7
 INT-4d (external chat model): delivered; chat only
 INT-4e (plan-aware chat): delivered
-INT-4c (PCC model choice): parked — needs paid developer access + entitlement
+INT-4c (PCC model choice): withdrawn 2026-11-24 — the owner will not integrate PCC
 INT-8: closed 2026-11-15 — no concrete question; read-only explanation covered
 
 INT-7     closed (read-only intents, phone and watch)
@@ -1759,20 +1685,20 @@ INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    closed 2026-11-18 — local daily reminder nudge (iOS only; device acceptance waived;
-          shipped in StrengthApp v1.2)
+          shipped in StrengthApp v2.0)
 INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval; device/release items
-          owner-closed 2026-11-17; shipped in backend 1.7.0 and StrengthApp v1.2
-INT-12    deferred — web search and RAG; after INT-11, new provider/ADR
+          owner-closed 2026-11-17; shipped in backend 2.0.0 and StrengthApp v2.0
+INT-12    withdrawn 2026-11-24 — web search and RAG; owner declined the feature
 INT-13    closed 2026-11-17 — Today summary card (iOS only; owner-closed without a device run;
-          shipped in StrengthApp v1.2)
+          shipped in StrengthApp v2.0)
 INT-9     deferred — starts only after iOS 27.3 lands
-INT-4c    parked — needs paid developer access + the PCC entitlement
+INT-4c    withdrawn 2026-11-24 — PCC will not be integrated
 ```
 
 - INT-1, INT-1b and INT-2 are delivered; INT-3 is closed (2026-11-15). INT-4 is delivered.
 - INT-4b (on-device chat) and INT-4d (DeepSeek chat) are delivered. INT-4e (plan-aware chat and
-  suggestions) is delivered. INT-4c (PCC model choice) is parked
-  until paid developer access and the entitlement exist; INT-5 delivered the server narrative track.
+  suggestions) is delivered. INT-4c (PCC model choice) was withdrawn on 2026-11-24 because the owner
+  will not integrate PCC; INT-5 delivered the server narrative track.
   INT-6 is closed (2026-11-15): its iOS surface is INT-4b and its server/web chat uses the deterministic dossier; tool calling and streaming are deferred.
 - INT-1b is a split of the original INT-1 scope, not a new capability; INT-2 does not depend on it,
   so either order is safe after INT-1.
@@ -1780,8 +1706,8 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
 - INT-4 (on device) and INT-5 (server) are independent; either can ship first.
 - INT-6 needs at least one working narrative path.
 - **Delivery complete 2026-11-15:** INT-7 → INT-7b-1 → INT-7b-2 → INT-7b-3 → INT-7c all closed and
-  owner-confirmed. INT-11 is closed with documented limitations; INT-9 remains gated on iOS 27.3, plus the
-  parked INT-4c.
+  owner-confirmed. INT-11 is closed with documented limitations; INT-9 remains gated on iOS 27.3, and
+  INT-4c is withdrawn.
 - **Why this order.** INT-7 first: it is the smallest phase, it is what December's adoption annotates,
   and built to §7.6 it leaves nothing behind. 7b-1 next: the cheapest real channel proves the trigger,
   ordering, dedupe and failure isolation that the heavier channels reuse. 7b-2 then adds the HomeKit
@@ -1806,22 +1732,18 @@ INT-4c    parked — needs paid developer access + the PCC entitlement
   foreground, which is why its text is precomputed rather than produced on demand.
 - **INT-11 is independent of training decisions.** It reuses the INT-5/INT-6 model client and chat
   shells, adds only a local read-only index and explanation surfaces, and changes no training rule,
-  envelope or MCP contract. INT-12 is the separate, deferred web-search/RAG step; MCP stays
-  facts-only until a new ADR.
+  envelope or MCP contract. Web search and RAG were withdrawn with INT-12 on 2026-11-24; MCP stays
+  facts-only absent a new ADR.
 
-### Deferred — web access (web UI and iOS)
+### Withdrawn — web access and retrieval-augmented generation
 
-Consolidated into **INT-12**. No browsing, web search, URL fetch or web citation is approved; the
-detailed policy lives there.
+Web browsing, web search, URL fetch, web citations and vector RAG were consolidated into **INT-12**
+and **withdrawn on 2026-11-24** at the owner's request. They are not deferred, not a backlog item and
+not planned. The MCP server stays facts-only.
 
-### Later-stage candidate — retrieval-augmented generation (not a phase, not scheduled)
+## 13. Decisions (accepted, one withdrawn)
 
-Consolidated into **INT-12**. Retrieval remains a later, separately approved step; the detailed
-prerequisites live there.
-
-## 13. Decisions (all accepted)
-
-Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
+Decision 19 was withdrawn on 2026-11-24 with INT-12; it is retained only as the record.
 
 | # | Decision | Recommendation | ADR |
 |---|---|---|---|
@@ -1843,7 +1765,7 @@ Decision 19 is deferred, not accepted; it is recorded for the later INT-12 step.
 | 16 | Shortcuts start/finish (INT-7c): the Shortcuts app can start the ready workout and open the finish surface on phone and watch; ending never finishes by itself | **accepted 2026-11-15** at the owner's request; it reuses decision 15's boundary and adds no new training path | `ADR-INT-018` (extended) |
 | 17 | Daily reminder nudge (INT-10): one user-set time, one local notification per day whose text is precomputed on device from the read-only packages, on-device model or deterministic template only, silent once the day is trained | **accepted 2026-11-16** at the owner's request; the §1.2 "notification intelligence" exclusion is narrowed to Live Activities, and remote push, background refresh and external models stay excluded | `ADR-INT-019` (accepted) |
 | 18 | Explain the System (INT-11): local incremental FTS5 index over an explicit docs/source/private allowlist, separate web and iOS tabs, best-effort path:line citations, no web or vector search | **accepted 2026-11-16** at the owner's request for personal use; named allowlist with regex, test source covered by the source allowlist with a separate test exclusion list, fixtures/snapshots/test data excluded, all non-secret private personal data permitted while secrets are excluded, index at server start, system-browser docs/GitHub links with copy fallback, minimal citation path/line/snippet sanity check, single-question only; substantive citation/retrieval/staleness risks accepted | `ADR-INT-020` (accepted; implemented and closed with limitations) |
-| 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **deferred 2026-11-16**; not approved or scheduled; MCP stays facts-only; provider/privacy/SSRF/evaluation decisions are still open | `ADR-INT-021` (deferred) |
+| 19 | Web search and RAG (INT-12): opt-in fixed-provider search with citations, and embeddings only if the INT-11 FTS baseline is insufficient | **withdrawn 2026-11-24** at the owner's request; not approved, not scheduled and no longer planned; MCP stays facts-only | `ADR-INT-021` (withdrawn) |
 | 20 | Today summary card (INT-13): two prose passages at the top of Today from the configured chat model, DeepSeek included | **accepted 2026-11-16** at the owner's request; amends INT-4d's "chat only" boundary for this surface, and plan data follows the existing chat consent toggle | `ADR-INT-022` (accepted) |
 
 Both former open questions are answered (2026-11-15):
@@ -1919,8 +1841,8 @@ described here and nowhere else.
 | §9.2 MCP server over Tailscale (Iteration 2 candidate) | superseded | §5, `ADR-INT-003`, `ADR-INT-004` |
 | §10 phases 1, 2 and 3 | superseded | INT-1 to INT-5 |
 | §11 future areas for context, analyst, explainer and `mcp/` | superseded | §3.2 |
-| `docs/plans/IOS-CLIENT-PLAN.md` §5 Apple Intelligence and PCC bullets | superseded | §7.2–§7.3, INT-4/INT-5 |
-| `ROADMAP.md` §4.24 phases 1–3 and the Iteration-2 MCP clause; §4.18 forward idea | superseded | §12, INT-1 to INT-8 |
+| `docs/plans/IOS-CLIENT-PLAN.md` §5 Apple Intelligence and PCC bullets | superseded | §7.2, INT-4/INT-5; the PCC part was withdrawn 2026-11-24 |
+| `ROADMAP-RETIRED.md` §4.24 phases 1–3 and the Iteration-2 MCP clause; §4.18 forward idea | superseded | §12, INT-1 to INT-8 |
 | Any earlier uncommitted Apple Intelligence or MCP scope | superseded | this plan |
 
 The superseded documents remain in place as **historical and requirements records**. They are not
@@ -1946,8 +1868,9 @@ retained items in §16.3.
   (`ADR-INT-003`), still read-only and still reusing the existing core.
 - **The context and evidence builder moves** from the planned `agents/context.py` to the
   provider-neutral `strength_coach/intelligence/context.py` (`ADR-INT-002`).
-- **Apple Intelligence and PCC move** from an unscheduled Phase 5 bullet to a specified, independently
-  disableable INT-4/INT-5 scope with no silent cloud fallback (`ADR-INT-007`).
+- **Apple Intelligence moves** from an unscheduled Phase 5 bullet to a specified, independently
+  disableable INT-4/INT-5 scope with no silent cloud fallback (`ADR-INT-007`). **PCC is withdrawn**
+  (2026-11-24) and is not planned.
 - **The constrained proposer is withdrawn.** The CLI `run --propose` path was removed on
   2026-11-17 because it broke CLI/UI parity, so `DEC-LLM-09` is closed rather than deferred. Its
   requirements remain as historical record; any future write capability needs a new decision.

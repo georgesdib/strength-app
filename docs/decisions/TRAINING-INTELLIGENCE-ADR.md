@@ -1,13 +1,15 @@
 # TRAINING INTELLIGENCE — ARCHITECTURE DECISION RECORDS
 
-**Status:** every record is accepted, deferred or superseded as of 2026-11-16. ADR-INT-001 to
-ADR-INT-021 are implemented, retained or deferred as recorded, ADR-INT-015 and ADR-INT-016 are deferred/accepted as recorded,
+**Status:** every record is accepted, deferred, withdrawn or superseded as of 2026-11-24. ADR-INT-001
+to ADR-INT-021 are implemented, retained, deferred or withdrawn as recorded: ADR-INT-015 (INT-4c) and
+ADR-INT-021 (INT-12) were withdrawn on 2026-11-24, and ADR-INT-016 is accepted as recorded.
 ADR-INT-011 and ADR-INT-018 are accepted (ADR-INT-011 amended with the refreshed Siri AI preview facts
 and the INT-7 readiness requirement; ADR-INT-018 covers the workout lifecycle surfaces and is extended
 by decision 16 for the Shortcuts start/finish pair), and ADR-INT-017 is accepted. ADR-INT-019
 (INT-10, the local daily reminder nudge) is accepted 2026-11-16, as are ADR-INT-020 (INT-11, Explain the
-System) and ADR-INT-022 (INT-13, the Today summary card); ADR-INT-021 (INT-12, web search and RAG) is
-deferred. The one open item is INT-9's adoption pass, which needs a new ADR once iOS 27.3 lands.
+System) and ADR-INT-022 (INT-13, the Today summary card); ADR-INT-021 (INT-12, web search and RAG) was
+**withdrawn on 2026-11-24** at the owner's request. The one open item is INT-9's adoption pass, which
+needs a new ADR once iOS 27.3 lands.
 **Canonical location:** this file, in the portfolio repository. It records decisions that span the
 backend, the iOS client and the MCP surface. Backend-only decisions remain in
 [`docs/DECISIONS.md`](https://github.com/georgesdib/strength-training-app/blob/development/docs/DECISIONS.md)
@@ -45,7 +47,8 @@ deployed as an independent process that never imports `strength_coach.web`.
 independent: no web imports, read-only database handle, own configuration. A future split remains
 possible because the module only depends on `strength_coach` core.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (plan §13, decision 1); implemented as the separately
+deployable `strength-intelligence-mcp` entry point in this repository.
 
 ## ADR-INT-002 — A provider-neutral intelligence package, not `agents/context.py`
 
@@ -72,7 +75,8 @@ proposal path and is imported by `intelligence/model/`, not by `intelligence/cap
 headings preserved). The layering table in `ARCHITECTURE.md` gains one row in INT-1. The one-context-
 builder rule (`DEC-LLM-08`) is preserved: there is still exactly one builder, in a different place.
 
-**Status.** Proposed. **Open question:** does the owner accept moving the planned path?
+**Status.** **Accepted 2026-11-15** (decision 2). The capability layer lives in
+`strength_coach/intelligence/`, so the open question is resolved.
 
 ## ADR-INT-003 — MCP protocol revision 2026-07-28 with the official Python SDK 2.x
 
@@ -101,7 +105,7 @@ transport, sampling, roots or logging.
 `json_response=True` for v1 because no tool streams progress. The server is stateless on the modern
 path, so deployment does not need sticky routing; legacy clients would.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 3).
 
 ## ADR-INT-004 — Static per-client bearer tokens for MVP; OAuth 2.1 is a later decision
 
@@ -129,10 +133,11 @@ document, because no authorization server exists. Do not accept a tailnet addres
 
 **Consequences.** Hosted clients that require OAuth discovery cannot connect; this is an accepted,
 documented limitation. Moving to OAuth is a contained change at the auth wrapper, and the capability
-layer is unaffected. **Open question for the owner:** which MCP host will be used first? That answer
-decides whether a static token is sufficient for INT-1 acceptance.
+layer is unaffected. The host question was answered on 2026-11-15: the Python client is the only
+MCP host, so the static token is sufficient for INT-1 acceptance.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 4); OAuth remains a later decision if a hosted client
+or a non-owner user is added.
 
 ## ADR-INT-005 — Tools and resources only; no MCP prompts
 
@@ -147,7 +152,7 @@ also owns model selection and UX.
 `intelligence/model/` or in the app. A host that wants a review prompt writes one; nothing in the
 server needs to know.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 5).
 
 ## ADR-INT-006 — MCP tools return facts, never narration
 
@@ -172,7 +177,7 @@ explanation capability.
 tool returns facts and the app narrates. Server-side narration remains available through INT-5 without
 changing the MCP surface.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 6).
 
 ## ADR-INT-007 — The iOS app consumes REST envelopes, not MCP
 
@@ -198,7 +203,7 @@ FoundationModels, SwiftUI, UIKit, HealthKit or WatchKit import. Model-specific c
 envelope models. If Apple ever ships first-party MCP support, the adapter can become another client of
 the same capabilities without moving business logic.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 7); implemented as INT-3.
 
 ## ADR-INT-008 — In-process capability calls by default, MCP parity in CI
 
@@ -215,7 +220,7 @@ envelopes.
 CI run and by external hosts. If the MCP server is ever deployed on another machine, the client
 choice becomes a configuration flag.
 
-**Status.** Proposed.
+**Status.** **Accepted 2026-11-15** (decision 8).
 
 ## ADR-INT-009 — `get_programme_block_summary` is a derived reporting window
 
@@ -238,7 +243,9 @@ invent a block id, block dates or a planned-session denominator.
 **Consequences.** The tool answers "how is this stretch of the programme going?" without implying a
 stored block. Any future block entity would extend the capability, not invalidate it.
 
-**Status.** Proposed. **Open question:** owner preference on the name.
+**Status.** **Accepted 2026-11-15** (decision 9). The name stays
+`get_programme_block_summary`; it is a reporting window with the mandatory limitation, so the open
+question is resolved.
 
 ## ADR-INT-010 — No intelligence cache in INT-1 or INT-2
 
@@ -394,7 +401,7 @@ read-only workstream.
 **Context.** Three documents described overlapping future work: `strength-training-app/docs/LLM-INTEGRATION-PLAN.md`
 (analyst, explainer, constrained proposer, context builder, MCP as a conditional Iteration-2
 candidate), `ROADMAP.md` §4.24 (the same workstream in status form) and
-`docs/plans/IOS-CLIENT-PLAN.md` §5 (Apple Intelligence and PCC as unscheduled optional enhancements).
+`docs/plans/IOS-CLIENT-PLAN.md` §5 (Apple Intelligence and PCC, then unscheduled optional enhancements; PCC was later withdrawn on 2026-11-24).
 Keeping four forward descriptions means four sets of phases, statuses and acceptance criteria that
 drift the moment one changes. Two of the old items are still binding: the outbound-data inventory and
 the evaluation gates, plus the minimal-selector retirement.
@@ -423,8 +430,8 @@ Apple-platform proposal amends this plan and adds an ADR. The proposer is explic
 it cannot be started by momentum. The supersession is recorded in the backend Superseded table for
 `DEC-LLM-12` and `DEC-LLM-13` (item 7), and as a status banner in the LLM plan itself.
 
-**Status.** Proposed; takes effect on owner approval of this plan. **Open question:** confirm that the
-constrained proposer should be deferred/unscheduled rather than kept as a parallel workstream.
+**Status.** **Accepted 2026-11-15** (decision 13); in force with this plan. The constrained proposer
+was withdrawn on 2026-11-17, so the open question is resolved.
 
 ## ADR-INT-014 — Scoped MCP tokens for sensitive readiness (retained, not adopted 2026-11-15)
 
@@ -459,45 +466,27 @@ coverage and direction only.
 **Owner decision (2026-11-15).** Keep as is: no health-scoped token; raw readiness stays local-only
 permanently unless a new decision reopens it.
 
-## ADR-INT-015 — User-selectable Private Cloud Compute model (deferred 2026-11-15)
+## ADR-INT-015 — User-selectable Private Cloud Compute model (withdrawn 2026-11-24)
 
-**Context.** INT-4 and INT-4b run entirely on the device. The owner asked for a user choice between
-on-device and Apple Private Cloud Compute (PCC). The Foundation Models framework exposes
+**Status.** Deferred 2026-11-15; **withdrawn on 2026-11-24 at the owner's request.** PCC will not be
+integrated: no entitlement is sought, no picker is added, no Private Cloud path exists, and the
+earlier scope is not planned work.
+
+**Context (historical).** INT-4 and INT-4b run entirely on the device. A user choice between
+on-device and Apple Private Cloud Compute was considered; the Foundation Models framework exposes
 `PrivateCloudComputeLanguageModel` on iOS 27, but Apple requires the managed entitlement
-`com.apple.developer.private-cloud-compute` and eligibility approval; without it the model is
-unavailable. The plan previously required explicit consent and a context preview for PCC. The owner
-has asked us not to over-engineer the privacy layer.
+`com.apple.developer.private-cloud-compute` and eligibility approval.
 
-**Decision.** Add INT-4c: one app-wide model choice, **On-device (default)** or **Private Cloud**,
-used by the single-shot explanations and Chat. PCC is offered only when the entitlement is present,
-the model is available, and the required capabilities (tool calling for chat, guided generation for
-explanations) are supported. There is **no silent fallback**: a PCC failure stops with a short
-message and the deterministic review stays intact. Model choice is stored in UserDefaults.
-
-**Privacy.** A single Settings picker with one line: “Private Cloud sends your question and training
-facts to Apple's private cloud; On-device keeps them on this iPhone.” No per-request consent modal,
-no context preview, no audit log, no telemetry. Transcripts remain session-only.
-
-**Entitlement.** The phase is blocked until Apple grants access to
-[Private Cloud Compute](https://developer.apple.com/private-cloud-compute/) and the entitlement is
-added to the app profile. A device spike must verify availability, capabilities, context size and
-quota before UI work. If access is not granted, INT-4c does not ship and no dead picker is added.
-
-**Consequences.** One model-choice setting and a session factory across both generators; error
-mapping for network, quota and service failures; a device acceptance matrix on both models; no
-backend change. The privacy boundary becomes user-selectable, so the UI must always show which
-model is active. INT-4b's on-device path remains the default.
-
-**Status.** Deferred 2026-11-15: PCC needs a paid Apple Developer Program membership and the managed
-entitlement, which are not available. The decision is parked, not rejected; the scope stays in the
-plan as the future definition and is revisited only if access is obtained.
+**Decision.** Withdrawn. The app stays on-device (Apple Foundation Models) or, in Chat only, on the
+DeepSeek key path (`ADR-INT-016`). No third model, no cloud fallback and no model picker.
+Reintroducing PCC needs a new owner request and a new ADR.
 
 ## ADR-INT-016 — External chat model via a user API key (DeepSeek, accepted 2026-11-15)
 
-**Context.** PCC is parked because it needs a paid Apple Developer Program membership and the managed
-entitlement. The owner wants the option to use another model with their own API key, specifically
-DeepSeek, and has clarified that it applies to **Chat only** — the weekly and overview explanations
-stay on-device. DeepSeek exposes an OpenAI-compatible `/chat/completions` API with tool calls.
+**Context.** PCC is unavailable and was withdrawn on 2026-11-24 (`ADR-INT-015`); it needed a paid
+Apple Developer Program membership and the managed entitlement. The owner wants the option to use
+another model with their own API key, specifically DeepSeek, and has clarified that it applies to
+**Chat only** — the weekly and overview explanations stay on-device. DeepSeek exposes an OpenAI-compatible `/chat/completions` API with tool calls.
 
 **Decision.** Add INT-4d: a Settings **Chat model** choice, On-device (default) or DeepSeek. With
 DeepSeek selected, the iPhone calls `https://api.deepseek.com` directly using `deepseek-chat` and
@@ -634,9 +623,9 @@ server feature:
   would freeze one body forever.
 - **On-device only.** The message is rendered by a dedicated two-field on-device shape that reuses the
   narrative path's availability handling over facts the app already holds — `TodayResponse` plus the
-  issued plan. No capability is fetched for the reminder. The DeepSeek and PCC paths are unreachable
-  from this code path by construction: the scheduler is wired to the on-device generator and offers no
-  provider choice.
+  issued plan. No capability is fetched for the reminder. The DeepSeek path is unreachable from this
+  code path by construction, and the withdrawn PCC path (`ADR-INT-015`) does not exist: the scheduler
+  is wired to the on-device generator and offers no provider choice.
 - **Numbers are allowed (owner decision, 2026-11-16).** The reminder enforces only length. An
   encouragement is not an explanation, and a numeral in a nudge — "five minutes", "two sets" — is not
   a training claim; the strict `NarrativeValidator` grounding check stays on the weekly review and
@@ -725,42 +714,33 @@ retrieved snippets.
 **Consequences.** No training rule, envelope, MCP tool or existing API contract changes. The index is
 local, untracked and owner-readable only. iOS needs the paired server and is offline otherwise.
 Private permitted text, including personal details, is sent to DeepSeek; secrets filtering is
-best-effort and reviewed by the allowlist. INT-11 is single-question; session-only follow-up context is deferred with INT-12. Retrieval
-quality, substantive citation accuracy and staleness are accepted as personal-use risks, not release
-gates; only the structural citation sanity check above is enforced.
+best-effort and reviewed by the allowlist. INT-11 is single-question; session-only follow-up context
+was withdrawn with INT-12. Retrieval quality, substantive citation accuracy and staleness are
+accepted as personal-use risks, not release gates; only the structural citation sanity check above is
+enforced.
 
 **Rejected alternatives.** Web search/browsing now (separate, higher-risk proposal); unrestricted
 filesystem access (secrets and traversal); vector RAG before keyword retrieval is measured; bundling
 the docs in the iOS app (size, staleness, secret risk); strict citation validation as a release gate
 (owner accepts best-effort).
 
-## ADR-INT-021 — Web search and RAG deferred (2026-11-16)
+## ADR-INT-021 — Web search and RAG (withdrawn 2026-11-24)
 
-**Status.** Deferred 2026-11-16. Not approved or scheduled; no implementation. INT-12 is the single
-record for the former separate web-access and RAG candidates, plus deferred follow-up context.
+**Status.** Deferred 2026-11-16; **withdrawn on 2026-11-24 at the owner's request.** Not approved,
+not implemented, not scheduled and no longer planned. The provider, quota, privacy, SSRF, query
+retention, page-fetch and citation-evaluation questions are closed with it.
 
-**Context.** INT-11 provides single-question local docs/code explanation. The owner wants a later step
-for web search, session-only follow-up context and, if measured necessary, retrieval-augmented
-generation. The existing MCP server provides
-transport, authentication and a facts-only tool boundary but is not a search engine and has no web
-access. External content is untrusted; search queries leave the server; RAG can add an embedding
-store without improving exact structured facts.
+**Context (historical).** INT-11 provides single-question local docs/code explanation. A later step
+for web search, session-only follow-up context and retrieval-augmented generation was considered and
+deferred on 2026-11-16; the owner has since declined that direction entirely.
 
-**Decision.** Keep these items deferred behind INT-11. Follow-up context, if approved, is capped
-session-only history with query rewriting and no transcript persistence. The first web slice, if
-approved, uses one
-fixed search provider, opt-in per question, bounded snippets and URL citations; page fetching is a
-separate step with an allowlist and SSRF controls. RAG is permitted only after the INT-11 FTS5
-baseline is measured insufficient. Web content and retrieved sources never compute or override a
-training value and never become a rule. MCP remains facts-only; exposing knowledge search or web
-research over MCP requires a new ADR and contract revision.
+**Decision.** No web search, browsing, URL fetch, web citation or retrieval-augmented generation is
+approved or planned. The MCP server stays transport and facts-only, INT-11 stays a local keyword/FTS5
+explainer, and no component reads external content. Reintroducing any of it needs a new owner request
+and a new ADR.
 
-**Consequences.** No code, provider key, endpoint, network policy, MCP tool or contract change now.
-Provider, quota, privacy, SSRF, query retention, page-fetch policy and citation evaluation remain
-open decisions for the later phase.
-
-**Rejected now.** Automatic search on every message; arbitrary model-run URLs or shell commands;
-scraping Google HTML; vector RAG before the keyword baseline; MCP as a search transport.
+**Consequences.** No code, provider key, endpoint, network policy, MCP tool or contract change was
+ever made, and none is expected.
 
 ## ADR-INT-022 — Today summary card (accepted 2026-11-16)
 
@@ -827,7 +807,7 @@ StrengthApp v1.2 on 2026-11-18.
 | APNs push for a daily reminder | a push key, token registry, scheduler and a live home server at delivery time — infrastructure for a reminder (ADR-INT-019) |
 | Background refresh to render the reminder on time | opportunistic by contract; would silently fail and fall back to the same precomputed text |
 | Unrestricted filesystem/RAG-for-everything explainer | secrets, traversal and a much larger index; ADR-INT-020 uses a named local allowlist |
-| Web search or RAG in the same slice as INT-11 | different provider, privacy, SSRF and evaluation risks; ADR-INT-021 defers them |
+| Web search or RAG in the same slice as INT-11 | different provider, privacy, SSRF and evaluation risks; ADR-INT-021 withdrew them on 2026-11-24 |
 
 ## Questions resolved by delivery (2026-11-15)
 

@@ -1,12 +1,12 @@
 # Longevity assessment — aerobic adequacy, fitness and strength context
 
-**Status:** closed 2026-11-18; released in 1.7.0 and corrected in 1.7.1 (correctness, privacy
+**Status:** closed 2026-11-18; released in 2.0.0 (correctness, privacy
 and integration hardening; no product-decision change). Implemented as one
 `adequacy()` function, the `assessment` block on `GET /api/cardio/summary` and the phone route, the
 golden fixtures, and the `get_longevity_assessment` capability behind MCP tool 11, the iOS
 intelligence route and the chat dossier. The iOS Today section, the health-consent toggle, the time-in-zone panel and the web panel are
 implemented (web prose is on demand, not automatic). This plan supersedes the v1.6.x cardio-impulse
-deliverable (ROADMAP §4.13a A2/A3).
+deliverable (ROADMAP-RETIRED.md §4.13a A2/A3).
 
 **One sentence:** three questions get one deterministic answer each, one consent switch guards the
 sensitive part, and a model may say what to do about it without the app ever prescribing.
@@ -52,7 +52,7 @@ consent.
 ### DEC-LONGEVITY-03 — the cardio impulse is retired, not deferred
 
 TRIMP, sRPE-impulse, acute:chronic ratios, cardio readiness scores and unified fatigue scores are
-closed as product direction. §4.13a A2/A3 is superseded. Time-in-zone classification of stored heart
+closed as product direction. ROADMAP-RETIRED.md §4.13a A2/A3 is superseded. Time-in-zone classification of stored heart
 rate samples is **not** an impulse: it adds no load model, no cumulative score and no time constant,
 and it is the only cardio computation this plan adds.
 
@@ -91,8 +91,8 @@ without scolding.
 | iOS | Today section = facts + prose from the configured model (on-device or DeepSeek); health-tool execution is limited to the consent-aware allowlist; time-in-zone panel on the Cardio screen |
 | Web | Longevity panel reads the same canonical `assessment` block (no second adequacy calculation), requests time-in-zone and headroom deliberately, and gates prose from the configured model behind a health-data disclosure naming the provider/model |
 
-Before 1.7.0, `time_in_zone` was only reachable through `tools/cardio_report.py`. This plan wired
-it into the product. The 1.7.1 corrective release replaced its equal-per-sample allocation with
+Before 2.0.0, `time_in_zone` was only reachable through `tools/cardio_report.py`. This plan wired
+it into the product. The 2.0.0 corrective release replaced its equal-per-sample allocation with
 elapsed-time integration, clipping and explicit coverage (see §6.1); the block and the continuity gate
 are otherwise the same.
 
@@ -130,9 +130,9 @@ are otherwise the same.
 - **Strength context:** headroom is the configured volume budget, not a measurement of adaptation.
   The plan does not claim cardio caused a strength change, and nothing here is a strength verdict.
 
-### 6.1 Corrective release 1.7.1
+### 6.1 Corrective release 2.0.0
 
-Verified against the 1.7.0 code and corrected without reopening the product decisions:
+Verified against the 2.0.0 code and corrected without reopening the product decisions:
 
 | Finding | Correction | Evidence |
 |---|---|---|

@@ -54,8 +54,9 @@ this work: portfolio rules forbid moving submodule pointers as a side effect of 
   not call an LLM; `agents` may only call deterministic functions.
 - Persistence is SQLite through `strength_coach/store/` with **59 append-only migrations** (latest
   `0059_observation.sql`) and a **single-athlete database** (`data/coach.db`). There is no
-  `user_id` or tenant column anywhere in the clinical schema; `ROADMAP.md` §4.19.1 describes a
-  per-user database plan that is explicitly **not implemented**.
+  `user_id` or tenant column anywhere in the clinical schema; the per-user database plan that
+  `ROADMAP.md` §4.19.1 once described was withdrawn on 2026-11-25 (`DEC-WEB-04`) and is not
+  implemented.
 - Existing observability is modest and adequate for a home server: `logging` plus a 500-record
   in-memory ring buffer exposed at `GET /api/logs`; `run`/`run_event` tables record LLM and
   analytical runs; the e1RM calibration and programme-schedule caches already use
@@ -220,9 +221,9 @@ The intelligence layer should be a **composition layer**, exactly as AFC is (`DE
 2. **No second evidence schema.** `features/evidence.py` is the schema; the envelope wraps it.
 3. **No router-framework assumption.** A separate process imports `queries`/`features` and owns its
    own validation; it never imports `web.server`.
-4. **Single athlete, not multi-tenant.** Per-user isolation is a future `ROADMAP` §4.19
-   deliverable. The intelligence layer must not fake a tenant model and must not accept an
-   `athlete_id` argument it cannot enforce.
+4. **Single athlete, not multi-tenant.** Per-user isolation is not planned (withdrawn
+   2026-11-25, `DEC-WEB-04`). The intelligence layer must not fake a tenant model and must not
+   accept an `athlete_id` argument it cannot enforce.
 5. **No writes.** No intelligence tool may create, edit, void, start, complete or prescribe.
 6. **No beta dependency.** iOS 27.3 Siri AI and any point-release API is a preview, not a foundation.
 7. **No new public surface.** The web UI stays unauthenticated on the home LAN; a new authenticated
@@ -237,7 +238,7 @@ The intelligence layer should be a **composition layer**, exactly as AFC is (`DE
 | D3 | `LLM-INTEGRATION-PLAN.md` §9.2 and `ROADMAP.md` §4.24 treat an MCP server as a conditional Iteration-2 candidate after a needs assessment | this workstream makes a read-only MCP server the primary AI-facing interface in Iteration 1 | reconciled by `ADR-INT-003`; the "no second engine, no writes, tailnet plus application auth" conditions are retained verbatim |
 | D4 | `docs/plans/IOS-CLIENT-PLAN.md` §8 shows `StrengthApp/{App,Networking,Persistence,HealthKit}` | actual tree is `StrengthApp/{Core,Features}`; networking and models live in `StrengthCore` | noted; corrected only if §8 is edited for another reason |
 | D5 | `ARCHITECTURE.md` §6 says "no authentication yet" | true of the web UI; `/api/ios/v1/` has per-device bearer auth | wording is scoped but easy to misread; no edit required now |
-| D6 | `ROADMAP.md` §4.19.1 and `LIM-57` describe per-user auth as backlog | confirmed backlog; nothing implemented | the intelligence plan must not assume it exists |
+| D6 | `ROADMAP.md` §4.19.1 and `LIM-57` described per-user auth as backlog | withdrawn 2026-11-25 (`DEC-WEB-04`); nothing implemented | the intelligence plan must not assume it exists |
 | D7 | The work request implies a stored "training block" | there is no block entity; `DEC-PROGRAMME-01` says there is no fixed programme block and `DEC-W7-01` says there is no planned-session calendar | the candidate tool is renamed `get_programme_block_summary` and defined as a derived reporting window with an explicit limitation |
 
 ## 9. What could not be verified
@@ -246,8 +247,8 @@ The intelligence layer should be a **composition layer**, exactly as AFC is (`DE
   an internal build and region availability, and Apple states the App Intents API "may change" during
   the preview. Nothing here depends on it.
 - Private Cloud Compute access: `PrivateCloudComputeLanguageModel` is documented for iOS 27, but use
-  requires Apple's managed entitlement and a per-day quota. Entitlement status is not knowable from
-  the repositories.
+  requires Apple's managed entitlement and a per-day quota. Entitlement status was not knowable from
+  the repositories; PCC was later withdrawn (INT-4c, 2026-11-24), so nothing depends on it.
 - Production latency of the heavier analytical calls (VBT analysis, adherence analytics, a 365-day
   e1RM series) on the ODROID host: no benchmark was run in this audit and none was added.
 - Whether any hosted MCP client the owner uses accepts a static bearer token instead of OAuth

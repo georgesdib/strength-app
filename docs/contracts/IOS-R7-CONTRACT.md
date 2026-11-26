@@ -244,9 +244,10 @@ Body (closed schema; unknown fields rejected):
   i.e. today's behaviour.
 - `session_type` accepts `auto`, `squat`, `hinge`, `bench_squat`, `bench_hinge`,
   `accessory`. `auto` resolves through `schedule.next_session_type` exactly as the web does.
-- `minimum_session` maps to `minimum_session=True`; `minimum_target_minutes` and
-  `minimum_include_main` may be added in the same object if the owner wants the full
-  `MOD-MIN-001` surface. The default target comes from configuration
+- `minimum_session` maps to `minimum_session=True`. `minimum_target_minutes` accepts
+  only the configured `MOD-MIN-001` targets — `30`, `45` or `60` today — and any other
+  value is a `400 validation_failed` naming the field; it is ignored when
+  `minimum_session` is false. The default and allowed set come from configuration
   ([`minimum-session.v1.yaml`](https://github.com/georgesdib/strength-training-app/blob/development/config/minimum-session.v1.yaml)).
 - The server keeps every existing gate before writing the row: authentication, mutation switch,
   readiness score/acknowledgement, reactive deload, scheduled deload/drop confirmation. A gate
