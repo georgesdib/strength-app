@@ -310,7 +310,7 @@ interval stays the single source of truth: an intent writes it and the app appli
 so a locked phone shows the extension and the tab bar agrees once the app is looked at. Compact and
 minimal Island states cannot host buttons. **Physical-device acceptance was waived by owner
 decision on 2026-11-18** rather than run, so the locked tap, force-quit and Dynamic Island
-behaviours are unproven; the feature ships in v1.2.1 with that recorded. The watch's −15 s skip
+behaviours are unproven; the feature ships in v2.0 with that recorded. The watch's −15 s skip
 alignment is separate watch acceptance and is not part of this item. The original scope is kept
 below.
 

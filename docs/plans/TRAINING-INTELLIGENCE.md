@@ -31,7 +31,7 @@ model, extending INT-4d's chat-only boundary to that one surface; it is client-o
 
 Amended 2026-11-18: the owner waived INT-10's remaining physical-device acceptance — delivery
 timing, tap routing and Focus behaviour — as INT-13's had been waived on 2026-11-17. INT-10 is
-closed and shipped in StrengthApp v1.2 on 2026-11-18. Its documented residual gap (a watch-only
+closed and shipped in StrengthApp v2.0 on 2026-11-18. Its documented residual gap (a watch-only
 session the phone never observes cannot suppress that day's nudge) is unchanged.
 
 Amended 2026-11-24: the owner withdrew INT-12 (web search and RAG). No web search, page fetch or
@@ -1519,7 +1519,7 @@ contract.
 settings section, the shared authorisation helper and the tap routing are in place, with 18 automated
 tests passing and the iOS scheme building. **Closed 2026-11-18** by owner decision: the remaining
 physical-device acceptance (delivery timing, tap routing, Focus behaviour) was waived rather than run,
-and the nudge shipped in StrengthApp v1.2 on 2026-11-18. The watch-only suppression gap recorded
+and the nudge shipped in StrengthApp v2.0 on 2026-11-18. The watch-only suppression gap recorded
 above remains a documented limitation. iOS-only, with no backend change.
 
 ### INT-11 — Explain the System (local knowledge; accepted 2026-11-16)
@@ -1533,7 +1533,7 @@ A 15-question evaluation is complete. Known limitations: programme-block answers
 archive/contract context; no direct outcome evidence is cited for the reactive trigger counts. The
 owner closed the remaining device-acceptance and release-tag items on 2026-11-17 by decision: no
 separate physical-device run was made and no dedicated tag was cut. Explain shipped in the backend
-1.7.0 release and carried the iOS Explain tab in StrengthApp v1.2, both on 2026-11-18. No follow-up
+2.0.0 release and carried the iOS Explain tab in StrengthApp v2.0, both on 2026-11-18. No follow-up
 context, web search or RAG is included.
 
 **Goal.** Answer questions about how the system works — for example how readiness is calculated or
@@ -1665,7 +1665,7 @@ displayed, never stored as a prescription, session or measurement.
 
 **Status.** **Implemented 2026-11-16** (decision 20, `ADR-INT-022`) at the owner's request; iOS-only.
 **Closed 2026-11-17** by owner decision: the physical-device acceptance was waived rather than run.
-The card shipped in StrengthApp v1.2 on 2026-11-18.
+The card shipped in StrengthApp v2.0 on 2026-11-18.
 
 ## 12. Dependencies and sequencing
 
@@ -1685,12 +1685,12 @@ INT-7b-2  closed (HomeKit scenes, phone and watch)
 INT-7b-3  closed (Action button + watch Siri)
 INT-7c    closed (Shortcuts start/finish, phone and watch)
 INT-10    closed 2026-11-18 — local daily reminder nudge (iOS only; device acceptance waived;
-          shipped in StrengthApp v1.2)
+          shipped in StrengthApp v2.0)
 INT-11    closed 2026-11-16 — Explain the System, local docs/code retrieval; device/release items
-          owner-closed 2026-11-17; shipped in backend 1.7.0 and StrengthApp v1.2
+          owner-closed 2026-11-17; shipped in backend 2.0.0 and StrengthApp v2.0
 INT-12    withdrawn 2026-11-24 — web search and RAG; owner declined the feature
 INT-13    closed 2026-11-17 — Today summary card (iOS only; owner-closed without a device run;
-          shipped in StrengthApp v1.2)
+          shipped in StrengthApp v2.0)
 INT-9     deferred — starts only after iOS 27.3 lands
 INT-4c    withdrawn 2026-11-24 — PCC will not be integrated
 ```

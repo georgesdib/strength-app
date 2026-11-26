@@ -261,7 +261,7 @@ before the remote model is called. The field-level outbound inventory required b
 | 8 | `get_programme_block_summary` | **yes** (INT-2) | yes | yes | `features/deload.py`, `features/regime_change.py`, `prescribe/volume_budget.py` |
 | 9 | `compare_training_periods` | **yes** (INT-2) | yes | yes | `features/attendance.py`, `features/adherence_analytics.py`, `features/volume.py` |
 | 10 | `get_weekly_review` | **yes** (INT-3) | yes | yes | composition of 5, 8, and the trends |
-| 11 | `get_longevity_assessment` | **yes** (1.7.0; corrected 1.7.1) | yes | yes | `features/cardio_metrics.py` `adequacy()`, `prescribe/volume_budget.py`, `measurement` (`vo2max`) |
+| 11 | `get_longevity_assessment` | **yes** (2.0.0) | yes | yes | `features/cardio_metrics.py` `adequacy()`, `prescribe/volume_budget.py`, `measurement` (`vo2max`) |
 | — | `explain_prescription` | **rejected as a tool** | — | — | model capability over tool 6 (see §7.9) |
 
 `get_weekly_review_data` is not a separate tool: `get_weekly_review` returns the deterministic
@@ -661,7 +661,7 @@ the tool MUST NOT return prose, a recommendation or a target.
 
 **iOS.** Yes.
 
-**Status.** Implemented 2026-11-18; released in 1.7.0; corrected in 1.7.1.
+**Status.** Implemented 2026-11-18; released in 2.0.0.
 
 #### 7.5.12 Why `explain_prescription` is not a tool
 

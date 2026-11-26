@@ -739,7 +739,7 @@ verified backup and one restore drill before the first such migration.
 
 Initially landed 2026-11-17 on task branches. The work was subsequently integrated through
 `development` and merged into `main` on 2026-11-21 through the backend, iOS and portfolio
-integration PRs #27, #8 and #2, deployed at backend 1.6.0 and released through 1.7.1.
+integration PRs #27, #8 and #2, deployed at backend 1.6.0 and released through 2.0.0.
 
 | Repository | Change | Commits |
 |---|---|---|

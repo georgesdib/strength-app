@@ -1,6 +1,6 @@
 # Longevity assessment — aerobic adequacy, fitness and strength context
 
-**Status:** closed 2026-11-18; released in 1.7.0 and corrected in 1.7.1 (correctness, privacy
+**Status:** closed 2026-11-18; released in 2.0.0 (correctness, privacy
 and integration hardening; no product-decision change). Implemented as one
 `adequacy()` function, the `assessment` block on `GET /api/cardio/summary` and the phone route, the
 golden fixtures, and the `get_longevity_assessment` capability behind MCP tool 11, the iOS
@@ -91,8 +91,8 @@ without scolding.
 | iOS | Today section = facts + prose from the configured model (on-device or DeepSeek); health-tool execution is limited to the consent-aware allowlist; time-in-zone panel on the Cardio screen |
 | Web | Longevity panel reads the same canonical `assessment` block (no second adequacy calculation), requests time-in-zone and headroom deliberately, and gates prose from the configured model behind a health-data disclosure naming the provider/model |
 
-Before 1.7.0, `time_in_zone` was only reachable through `tools/cardio_report.py`. This plan wired
-it into the product. The 1.7.1 corrective release replaced its equal-per-sample allocation with
+Before 2.0.0, `time_in_zone` was only reachable through `tools/cardio_report.py`. This plan wired
+it into the product. The 2.0.0 corrective release replaced its equal-per-sample allocation with
 elapsed-time integration, clipping and explicit coverage (see §6.1); the block and the continuity gate
 are otherwise the same.
 
@@ -130,9 +130,9 @@ are otherwise the same.
 - **Strength context:** headroom is the configured volume budget, not a measurement of adaptation.
   The plan does not claim cardio caused a strength change, and nothing here is a strength verdict.
 
-### 6.1 Corrective release 1.7.1
+### 6.1 Corrective release 2.0.0
 
-Verified against the 1.7.0 code and corrected without reopening the product decisions:
+Verified against the 2.0.0 code and corrected without reopening the product decisions:
 
 | Finding | Correction | Evidence |
 |---|---|---|
