@@ -380,8 +380,16 @@ Unchanged request (`{"issued_plan_id": "…"}`) and unchanged client contract, b
 longer points at a prescription stored at issue:
 
 - Require `status = 'ready'`; `queued`/`building` → `409 plan_not_ready` with
-  `details: {status, retry_after_ms}`. `error` → `410 plan_failed`. Expired/superseded/consumed
-  keep their Phase 2 codes.
+  `details: {status, retry_after_ms}`. `error` → `410 plan_failed`, including a plan that failed
+  because a recorded constraint forbade it (`error.code = "constraint_veto"`). Expired/superseded/
+  consumed keep their Phase 2 codes.
+- **A constraint recorded since issue blocks the start.** The plan is frozen history and is never
+  silently rebuilt, so the server re-evaluates the plan's own constraint state as of its
+  `for_date` and refuses with `409 plan_not_executable`, `details: {issues, exercise_ids}` where
+  each issue is `CONSTRAINT_VETO:<exercise_id>:<reason>`. The published plan already carries
+  `executable` and `issues`, so the client can disable Start and explain before it is tapped;
+  the response is authoritative if the two disagree. A constraint that states it began after the
+  plan's `for_date` does not block an earlier plan.
 - In **one** transaction: persist the normal `prescription`/`prescription_item` rows from the
   stored `plan_json` via `prescription_persistence.store_plan`, call `workout.start` with that
   `prescription_id` and the stored readiness, then set `consumed_at`, `workout_id` and
@@ -391,6 +399,20 @@ longer points at a prescription stored at issue:
   plan that already has one would duplicate append-only history. A null `prescription_id` is the
   signal that this is a post-R7 preview, and only then is the prescription written at start.
 - The workout snapshot remains the issued plan; the client still cannot supply plan content.
+
+### 4.3.1 A session the athlete cannot start is never issued as `ready`
+
+Two different moments, two different answers, and they must not be collapsed into one:
+
+| When the veto is known | Outcome |
+|---|---|
+| At build time | The request **fails**: `status = 'error'`, `error.code = "constraint_veto"`, `error.message` naming the blocked lifts. No plan is published, so no Start button ever appears and nothing unexecutable can be cached for an offline start |
+| After the plan was issued | The plan keeps its identity; start refuses with `409 plan_not_executable` (§4.3) |
+
+An automatic (`session_type: auto`) request rarely reaches the first row: the scheduler already
+excludes families whose main lift is vetoed. It is reached when the client explicitly requests
+that session type, and then a truthful refusal naming the blocked lift is the answer — not a
+silent substitution, and not a plausible-looking plan that cannot start.
 
 ### 4.4 Worker: one bounded dispatcher, two eligibility checks, guarded publish
 
@@ -614,6 +636,9 @@ Server (`tests/test_ios_plan_requests.py`, temporary SQLite, live-server fixture
   independent; duplicate idempotency replay adds no decision.
 - Worker publishes `ready` with the exact plan; `plans/current` returns it; status transitions are
   one-way.
+- A constraint forbidding the requested session fails the request with `constraint_veto` and
+  publishes nothing; a constraint recorded *after* a plan is ready makes Start return
+  `409 plan_not_executable` naming the blocked lifts.
 - Supersession during a build discards the stale result (guarded update affects no row); superseding
   a `queued` row works.
 - CPU slot: a second request while one builds stays `queued` and later builds; no 409 to the client.
