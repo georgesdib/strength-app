@@ -8,7 +8,7 @@ These contracts define cross-repository behavior and are authoritative in this p
 | [iOS Phase 2](IOS-PHASE-2-CONTRACT.md) | Online strength workflow, readiness, workout lifecycle | Completed; later amendments are cross-linked | Backend + iOS |
 | [iOS Phase 3A](IOS-PHASE-3A-CONTRACT.md) | HealthKit readiness import | Completed/owner-accepted per linked plan | Backend + iOS |
 | [iOS Phase 4](IOS-PHASE-4-CONTRACT.md) | Offline capture and ordered replay | Completed/owner-accepted per linked plan | Backend + iOS |
-| [iOS R7](IOS-R7-CONTRACT.md) | Asynchronous prescription request | Completed per source plan; 2026-11-19 amendment adds the tri-state intent, frozen plan and execution view | Backend + iOS |
+| [iOS R7](IOS-R7-CONTRACT.md) | Asynchronous prescription request | Completed per source plan; 2026-11-19 amendment adds the tri-state intent, frozen plan and execution view; 2026-11-28 amendment records the constraint refusals (`constraint_veto`, `409 plan_not_executable`) and the configured 4-hour issued-plan lifetime | Backend + iOS |
 | [iOS R8](IOS-R8-CONTRACT.md) | Active-workout plan editing | Completed per source plan; plan-edit surface superseded in part 2026-11-19 | Backend + iOS |
 | [watchOS Phase 6](IOS-WATCH-CONTRACT.md) | Watch companion contract | Phase 6.7 owner-confirmed 2026-11-14 (W1–W12 and R); 2026-11-19 amendment for frozen plans and execution substitutions | Backend + iOS/watchOS |
 | [Training Intelligence](TRAINING-INTELLIGENCE-CONTRACT.md) | Envelope, evidence rules, MCP tools/resources, error semantics, limits, iOS native adapter | Implemented 2026-11-15 (MCP, REST and iOS adapters) | Backend + iOS |
