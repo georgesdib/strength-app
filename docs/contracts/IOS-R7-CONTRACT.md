@@ -52,6 +52,14 @@ contract as follows.
 - Execution prefill may be null. The client keeps a null load null and never falls back to the
   original exercise's prescribed load; the athlete enters the unknown load as actual data.
 
+## 2026-11-28 amendment — postpone a scheduled deload
+
+A scheduled deload remains a server-owned decision. When one is due, Today offers **Accept**,
+**Proceed without** and **Postpone scheduled deload**. Postponement is a separate, authenticated,
+idempotent mutation; it does not apply or dismiss a reactive deload. The selected future date is
+the first day of a seven-day deload window and re-anchors the full future cadence. A declared break
+still suppresses an active scheduled deload and resets the schedule after the break.
+
 **Why R7 exists.** Phase 2 issues a prescription by calling `build_prescription` synchronously
 inside the request handler ([server.py](https://github.com/georgesdib/strength-training-app/blob/development/strength_coach/web/server.py) `_ios_prescription`).
 With Settings → Resolver enabled the build takes **35–46 s** on the ODROID-C4
@@ -278,6 +286,22 @@ Response `202 Accepted`:
 > a `200` carrying `plan` is treated exactly like a `ready` poll result (the legacy row is
 > `ready`, §3.1), and a `202` starts the poll. Receipts expire within 30 days, so this is a
 > transition, not a permanent dual protocol.
+
+### 4.1a `POST /api/ios/v1/deload/postpone` — scheduled-deload re-anchor
+
+Body: `{"postponed_until": "YYYY-MM-DD", "operation_id": "…"}`. The request uses the paired
+bearer token and a UUID `Idempotency-Key`; the body operation id is 1–128 ASCII characters and is
+also unique in the append-only postponement table. The server requires the scheduled deload to be
+due today and the selected date to be in the future. Success returns
+`{"postponed_until": "YYYY-MM-DD", "window_ends_on": "YYYY-MM-DD"}`.
+
+The selected date begins the seven-day due window and shifts the full future cadence. A retry with
+the same idempotency key and body returns the original response. A different operation id may not
+be used to repeat the same date after the schedule is no longer due. The client does not queue this
+mutation for offline replay; if the response is ambiguous, it retries in-session with the same
+operation id. Invalid dates return `400 validation_failed`, a date with no scheduled deload due
+returns `409 deload_not_due`, and reusing an operation id with a different date returns
+`409 idempotency_conflict`. The server remains authoritative for the result.
 
 ### 4.2 `GET /api/ios/v1/plans/current` — recovery and polling read
 
@@ -524,7 +548,10 @@ Reconciliation, on every launch and every foreground activation:
 
 - **Today:** "Request workout" opens a settings sheet (session type picker defaulting to Auto;
   main-lift structure defaulting to Server decides; minimum-session toggle and optional target
-  minutes). The sheet shows the server's current readiness/confirmation warnings.
+  minutes). The sheet shows the server's current readiness/confirmation warnings. A due scheduled
+  deload also offers **Postpone scheduled deload**; the selected date starts a one-week window and
+  re-anchors the schedule. The client retries an ambiguous postponement with the original operation
+  id.
 - **Generating card:** status, elapsed counter from the server, "you can leave this screen", the
   active settings, and a client-side "Stop waiting" that stops polling without claiming the request
   was cancelled.
@@ -543,6 +570,8 @@ Server (`tests/test_ios_plan_requests.py`, temporary SQLite, live-server fixture
   session maps to `MOD-MIN-001`; accessories-only without a type returns the existing 400; unknown
   fields rejected.
 - Gates unchanged: readiness 409, scheduled deload/drop 409, reactive deload warning.
+- Scheduled-deload postponement: due-date and future-date validation, one-week response window,
+  schedule re-anchor and replay with the same idempotency key.
 - Worker publishes `ready` with the exact plan; `plans/current` returns it; status transitions are
   one-way.
 - Supersession during a build discards the stale result (guarded update affects no row); superseding
@@ -641,7 +670,10 @@ Client (unit):
 9. **Authoritative recovery:** after a lost `202`, a supersession or an expiry, launch and
    foreground show exactly what `plans/current` reports; no cached Today or retained preview
    overrides it; an active workout still takes precedence and its timer is unaffected.
-10. Default suite, docs tests and `ruff` pass; existing Phase 2 behaviour for readiness, sets, form,
+10. A due scheduled deload offers Accept, Proceed without and Postpone; postponing starts the
+   seven-day window on the selected date, re-anchors future weeks, and leaves reactive deloads
+   automatic. A declared break still resets the schedule.
+11. Default suite, docs tests and `ruff` pass; existing Phase 2 behaviour for readiness, sets, form,
     completion and abandon is unchanged.
 
 **Implementation status (2026-11-08).** Server criteria 1–3 and 5–10 are covered by
