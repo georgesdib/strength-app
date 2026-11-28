@@ -321,9 +321,19 @@ The stable `event_id` identifies the effective schedule anchor and seven-day sch
 and otherwise names the latest persisted choice. The decision is stored in the same request
 transaction as the issued plan. Accepted applies the scheduled deload; deferred leaves the
 prescription unchanged and records the issuance that consumed the deferral; the next distinct
-eligible issuance presents the event again, until a new scheduled block is due and replaces it.
-Dismissed is final for that event, and a later scheduled block has an independent event id. A retry with the same idempotency key/body replays the
+eligible issuance presents the event again. Dismissed is final for that event, and a later
+scheduled block has an independent event id. A retry with the same idempotency key/body replays the
 same queued plan and cannot add another choice.
+
+Re-presentation is decided by issuance identity, never by elapsed time: the persisted
+`reconsider_after_issuance_id` names the issuance the deferral already answered, so every other
+issuance asks again. `programme_header.deload` describes state rather than a request and reports a
+deferral in force as `status: none` with `decision: deferred`; it is not an actionable suggestion
+until the next issuance. Header, nudge and issuance share one rule, so they cannot disagree.
+
+An unresolved deferral is retired once the schedule produces a newer block, including when that
+block was skipped without a prescription request; the decision row is preserved as history and is
+never presented again.
 
 The async worker uses the frozen event and decision in `build_inputs_json`; it does not re-read a
 new scheduled choice while building. It still evaluates reactive triggers and applies a reactive

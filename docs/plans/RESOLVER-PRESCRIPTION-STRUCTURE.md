@@ -253,10 +253,12 @@ Rules:
   accepts the current event, or the live ready plan was built with a deload; `suggested` when a
   scheduled event has no owner decision; otherwise `none`. The header also exposes the stable
   `event_id` and persisted `decision` (`accepted`, `deferred`, `dismissed`, or null). A deferred
-  event is not an actionable suggestion on the day it was deferred and becomes `suggested` again
-  from the next day, matching the issuance rule that offers it again at the next eligible
-  issuance. An unresolved deferral stays visible until a new block is due, whose own event then
-  replaces it. `trigger` and `reason` are copied from the policy decision.
+  event is never an actionable suggestion: the header reports `none` while the deferral is in
+  force, and the next prescription issuance - the only thing that can end it - presents the choice
+  again. Header, nudge and issuance share that one rule, keyed on the issuance recorded in
+  `reconsider_after_issuance_id`, so no view depends on elapsed days. Once the schedule produces a
+  newer block the older deferral is retired and never re-presented. `trigger` and `reason` are
+  copied from the policy decision.
 - Competition status reuses the existing competition window; a past date is not counted down and
   a date whose override is disabled reports `window: "none"` while `days_until` still reflects
   the real date.
