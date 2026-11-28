@@ -225,10 +225,7 @@ content.
   technique-throttle, selection-apply, LLM or drop/deload *option* in the request; the server uses
   the existing auto scheduler and the existing safety decisions.
 
-> **Superseded by R7** ([`IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) §4.1): an optional `settings`
-> object admits `session_type` and `minimum_session`, and the route returns `202` with a polled
-> request instead of a `200` with the plan. The auto scheduler and the safety decisions still
-> apply.
+> **Superseded by R7** ([`IOS-R7-CONTRACT.md`](https://github.com/georgesdib/strength-app/blob/main/docs/contracts/IOS-R7-CONTRACT.md) §4.1/§4.1a): current issuance uses persisted, event-scoped scheduled-deload accept/defer/dismiss decisions and an independent `drop` confirmation. The boolean `deload` confirmation described in this historical Phase 2 contract is no longer accepted; R7 also adds settings and returns `202` with a polled request.
 
 - Readiness gate: if the readiness status is `ready`, proceed. If it is `insufficient` or
   `unknown` and `readiness_ack` is false, return `409 readiness_required` with

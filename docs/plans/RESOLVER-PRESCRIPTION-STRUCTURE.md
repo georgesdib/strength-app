@@ -249,9 +249,14 @@ Rules:
   labelled separately because the two definitions can disagree.
 - DUP is present only when undulation is enabled and an anchor exists; `cycle_week` is derived
   from the trained week and the effective cycle. Schemes come from the applied undulation table.
-- `deload.status` is `active` when a reactive decision applies today or when the live ready plan
-  was built with a deload; `suggested` when a scheduled deload awaits confirmation; otherwise
-  `none`. `trigger` and `reason` are copied from the policy decision.
+- `deload.status` is `active` when a reactive decision applies today, a stored scheduled decision
+  accepts the current event, or the live ready plan was built with a deload; `suggested` when a
+  scheduled event has no owner decision; otherwise `none`. The header also exposes the stable
+  `event_id` and persisted `decision` (`accepted`, `deferred`, `dismissed`, or null). A deferred
+  event is not an actionable suggestion on the day it was deferred and becomes `suggested` again
+  from the next day, matching the issuance rule that offers it again at the next eligible
+  issuance. An unresolved deferral stays visible until a new block is due, whose own event then
+  replaces it. `trigger` and `reason` are copied from the policy decision.
 - Competition status reuses the existing competition window; a past date is not counted down and
   a date whose override is disabled reports `window: "none"` while `days_until` still reflects
   the real date.

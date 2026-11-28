@@ -29,7 +29,7 @@ contract as follows.
 - `GET /api/ios/v1/today` gains an additive `programme_header`; the top-level `date` is
   unchanged. The header is `{trained_week, dup?, deload, competition?}`: `trained_week` is
   null without a block anchor; `dup` is present only with undulation enabled and an anchor;
-  `deload` carries `{calendar_week, status, trigger, reason}`; `competition` carries
+  `deload` carries `{calendar_week, status, trigger, reason, event_id, decision}`; `competition` carries
   `{date, days_until, window}` and omits `days_until` for a past date. The web
   `/api/overview` dashboard carries the same block.
 - `plan_revision` is plan identity only and never changes after start; the execution watermark
@@ -54,11 +54,20 @@ contract as follows.
 
 ## 2026-11-28 amendment — postpone a scheduled deload
 
-A scheduled deload remains a server-owned decision. When one is due, Today offers **Accept**,
-**Proceed without** and **Postpone scheduled deload**. Postponement is a separate, authenticated,
-idempotent mutation; it does not apply or dismiss a reactive deload. The selected future date is
-the first day of a seven-day deload window and re-anchors the full future cadence. A declared break
-still suppresses an active scheduled deload and resets the schedule after the break.
+> **Superseded by the amendment below and by §4.1a.** The date-picker postponement and its
+> `POST /api/ios/v1/deload/postpone` route are retired: a scheduled deload now uses persisted
+> accept/defer/dismiss decisions. Migration-0085 `scheduled_deload_postponement` rows remain
+> historical schedule re-anchors and are still read when the effective anchor is derived.
+
+## 2026-11-28 amendment — persistent scheduled-deload decisions
+
+Scheduled deloads have explicit, event-scoped **Accept**, **Defer** and **Dismiss** decisions.
+Defer skips the deload for the prescription issued with that decision and asks again at the next
+eligible prescription issuance; it is not a time-based snooze. Dismiss closes only that scheduled
+block. Accepted decisions apply to the scheduled event. Reactive deloads remain automatic and
+override scheduled decisions. The backend persists the decision and freezes it into the async
+request snapshot; programme status and nudges reflect the decision without sharing their own
+suppression state with prescription policy.
 
 **Why R7 exists.** Phase 2 issues a prescription by calling `build_prescription` synchronously
 inside the request handler ([server.py](https://github.com/georgesdib/strength-training-app/blob/development/strength_coach/web/server.py) `_ios_prescription`).
@@ -244,7 +253,12 @@ Body (closed schema; unknown fields rejected):
 
 ```json
 {"readiness_ack": false,
- "confirmations": {"deload": true, "drop": true},
+ "confirmations": {"drop": true},
+ "scheduled_deload_decision": {
+   "event_id": "scheduled:2026-01-01:2026-02-05",
+   "decision": "defer",
+   "expected_decision_id": null
+ },
  "settings": {"session_type": "auto", "minimum_session": false}}
 ```
 
@@ -257,9 +271,22 @@ Body (closed schema; unknown fields rejected):
   value is a `400 validation_failed` naming the field; it is ignored when
   `minimum_session` is false. The default and allowed set come from configuration
   ([`minimum-session.v1.yaml`](https://github.com/georgesdib/strength-training-app/blob/development/config/minimum-session.v1.yaml)).
-- The server keeps every existing gate before writing the row: authentication, mutation switch,
-  readiness score/acknowledgement, reactive deload, scheduled deload/drop confirmation. A gate
-  failure returns the same 409s as today and creates nothing.
+- `confirmations` contains only the independent `drop` boolean. Scheduled deload uses the explicit
+  decision object, never the legacy boolean.
+- If an event has no decision, or its prior decision was deferred, and no reactive trigger is
+  active, the server returns
+  `409 confirmation_required` with `details.scheduled_deload` including the stable event id,
+  latest decision id, reason and window. A required volume-drop confirmation is independently
+  returned as `details.drop`; the client chooses each outcome separately.
+- `accept` applies the deload from the prescription issued with that decision on, for the rest of
+  that scheduled deload week. A new scheduled block has a new event id and asks again.
+- A reactive trigger proceeds automatically without waiting for scheduled confirmation and
+  overrides the scheduled decision for that prescription.
+- The decision object is accepted only for the current event and expected decision id. The
+  `Idempotency-Key` is also the decision operation id. Decision persistence and plan-request
+  enqueueing share one transaction; failed gates create neither a decision nor a plan.
+- The server keeps the readiness score/acknowledgement gate. Reactive deloads remain automatic and
+  do not need confirmation.
 - Validation coupling is preserved and transported unchanged: an accessories-only minimum session
   without an explicit session type is the existing 400, with `fields` naming the problem.
 
@@ -287,21 +314,22 @@ Response `202 Accepted`:
 > `ready`, §3.1), and a `202` starts the poll. Receipts expire within 30 days, so this is a
 > transition, not a permanent dual protocol.
 
-### 4.1a `POST /api/ios/v1/deload/postpone` — scheduled-deload re-anchor
+### 4.1a Scheduled-deload decision lifecycle
 
-Body: `{"postponed_until": "YYYY-MM-DD", "operation_id": "…"}`. The request uses the paired
-bearer token and a UUID `Idempotency-Key`; the body operation id is 1–128 ASCII characters and is
-also unique in the append-only postponement table. The server requires the scheduled deload to be
-due today and the selected date to be in the future. Success returns
-`{"postponed_until": "YYYY-MM-DD", "window_ends_on": "YYYY-MM-DD"}`.
+The stable `event_id` identifies the effective schedule anchor and seven-day scheduled window.
+`decision` is `accept`, `defer` or `dismiss`; `expected_decision_id` is null for the first choice
+and otherwise names the latest persisted choice. The decision is stored in the same request
+transaction as the issued plan. Accepted applies the scheduled deload; deferred leaves the
+prescription unchanged and records the issuance that consumed the deferral; the next distinct
+eligible issuance presents the event again, until a new scheduled block is due and replaces it.
+Dismissed is final for that event, and a later scheduled block has an independent event id. A retry with the same idempotency key/body replays the
+same queued plan and cannot add another choice.
 
-The selected date begins the seven-day due window and shifts the full future cadence. A retry with
-the same idempotency key and body returns the original response. A different operation id may not
-be used to repeat the same date after the schedule is no longer due. The client does not queue this
-mutation for offline replay; if the response is ambiguous, it retries in-session with the same
-operation id. Invalid dates return `400 validation_failed`, a date with no scheduled deload due
-returns `409 deload_not_due`, and reusing an operation id with a different date returns
-`409 idempotency_conflict`. The server remains authoritative for the result.
+The async worker uses the frozen event and decision in `build_inputs_json`; it does not re-read a
+new scheduled choice while building. It still evaluates reactive triggers and applies a reactive
+deload automatically, regardless of the frozen scheduled state. The old date-based postponement
+route is retired. Existing migration-0085 postponement rows remain historical schedule re-anchors;
+they are not used for new deferrals.
 
 ### 4.2 `GET /api/ios/v1/plans/current` — recovery and polling read
 
@@ -548,10 +576,10 @@ Reconciliation, on every launch and every foreground activation:
 
 - **Today:** "Request workout" opens a settings sheet (session type picker defaulting to Auto;
   main-lift structure defaulting to Server decides; minimum-session toggle and optional target
-  minutes). The sheet shows the server's current readiness/confirmation warnings. A due scheduled
-  deload also offers **Postpone scheduled deload**; the selected date starts a one-week window and
-  re-anchors the schedule. The client retries an ambiguous postponement with the original operation
-  id.
+  minutes). The server's confirmation form has independent scheduled-deload and volume-drop
+  controls. Scheduled deload offers **Accept**, **Defer one prescription** and **Dismiss for this
+  block**, with the difference explained. The client retries an ambiguous request with the exact
+  original decision body and idempotency key.
 - **Generating card:** status, elapsed counter from the server, "you can leave this screen", the
   active settings, and a client-side "Stop waiting" that stops polling without claiming the request
   was cancelled.
@@ -569,9 +597,11 @@ Server (`tests/test_ios_plan_requests.py`, temporary SQLite, live-server fixture
 - Settings: default when omitted; explicit session type reaches `build_prescription`; minimum
   session maps to `MOD-MIN-001`; accessories-only without a type returns the existing 400; unknown
   fields rejected.
-- Gates unchanged: readiness 409, scheduled deload/drop 409, reactive deload warning.
-- Scheduled-deload postponement: due-date and future-date validation, one-week response window,
-  schedule re-anchor and replay with the same idempotency key.
+- Gates: readiness 409; scheduled decision and volume-drop confirmation are independent; reactive
+  deload remains automatic.
+- Scheduled-decision lifecycle: accept applies; defer is consumed by the current issuance and is
+  reconsidered on the next distinct issuance; dismiss suppresses the same event; a new block is
+  independent; duplicate idempotency replay adds no decision.
 - Worker publishes `ready` with the exact plan; `plans/current` returns it; status transitions are
   one-way.
 - Supersession during a build discards the stale result (guarded update affects no row); superseding
@@ -670,9 +700,10 @@ Client (unit):
 9. **Authoritative recovery:** after a lost `202`, a supersession or an expiry, launch and
    foreground show exactly what `plans/current` reports; no cached Today or retained preview
    overrides it; an active workout still takes precedence and its timer is unaffected.
-10. A due scheduled deload offers Accept, Proceed without and Postpone; postponing starts the
-   seven-day window on the selected date, re-anchors future weeks, and leaves reactive deloads
-   automatic. A declared break still resets the schedule.
+10. A due scheduled deload offers Accept, Defer and Dismiss; deferral applies to one issued
+   prescription and is reconsidered on the next eligible issuance; dismissal is scoped to the same
+   event. The volume-drop answer is independent, reactive deloads remain automatic, and declared
+   breaks still reset the scheduled cadence.
 11. Default suite, docs tests and `ruff` pass; existing Phase 2 behaviour for readiness, sets, form,
     completion and abandon is unchanged.
 
@@ -811,7 +842,7 @@ behaviour.
 
 | area | spec | implemented | why |
 |---|---|---|---|
-| storage | status, settings, two deadlines | adds `build_inputs_json` | The client's deload/drop confirmations and readiness acknowledgement must be frozen at request time; the build runs seconds later in another thread. |
+| storage | status, settings, two deadlines | adds `build_inputs_json` | The scheduled event decision, independent drop confirmation and readiness acknowledgement must be frozen at request time; the build runs seconds later in another thread. |
 | pre-flight | "name the count and a sample id" | a CHECK/FK failure that `db.migrate` surfaces as `MigrationError` | SQLite cannot raise a custom message with a row count from a migration; the invariant is enforced and the rebuild rolls back, which is the property that matters. |
 | startup sweep | reset `building` to `queued` | same | Nothing is published before the guarded publish, so a retry is safe. |
 | settings validation | accessory coupling returns 400 at request time | accessory sessions surface as a build error (`error_code = resolver_build_failed`) | The coupling lives inside `build_prescription`, which also decides whether the resolver is enabled; pre-validating it here would duplicate a rule. |
