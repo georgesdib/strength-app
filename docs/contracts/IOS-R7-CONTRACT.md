@@ -172,6 +172,7 @@ Config additions in `config/ios.v1.yaml` (committed, no secrets):
 
 ```yaml
 plan_request_ttl_seconds: 900    # queued/building lifetime; 60-3600
+issued_plan_ttl_seconds: 14400   # ready-plan lifetime; 60-86400
 ```
 
 **Two lifetimes, two columns, deliberately separate.** The Phase 2 table had one `expires_at`,
@@ -181,16 +182,16 @@ time:
 | deadline | column | set when | value | what it bounds |
 |---|---|---|---|---|
 | build deadline | `request_expires_at` | at insert | `created_at + plan_request_ttl_seconds` (15 min) | how long a request may sit `queued` or `building` before it is a failure |
-| startable deadline | `plan_expires_at` | at publish | `ready_at + issued_plan_ttl_seconds` (60 min, the existing Phase 2 value) | how long a **ready** preview may be started |
+| startable deadline | `plan_expires_at` | at publish | `ready_at + issued_plan_ttl_seconds` (default 14 400 s = 4 h, §14 decision 1) | how long a **ready** preview may be started |
 
-The clock does not stop when the build finishes: publishing a plan starts a fresh 60 minutes.
+The clock does not stop when the build finishes: publishing a plan starts a fresh 4 hours.
 Expiry is checked against whichever deadline applies to the current status, so a plan built in
-40 s and left alone expires 60 minutes after it became ready — not 15 minutes after it was
+40 s and left alone expires 4 hours after it became ready — not 15 minutes after it was
 requested.
 
 Worked example: Request workout at 09:00 → `request_expires_at` 09:15 → plan ready 09:00:45 →
-`plan_expires_at` 10:00:45. Reopening the app at 09:40 shows the plan and Start works. Reopening at
-10:10 shows no plan and Today returns to "Request workout".
+`plan_expires_at` 13:00:45. Reopening the app at 09:40 shows the plan and Start works. Reopening at
+13:10 shows no plan and Today returns to "Request workout".
 
 ### 3.1 Legacy data mapping — what the rebuild does to existing rows
 
@@ -362,8 +363,13 @@ override it.
 
 - `status: ready` fills `plan`, `readiness` (status/score/basis/overrides/context flags) and
   `warnings`; the shape is the Phase 2 issue response, so the client's existing preview decoding is
-  reused.
-- `status: error` fills `error: {code, message}`.
+  reused. A plan is only published when it is executable at build time. If a constraint recorded
+  later makes it non-executable, its `issues` carry `CONSTRAINT_VETO:<exercise_id>:<reason>`: the
+  client names the blocked lifts and does not offer Start. The optional `executable` flag is not the
+  permission signal, and its absence is not permission either.
+- `status: error` fills `error: {code, message}`. `constraint_veto` means a stored constraint
+  forbids the session the athlete asked for, so no plan is published (§4.4); `resolver_build_failed`
+  and `stale_date` are the other build outcomes.
 - No live row → `{"status": "none"}` with 200. Not a 404: "nothing pending" is a normal state.
   This is also what a plan past `plan_expires_at` returns: expiry removes a plan from the live set
   without deleting the row, so an hour-old workout is gone from the app but still auditable.
@@ -382,6 +388,10 @@ longer points at a prescription stored at issue:
 - Require `status = 'ready'`; `queued`/`building` → `409 plan_not_ready` with
   `details: {status, retry_after_ms}`. `error` → `410 plan_failed`. Expired/superseded/consumed
   keep their Phase 2 codes.
+- A constraint is re-evaluated as of the plan's `for_date` at start. A constraint recorded after
+  the plan was issued that now forbids part of it returns `409 plan_not_executable` with
+  `details: {issues, exercise_ids}`; the frozen plan keeps its identity and is never rewritten
+  (`DEC-STATE-04`). This is drift only — an unexecutable session is never published.
 - In **one** transaction: persist the normal `prescription`/`prescription_item` rows from the
   stored `plan_json` via `prescription_persistence.store_plan`, call `workout.start` with that
   `prescription_id` and the stored readiness, then set `consumed_at`, `workout_id` and
@@ -458,7 +468,9 @@ Other rules:
 
 - A build exception sets `status='error'` with an owner-safe code and message and
   `finished_at=now`; no stack trace, path or token is stored. `ResolverBuildError` maps to
-  `error_code='resolver_build_failed'` with the existing stage/message.
+  `error_code='resolver_build_failed'` with the existing stage/message; a session a stored
+  constraint refuses maps to `error_code='constraint_veto'`, raised before publish so no plan
+  reaches the device.
 - The loop body is wrapped so an unexpected exception terminalises that row and the dispatcher
   survives. If the thread ever dies anyway, the next `POST` **or** `plans/current` read restarts it
   under the lock (`is_alive()` check), because the queue is the table and no request lives in the
@@ -534,14 +546,14 @@ Reconciliation, on every launch and every foreground activation:
   detection still applies. R7 adds no second timer and no second recovery path.
 - Because `elapsed_seconds` is server-computed, closing the app for two minutes and reopening shows
   the true age of the request; a plan that became ready while the app was closed is simply `ready`.
-- The plan deadline keeps working while the app is away. `plan_expires_at` is 60 minutes after the
+- The plan deadline keeps working while the app is away. `plan_expires_at` is 4 hours after the
   plan became ready, so:
   - returning 20 minutes later → the plan is there and Start works;
-  - returning 59 minutes later → still there;
-  - returning **an hour later** → the plan has expired: `plans/current` reports `none`, Today
+  - returning 3 hours later → still there;
+  - returning **four hours later** → the plan has expired: `plans/current` reports `none`, Today
     falls back to "request workout", and the Start action is unavailable. The row is not deleted —
     `plan_json` is retained until pruning and the row is auditable — but it can no longer start a
-    workout, because a prescription an hour old may describe a session the owner no longer wants,
+    workout, because a prescription hours old may describe a session the owner no longer wants,
     a readiness state that has changed, or sets already done on the web.
   - The client never offers Start on an expired plan; it refreshes and asks for a new one.
 
@@ -618,6 +630,9 @@ Server (`tests/test_ios_plan_requests.py`, temporary SQLite, live-server fixture
   a `queued` row works.
 - CPU slot: a second request while one builds stays `queued` and later builds; no 409 to the client.
 - Start requires `ready`; `queued` → 409 `plan_not_ready`; `error` → 410 `plan_failed`.
+- A session a stored constraint forbids is refused at build time (`error.code = constraint_veto`,
+  no published plan), and Start re-evaluates constraints as of `for_date`: a constraint recorded
+  after issue is `409 plan_not_executable` with `details`, leaving the frozen plan unchanged.
 - Start writes prescription rows exactly once and links them; a retried start does not duplicate.
 - **Legacy start:** a migrated Phase 2 row with `prescription_id` set starts without persisting a
   second prescription, and the workout links to the original `prescription_id`.
@@ -661,7 +676,7 @@ Migration `0056` (`tests/test_migration_0056.py`, building a database at the `00
 - Expiry is deadline-specific: a `queued`/`building` row past `request_expires_at` fails the
   request; a `ready` row past `plan_expires_at` reports `none` and `409 plan_expired` on Start.
   Publishing sets `plan_expires_at = ready_at + issued_plan_ttl_seconds`, so a 90 s build yields a
-  full 60 minutes of startable time, not 58.5 minutes.
+  full 4 hours of startable time, measured from publish rather than from the request.
 - No token, code, path or stack trace in any stored row, response or log; no plan content in logs.
 
 **Acceptance scope.** Simulator and unit coverage close R7 (§14 decision 4). The build timing is
@@ -674,6 +689,8 @@ Client (unit):
   `ready` and renders.
 - Settings round-trip; a settings change issues a new key; superseded id is never reused.
 - 409 `plan_not_ready` on Start is handled without losing the ready card.
+- A plan whose `issues` carry `CONSTRAINT_VETO:` disables Start and names the blocked lifts; an
+  absent `executable` flag does not enable it.
 - **Foreground reconciliation is authoritative:**
   - a **lost `POST` response** (request created, response never received) resolves to the
     generating card on the next foreground, then to the **Workout ready** card when the poll
